@@ -13,7 +13,81 @@
 </head>
 
 <body>
-	<div id='root'></div>
+	<div id="join_or_start">
+		<span>
+			<button type="button" id="new">new game</button>
+		</span>
+		<span>
+			<button type="button" id="join">join game</button>
+		</span>
+	</div>
+
+	<div id="chooseSettings" class="hidden">
+		<form id="chooseSettings">
+			<div>
+				<label for="choose_ID">user name:</label>
+				<input type="text" id="choose_ID" name="choose_ID">
+			</div>
+			<div>
+				<label for="choose_size">board size:</label>
+				<input
+					type="number"
+					id="choose_size"
+					name="choose_size"
+					min="5" max="20"
+					placeholder="(10-20)"
+				>
+			</div>
+			<div>
+				<label for="choose_num_of_players">number of players:</label>
+				<input
+					type="number"
+					id="choose_num_of_players"
+					name="choose_num_of_players"
+					min="2"
+					max="4"
+					placeholder="(2-4)"
+				>
+			</div>
+			<div class="button">
+				<button type="submit" onclick="return sendData(this)">submit</button>
+			</div>
+		</form>
+	</div>
+
+	<div id="settings" class="hidden">
+		<dl>
+			<dt>Game ID:</dt>
+			<dd id="game_id"></dd>
+			<br>
+			<dt>User Name:</dt>
+			<dd id="user_name"></dd>
+			<br>
+			<dt>Number of Players:</dt>
+			<dd id="num_players"></dd>
+		</dl>
+	</div>
+	
+	<span>
+		<div class="left_column">
+			<div id="instructions" class="hidden">
+				<pre>now you will place your ships.
+you will place:
+5 "a" -- these a's will be your aircraft carrier.
+4 "b" -- these b's will be your battleship.
+3 "c" -- these c's will be your cruiser.
+3 "s" -- these s's will be your submarine.
+2 "d" -- these d's will be your destroyer.
+
+each ship must be in a line
+horizontally, vertically, or diagonally.</pre>
+			</div>
+		</div>
+
+		<div class"right_column">
+			<div id="root" class="right_column"></div>
+		</div>
+	</span>
 	<script type="text/babel" src="battleship.js" crossorigin></script>
 </body>
 </html>

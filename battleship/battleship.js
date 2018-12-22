@@ -1,6 +1,85 @@
 let doc = document;
 let root = doc.getElementById('root');
+let startNewGameButton = doc.getElementById('new');
+let joinGameButton = doc.getElementById('join');
+let joinOrNewGameButtons = doc.getElementById('join_or_start');
+let chooseSettingsDiv = doc.getElementById('chooseSettings');
+let settingsDiv = doc.getElementById('settings');
+let gameIdElement = doc.getElementById('game_id');
+let userNameElement = doc.getElementById('user_name');
+let numberOfPlayersElement = doc.getElementById('num_players');
+let chooseSettingsForm = doc.getElementById('chooseSettings');
+let instrDiv = doc.getElementById('instructions');
 
+let state = {
+	settings: {
+		gameId: "someGameID",
+		thisUser: "",
+		numberOfPlayers: 0,
+		boardSize: 0
+	}
+}
+
+startNewGameButton.onclick = newGame;
+joinGameButton.onclick = joinGame;
+chooseSettingsForm.onSubmit = sendData;
+
+function joinGame() {
+	let gameId = window.prompt("Enter game ID:");
+	if (gameId) {
+
+	} else {
+		gameId = prompt("Invalid game ID, try again");
+	}
+}
+
+function newGame() {
+	joinOrNewGameButtons.classList.add('hidden');
+	chooseSettingsDiv.classList.remove('hidden');
+	doc.getElementById('choose_ID').focus();
+}
+
+function sendData(e) {
+	let id = e.form.choose_ID.value;
+	let nP = e.form.choose_num_of_players.value;
+	let bSize = e.form.choose_size.value;
+
+	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20) {
+		window.alert("fail")
+		return false;
+	}
+
+	let settings = state.settings;
+
+	settings.thisUser = id;
+	userNameElement.innerHTML = id;
+	e.form.choose_ID.value = '';
+
+	state[id + 'Board'] = [];
+
+	settings.numberOfPlayers = nP;
+	numberOfPlayersElement.innerHTML = nP;
+	e.form.choose_num_of_players.value = '';
+
+	//makes a game board of e.form.choose_size.value
+	settings.boardSize = bSize;
+	e.form.choose_size.value = '';
+
+	gameIdElement.innerHTML = 'randomgameinfo';
+
+	chooseSettingsDiv.classList.add('hidden');
+	settingsDiv.classList.remove('hidden');
+	instrDiv.classList.remove('hidden');
+
+	console.log(state);
+
+	return false;
+};
+
+
+
+
+{/*
 
 let numColumns = 15;
 let numRows = 15;
@@ -8,6 +87,7 @@ let data = [];
 for (let i = 0; i < numColumns*numRows; i++) {
   data[i] = "";
 }
+
 
 let colHeaders = [];
 for (let i = 0; i < numColumns; i++) {
@@ -183,3 +263,4 @@ function addClass(col, row, color) {
 }
 
 ReactDOM.render(<Game/>, root)
+*/}
