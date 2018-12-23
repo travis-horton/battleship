@@ -1,15 +1,9 @@
 * {
-	margin: 0;
-	padding: 0;
 	box-sizing: border-box;
 	font-size: small;
 	font-family: verdana;
 	text-transform: lowercase;
 	text-align: center;
-}
-
-div {
-	margin: 10px;
 }
 
 input {
@@ -30,30 +24,88 @@ button:hover {
 	background-color: turquoise;
 }
 
+dl {
+	margin: 0;
+	padding: 0;
+}
+
 dt {
 	text-decoration: underline;
 	display: inline-block;
+	padding: 6px 0 0 0;
 }
 
 dd {
 	display: inline-block;
 	background-color: yellow;
+	margin: 0;
 }
 
 .hidden {
 	display: none;
 }
 
+.flex-box {
+	display: flex;
+}
+
 .left_column {
-	width: 30%;
 	border-right: 1px solid black;
+	height: 100%;
+	width: 30%;
 }
 
 .right_column {
+	display: flex;
+	justify-content: center;
 	width: 70%;
 }
 
 #settings {
-	border-bottom: 1px solid black;
+	border-top: 1px solid black;
+	padding: 10px 0 0 0;
+}
+
+#instructions {
+	white-space: pre-wrap;
 	padding: 0 0 10px 0;
+}
+
+.cell {
+	margin: 0;
+	padding: 0;
+	width: 18px;
+	border: none;
+	border-top: 1px solid blue;
+	border-left: 1px solid blue;
+}
+
+.headerCell {
+	padding: 0;
+	width: 18px;
+	border: none;
+	text-align: center;
+}
+
+.row {
+	display: flex;
+	margin: 0;
+	padding: 0;
+	height: 18px;
+}
+
+.rightColumnCell {
+	border-right: 1px solid blue;
+}
+
+.bottomRowCell {
+	border-bottom: 1px solid blue;
+}
+
+.rowHeaderCell {
+	margin: 0 3px;
+}
+
+.board {
+	border: 1px solid blue
 }

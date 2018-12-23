@@ -55,37 +55,24 @@
 		</form>
 	</div>
 
-	<div id="settings" class="hidden">
-		<dl>
-			<dt>Game ID:</dt>
-			<dd id="game_id"></dd>
-			<br>
-			<dt>User Name:</dt>
-			<dd id="user_name"></dd>
-			<br>
-			<dt>Number of Players:</dt>
-			<dd id="num_players"></dd>
-		</dl>
-	</div>
-
-	<span>
+	<span class="flex-box">
 		<div class="left_column">
-			<div id="instructions" class="hidden">
-				<pre>now you will place your ships.
-you will place:
-5 "a" -- these a's will be your aircraft carrier.
-4 "b" -- these b's will be your battleship.
-3 "c" -- these c's will be your cruiser.
-3 "s" -- these s's will be your submarine.
-2 "d" -- these d's will be your destroyer.
-
-each ship must be in a line
-horizontally, vertically, or diagonally.</pre>
+			<div id="instructions" class="hidden"></div>
+			<div id="settings" class="hidden">
+				<dl>
+					<dt>Game ID:</dt>
+					<dd id="game_id"></dd>
+					<br>
+					<dt>User Name:</dt>
+					<dd id="user_name"></dd>
+					<br>
+					<dt>Number of Players:</dt>
+					<dd id="num_players"></dd>
+				</dl>
 			</div>
 		</div>
 
-		<div class"right_column">
-			<div id="root" class="right_column"></div>
+		<div id="root" class="right_column">
 		</div>
 	</span>
 	<script type="text/babel" src="battleship.js" crossorigin></script>
