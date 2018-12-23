@@ -9,10 +9,10 @@ let gameIdElement = doc.getElementById('game_id');
 let userNameElement = doc.getElementById('user_name');
 let numberOfPlayersElement = doc.getElementById('num_players');
 let chooseSettingsForm = doc.getElementById('chooseSettings');
-let instrDiv = doc.getElementById('instructions');
+let statusDiv = doc.getElementById('currentStatus');
 
 let instrStrs = [
-	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\" -- these a\'s will be your aircraft carrier.\n4 \"b\" -- these b\'s will be your battleship.\n3 \"c\" -- these c\'s will be your cruiser.\n3 \"s\" -- these s\'s will be your submarine.\n2 \"d\" -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. they can, unintuitively, be placed overlapping.'
+	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\" -- these a\'s will be your aircraft carrier.\n4 \"b\" -- these b\'s will be your battleship.\n3 \"c\" -- these c\'s will be your cruiser.\n3 \"s\" -- these s\'s will be your submarine.\n2 \"d\" -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. your submarine is allowed to cross other ships.'
 ]
 
 let state = {
@@ -22,28 +22,34 @@ let state = {
 		numberOfPlayers: 0,
 		boardSize: 0
 	},
+
 	ships: {
 		a: {
 			max: 5,
-			loc: []
+			locs: []
 		},
+
 		b: {
 			max: 4,
-			loc: []
+			locs: []
 		},
+
 		c: {
 			max: 3,
-			loc: []
+			locs: []
 		},
+
 		s: {
 			max: 3,
-			loc: []
+			locs: []
 		},
+
 		d: {
 			max: 2,
-			loc: []
+			locs: []
 		}
 	},
+
 	shots: []
 }
 
@@ -53,6 +59,7 @@ chooseSettingsForm.onSubmit = createGame;
 
 function chooseJoinGame() {
 	let gameId = window.prompt('Enter game ID:');
+	if (gameId === null) return;
 	if (gameId) {
 
 	} else {
@@ -78,8 +85,8 @@ function createGame(e) {
 
 	hide(chooseSettingsDiv);
 	unhide(settingsDiv);
-	unhide(instrDiv);
-	instrDiv.innerHTML = instrStrs[0];
+	unhide(statusDiv);
+	statusDiv.innerHTML = instrStrs[0];
 	setSettings(id, nP, bSize, e.form);
 
 	ReactDOM.render(< Game state={ state }/>, root);
@@ -272,8 +279,8 @@ class Game extends React.Component {
 
 	handleInput(target) {
 		let ships = state.ships;
-		let col = target.attributes.col;
-		let row = target.attributes.row;
+		let col = target.attributes.col.nodeValue;
+		let row = parseFloat(target.attributes.row.nodeValue);
 
 		if (!(target.value in ships)) {
 			alert('must be a ship letter (a, b, c, s, or d)');
@@ -289,7 +296,7 @@ class Game extends React.Component {
 			return false;
 		}
 
-		ship.loc.push([col, row]);
+		ship.locs.push([col, row]);
 		console.log(target);
 		console.log(ships);
 	}
