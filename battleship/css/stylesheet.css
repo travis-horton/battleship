@@ -24,23 +24,6 @@ button:hover {
 	background-color: turquoise;
 }
 
-dl {
-	margin: 0;
-	padding: 0;
-}
-
-dt {
-	text-decoration: underline;
-	display: inline-block;
-	padding: 6px 0 0 0;
-}
-
-dd {
-	display: inline-block;
-	background-color: yellow;
-	margin: 0;
-}
-
 .hidden {
 	display: none;
 }
@@ -108,4 +91,8 @@ dd {
 
 .board {
 	border: 1px solid blue
+}
+
+.highlighted {
+	background-color: yellow;
 }

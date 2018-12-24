@@ -24,31 +24,11 @@ let state = {
 		boardSize: 0
 	},
 	ships: {
-		a: {
-			max: 5,
-			locs: [],
-			o: ""
-		},
-		b: {
-			max: 4,
-			locs: [],
-			o: ""
-		},
-		c: {
-			max: 3,
-			locs: [],
-			o: ""
-		},
-		s: {
-			max: 3,
-			locs: [],
-			o: ""
-		},
-		d: {
-			max: 2,
-			locs: [],
-			o: ""
-		}
+		a: {max: 5, locs: [], o: ""},
+		b: {max: 4, locs: [], o: ""},
+		c: {max: 3, locs: [], o: ""},
+		s: {max: 3, locs: [], o: ""},
+		d: {max: 2, locs: [], o: ""}
 	},
 	shots: [],
 	completion: 0
@@ -62,7 +42,7 @@ function chooseJoinGame() {
 	let gameId = window.prompt('Enter game ID:');
 	if (gameId === null) return;
 	if (gameId) {
-		//checks for gameID, but there is no sata just now...
+		//checks for gameID, but there is no data just now...
 		gameId = prompt('Invalid game ID, try again');
 	} else {
 		gameId = prompt('Invalid game ID, try again');
@@ -233,9 +213,13 @@ class Board extends React.Component {
 		for (let i = 0; i < state.settings.boardSize; i++) {
 			rows.push( i )
 		}
+		let className='board';
+		if (this.props.className) {
+			className += " "+this.props.className;
+		}
 		return (
 			<div>
-				<div className='board'>
+				<div className={ className }>
 					<p>{ state.settings.thisUser }'s board</p>
 					<HeaderRow/>
 					{ rows.map((row) =>
@@ -326,6 +310,14 @@ class Game extends React.Component {
 			<div>
 				< Board
 					handleInput={ this.handleInput }
+				/>
+				< Board
+					handleInput={ this.handleInput }
+					className="hidden"
+				/>
+				< Board
+					handleInput={ this.handleInput }
+					className="hidden"
 				/>
 				< SubmitButton
 					handleClick={ this.handleSubmit }
