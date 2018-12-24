@@ -32,7 +32,6 @@
 				<label for="choose_size">board size:</label>
 				<input
 					type="number"
-					id="choose_size"
 					name="choose_size"
 					min="5" max="20"
 					placeholder="(10-20)"
@@ -42,12 +41,15 @@
 				<label for="choose_num_of_players">number of players:</label>
 				<input
 					type="number"
-					id="choose_num_of_players"
 					name="choose_num_of_players"
 					min="2"
 					max="4"
 					placeholder="(2-4)"
 				>
+			</div>
+			<div>
+				<label for="choose_game_name">game id:</label>
+				<input type="text" name="choose_game_name">
 			</div>
 			<div class="button">
 				<button type="submit" onclick="return createGame(this)">submit</button>

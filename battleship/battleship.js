@@ -11,8 +11,9 @@ let numberOfPlayersElement = doc.getElementById('num_players');
 let chooseSettingsForm = doc.getElementById('chooseSettings');
 let statusDiv = doc.getElementById('currentStatus');
 
-let instrStrs = [
-	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\" -- these a\'s will be your aircraft carrier.\n4 \"b\" -- these b\'s will be your battleship.\n3 \"c\" -- these c\'s will be your cruiser.\n3 \"s\" -- these s\'s will be your submarine.\n2 \"d\" -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. your submarine is allowed to cross other ships.'
+let statusStrs = [
+	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\"s -- these a\'s will be your aircraft carrier.\n4 \"b\"s -- these b\'s will be your battleship.\n3 \"c\"s -- these c\'s will be your cruiser.\n3 \"s\"s -- these s\'s will be your submarine.\n2 \"d\"s -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. your submarine is allowed to cross other ships.',
+	'waiting on other players'
 ]
 
 let state = {
@@ -22,35 +23,35 @@ let state = {
 		numberOfPlayers: 0,
 		boardSize: 0
 	},
-
 	ships: {
 		a: {
 			max: 5,
-			locs: []
+			locs: [],
+			o: ""
 		},
-
 		b: {
 			max: 4,
-			locs: []
+			locs: [],
+			o: ""
 		},
-
 		c: {
 			max: 3,
-			locs: []
+			locs: [],
+			o: ""
 		},
-
 		s: {
 			max: 3,
-			locs: []
+			locs: [],
+			o: ""
 		},
-
 		d: {
 			max: 2,
-			locs: []
+			locs: [],
+			o: ""
 		}
 	},
-
-	shots: []
+	shots: [],
+	completion: 0
 }
 
 startNewGameButton.onclick = chooseNewGame;
@@ -61,7 +62,8 @@ function chooseJoinGame() {
 	let gameId = window.prompt('Enter game ID:');
 	if (gameId === null) return;
 	if (gameId) {
-
+		//checks for gameID, but there is no sata just now...
+		gameId = prompt('Invalid game ID, try again');
 	} else {
 		gameId = prompt('Invalid game ID, try again');
 	}
@@ -77,8 +79,9 @@ function createGame(e) {
 	let id = e.form.choose_ID.value;
 	let nP = e.form.choose_num_of_players.value;
 	let bSize = e.form.choose_size.value;
+	let gameID = e.form.choose_game_name.value;
 
-	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20) {
+	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || gameID.length === 0) {
 		window.alert('fail')
 		return false;
 	}
@@ -86,8 +89,8 @@ function createGame(e) {
 	hide(chooseSettingsDiv);
 	unhide(settingsDiv);
 	unhide(statusDiv);
-	statusDiv.innerHTML = instrStrs[0];
-	setSettings(id, nP, bSize, e.form);
+	statusDiv.innerHTML = statusStrs[0];
+	setSettings(id, nP, bSize, gameID, e.form);
 
 	ReactDOM.render(< Game state={ state }/>, root);
 
@@ -102,8 +105,7 @@ function unhide(element) {
 	element.classList.remove('hidden');
 }
 
-function setSettings(id, nP, bSize, form) {
-
+function setSettings(id, nP, bSize, gameID, form) {
 	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20) {
 		window.alert('fail')
 		return false;
@@ -119,11 +121,12 @@ function setSettings(id, nP, bSize, form) {
 	numberOfPlayersElement.innerHTML = nP;
 	form.choose_num_of_players.value = '';
 
-	//makes a game board of e.form.choose_size.value
-	settings.boardSize = bSize;
-	form.choose_size.value = '';
+	settings.gameId = gameID;
+	gameIdElement.innerHTML = gameID;
+	form.choose_game_name.value = '';
 
-	gameIdElement.innerHTML = 'randomgameinfo';
+	settings.boardSize = parseFloat(bSize);
+	form.choose_size.value = '';
 }
 
 class Cell extends React.Component {
@@ -275,30 +278,47 @@ class Game extends React.Component {
 	}
 
 	handleSubmit() {
+		if (state.completion !== 1) {
+			alert('you have more ships to place!')
+		} else {
+			let confirm = window.confirm('are you happy with your ship placement?');
+			if (confirm) {
+				statusDiv.innerHTML = statusStrs[1];
+			}
+		}
+
 	}
 
 	handleInput(target) {
 		let ships = state.ships;
 		let col = target.attributes.col.nodeValue;
 		let row = parseFloat(target.attributes.row.nodeValue);
+		let ship = target.value.toLowerCase();
+
+		if (target.value.length === 0) {
+			removeLoc(col, row);
+			state.completion = numShipsPlaced()/5;
+			return false
+		};
 
 		if (!(target.value in ships)) {
 			alert('must be a ship letter (a, b, c, s, or d)');
+			removeLoc(col, row);
+			state.completion = numShipsPlaced()/5;
 			target.value = "";
 			return false;
 		}
 
-		let ship = ships[target.value];
+		ship = ships[ship];
 
-		if (badPlacement(ship, col, row)) {
-			alert(badPlacement(ship, col, row));
+		if (!(goodPlacement(ship, col, row))) {
 			target.value = "";
+			state.completion = numShipsPlaced()/5;
 			return false;
 		}
 
 		ship.locs.push([col, row]);
-		console.log(target);
-		console.log(ships);
+		state.completion = numShipsPlaced()/5;
 	}
 
 	render() {
@@ -321,6 +341,78 @@ function addClass(className, col, row) {
 	return className;
 }
 
-function badPlacement(ship, col, row) {
-	if (false) {return "bad spot"}
+function goodPlacement(ship, col, row) {
+	if (ship.locs.length === 0) return true;
+	if (ship.locs.length === ship.max) {
+		alert('too many of this ship')
+		return false;
+	}
+
+	let col0 = col.charCodeAt(0) - 65;
+	let row0 = row - 1;
+	let index = col0 + (row0 * state.settings.boardSize);
+
+	if (ship.locs.length === 1) {
+		//check adjacency
+		let col1 = ship.locs[0][0].charCodeAt(0) - 65;
+		let row1 = ship.locs[0][1] - 1;
+		let index1 = col1 + (row1 * state.settings.boardSize);
+		let o = isAdjacent(index, index1);
+
+		if (o === undefined) {
+			alert('ship is not adjacent')
+			return false;
+		} else {
+			ship.o = o;
+		}
+	}
+
+	if (ship.locs.length > 1) {
+		let o = undefined;
+		for (let i = 0; i < ship.locs.length; i++) {
+			let loc = ship.locs[i];
+			let col1 = loc[0].charCodeAt(0) - 65;
+			let row1 = loc[1] - 1;
+			let index1 = col1 + (row1 * state.settings.boardSize);
+			o = isAdjacent(index, index1);
+			if (o === ship.o) {
+				break;
+			}
+			if (i === ship.locs.length - 1) {
+				alert('ship is not in line')
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+function isAdjacent(i1, i2) {
+	let colDif = Math.abs(i1 - i2);
+	let bSize = state.settings.boardSize
+	let adj = [1, bSize - 1, bSize, bSize + 1];
+	let o = ['h', 'db', 'v', 'df'][adj.indexOf(colDif)];
+	return o;
+}
+
+function removeLoc(col, row) {
+	let ships = state.ships;
+	for (let ship in ships) {
+		ships[ship].locs.forEach(function(loc, i) {
+			if (loc[0] === col && loc[1] === row) {
+				ships[ship].locs.splice(i, 1);
+			}
+		})
+	}
+}
+
+function numShipsPlaced() {
+	let num = 0;
+	for (let ship in state.ships) {
+		if (state.ships[ship].max === state.ships[ship].locs.length) {
+			num ++;
+		}
+	}
+	return num;
 }
