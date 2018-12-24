@@ -12,7 +12,7 @@ let chooseSettingsForm = doc.getElementById('chooseSettings');
 let statusDiv = doc.getElementById('currentStatus');
 
 let statusStrs = [
-	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\"s -- these a\'s will be your aircraft carrier.\n4 \"b\"s -- these b\'s will be your battleship.\n3 \"c\"s -- these c\'s will be your cruiser.\n3 \"s\"s -- these s\'s will be your submarine.\n2 \"d\"s -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. your submarine is allowed to cross other ships.',
+	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\"s -- these a\'s will be your aircraft carrier.\n4 \"b\"s -- these b\'s will be your battleship.\n3 \"c\"s -- these c\'s will be your cruiser.\n3 \"s\"s -- these s\'s will be your submarine.\n2 \"d\"s -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. in general, your ships are not allowed to cross one another. however, your submarine is allowed to cross other ships on the diagonal. no ships may share a cell.',
 	'waiting on other players'
 ]
 
@@ -354,35 +354,11 @@ function goodPlacement(ship, col, row) {
 
 	if (ship.locs.length === 1) {
 		//check adjacency
-		let col1 = ship.locs[0][0].charCodeAt(0) - 65;
-		let row1 = ship.locs[0][1] - 1;
-		let index1 = col1 + (row1 * state.settings.boardSize);
-		let o = isAdjacent(index, index1);
-
-		if (o === undefined) {
-			alert('ship is not adjacent')
-			return false;
-		} else {
-			ship.o = o;
-		}
+		return checkPWOneShip(ship, index);
 	}
 
 	if (ship.locs.length > 1) {
-		let o = undefined;
-		for (let i = 0; i < ship.locs.length; i++) {
-			let loc = ship.locs[i];
-			let col1 = loc[0].charCodeAt(0) - 65;
-			let row1 = loc[1] - 1;
-			let index1 = col1 + (row1 * state.settings.boardSize);
-			o = isAdjacent(index, index1);
-			if (o === ship.o) {
-				break;
-			}
-			if (i === ship.locs.length - 1) {
-				alert('ship is not in line')
-				return false;
-			}
-		}
+		return checkPWMOneShip(ship, index);
 	}
 
 	return true;
@@ -415,4 +391,44 @@ function numShipsPlaced() {
 		}
 	}
 	return num;
+}
+
+function checkPWOneShip(ship, index) {
+	let col1 = ship.locs[0][0].charCodeAt(0) - 65;
+	let row1 = ship.locs[0][1] - 1;
+	let index1 = col1 + (row1 * state.settings.boardSize);
+	let o = isAdjacent(index, index1);
+
+	if (o === undefined) {
+		alert('ship is not adjacent')
+		return false;
+	} else {
+		ship.o = o;
+		return true;
+	}
+}
+
+function checkPWMOneShip(ship, index) {
+	let o = undefined;
+	for (let i = 0; i < ship.locs.length; i++) {
+		let loc = ship.locs[i];
+		let col1 = loc[0].charCodeAt(0) - 65;
+		let row1 = loc[1] - 1;
+		let index1 = col1 + (row1 * state.settings.boardSize);
+		o = isAdjacent(index, index1);
+		if (o !== undefined) {
+			if (o === ship.o) {
+				break;
+			} else {
+				alert('ship is not in line');
+				return false;
+			}
+
+		}
+		if (i === ship.locs.length - 1) {
+			alert('ship is not adjacent')
+			return false;
+		}
+	}
+
 }
