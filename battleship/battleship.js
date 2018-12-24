@@ -16,24 +16,6 @@ let statusStrs = [
 	'waiting on other players'
 ]
 
-let state = {
-	settings: {
-		gameId: 'someGameID',
-		thisUser: '',
-		numberOfPlayers: 0,
-		boardSize: 0
-	},
-	ships: {
-		a: {max: 5, locs: [], o: ""},
-		b: {max: 4, locs: [], o: ""},
-		c: {max: 3, locs: [], o: ""},
-		s: {max: 3, locs: [], o: ""},
-		d: {max: 2, locs: [], o: ""}
-	},
-	shots: [],
-	completion: 0
-}
-
 startNewGameButton.onclick = chooseNewGame;
 joinGameButton.onclick = chooseJoinGame;
 chooseSettingsForm.onSubmit = createGame;
@@ -202,6 +184,10 @@ class Board extends React.Component {
 	constructor(props) {
 		super(props);
 		this.handleInput = this.handleInput.bind(this);
+		this.state = {
+			ships: this.props.ships,
+			shots: this.props.shots
+		}
 	}
 
 	handleInput(target) {
@@ -220,7 +206,7 @@ class Board extends React.Component {
 		return (
 			<div>
 				<div className={ className }>
-					<p>{ state.settings.thisUser }'s board</p>
+					<p>{ this.props.player }'s board</p>
 					<HeaderRow/>
 					{ rows.map((row) =>
 						<Row
@@ -268,9 +254,9 @@ class Game extends React.Component {
 			let confirm = window.confirm('are you happy with your ship placement?');
 			if (confirm) {
 				statusDiv.innerHTML = statusStrs[1];
+				showBoards();
 			}
 		}
-
 	}
 
 	handleInput(target) {
@@ -306,19 +292,31 @@ class Game extends React.Component {
 	}
 
 	render() {
+		let otherBoards = [];
+		for (let i = 0; i < state.settings.numberOfPlayers - 1; i++) {
+			otherBoards.push({key: i + 1})
+		}
+		let className;
+		if (state.completion < 1) className='hidden'
 		return (
 			<div>
 				< Board
 					handleInput={ this.handleInput }
+					key='0'
+					player={ state.settings.thisUser }
+					ships={ state.ships }
+					shots={ state.shots }
 				/>
-				< Board
-					handleInput={ this.handleInput }
-					className="hidden"
-				/>
-				< Board
-					handleInput={ this.handleInput }
-					className="hidden"
-				/>
+				{ otherBoards.map((board) =>
+					< Board
+						handleInput={ this.handleInput }
+						key={ board.key }
+						className={ className }
+						player='unknown'
+						ships={ state.ships }
+						shots={ state.shots }
+					/>
+				) }
 				< SubmitButton
 					handleClick={ this.handleSubmit }
 				/>
@@ -422,5 +420,27 @@ function checkPWMOneShip(ship, index) {
 			return false;
 		}
 	}
+	return true;
+}
 
+function showBoards() {
+	ReactDOM.render(< Game state={ state }/>, root);
+}
+
+let state = {
+	settings: {
+		gameId: 'someGameID',
+		thisUser: '',
+		numberOfPlayers: 0,
+		boardSize: 0
+	},
+	ships: {
+		a: {max: 5, locs: [], o: ""},
+		b: {max: 4, locs: [], o: ""},
+		c: {max: 3, locs: [], o: ""},
+		s: {max: 3, locs: [], o: ""},
+		d: {max: 2, locs: [], o: ""}
+	},
+	shots: [],
+	completion: 0
 }
