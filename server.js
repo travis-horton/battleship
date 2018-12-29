@@ -10,7 +10,6 @@ server.listen(port, function() {
 	console.log(`Battleship server listening on ${port}`);
 });
 
-
 app.use(express.static('battleship'));
 
 app.get('/index', function(req, res) {

@@ -10,11 +10,22 @@ let userNameElement = doc.getElementById('user_name');
 let numberOfPlayersElement = doc.getElementById('num_players');
 let chooseSettingsForm = doc.getElementById('chooseSettings');
 let statusDiv = doc.getElementById('currentStatus');
+let state = {
+	settings: {
+		gameId: 'someGameID',
+		numberOfPlayers: 0,
+		boardSize: 0
+	},
+	users: {}
+}
+let thisUser = '';
 
 let statusStrs = [
-	'<b>instructions:</b>\nnow you will place your ships.\nyou will place:\n5 \"a\"s -- these a\'s will be your aircraft carrier.\n4 \"b\"s -- these b\'s will be your battleship.\n3 \"c\"s -- these c\'s will be your cruiser.\n3 \"s\"s -- these s\'s will be your submarine.\n2 \"d\"s -- these d\'s will be your destroyer.\n\neach ship must be in a line horizontally, vertically, or diagonally. in general, your ships are not allowed to cross one another. however, your submarine is allowed to cross other ships on the diagonal. no ships may share a cell.',
-	'waiting on other players'
+	'<b>INSTRUCTIONS:</b>\nNow you will place your ships.\nYou will place:\n5 \"a\"s -- These a\'s will be your aircraft carrier.\n4 \"b\"s -- These b\'s will be your battleship.\n3 \"c\"s -- These c\'s will be your cruiser.\n3 \"s\"s -- These s\'s will be your submarine.\n2 \"d\"s -- These d\'s will be your destroyer.\n\nEach ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. No ships may share a cell.',
+	'Waiting on other players...'
 ]
+
+let database = firebase.database();
 
 startNewGameButton.onclick = chooseNewGame;
 joinGameButton.onclick = chooseJoinGame;
@@ -22,13 +33,49 @@ chooseSettingsForm.onSubmit = createGame;
 
 function chooseJoinGame() {
 	let gameId = window.prompt('Enter game ID:');
-	if (gameId === null) return;
-	if (gameId) {
-		//checks for gameID, but there is no data just now...
-		gameId = prompt('Invalid game ID, try again');
-	} else {
-		gameId = prompt('Invalid game ID, try again');
-	}
+	let games = [];
+
+	database.ref('games/').once('value')
+	.then(function(data) {
+
+		if (data.hasChild(gameId)) {
+			database.ref(`games/${gameId}/state/settings`).once('value')
+			.then(function(data) {
+				state.settings = data.val();
+			})
+			database.ref(`games/${gameId}/state/users`).once('value')
+			.then(function(data) {
+				if (data.numChildren() === parseFloat(state.settings.numberOfPlayers)) {
+					alert('This game is full');
+					return false;
+				} else {
+					thisUser = prompt('Choose a User ID:');
+					if (data.hasChild(thisUser)) {
+						thisUser = prompt('User ID taken, choose a different ID:')
+					}
+					initUser(thisUser);
+					database.ref(`games/${gameId}/state/users/${thisUser}`).set(state.users[thisUser]);
+					joinGame();
+				}
+			})
+		}
+	})
+
+}
+
+function joinGame() {
+	hide(joinOrNewGameButtons);
+	unhide(settingsDiv);
+	unhide(statusDiv);
+	statusDiv.innerHTML = statusStrs[0];
+
+	userNameElement.innerHTML = thisUser;
+	numberOfPlayersElement.innerHTML = state.settings.numberOfPlayers;
+	gameIdElement.innerHTML = state.settings.gameId;
+
+	ReactDOM.render(< Game state={ state }/>, root);
+
+	return false;
 }
 
 function chooseNewGame() {
@@ -41,9 +88,9 @@ function createGame(e) {
 	let id = e.form.choose_ID.value;
 	let nP = e.form.choose_num_of_players.value;
 	let bSize = e.form.choose_size.value;
-	let gameID = e.form.choose_game_name.value;
+	let gameId = e.form.choose_game_name.value;
 
-	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || gameID.length === 0) {
+	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || gameId.length === 0) {
 		window.alert('fail')
 		return false;
 	}
@@ -52,7 +99,7 @@ function createGame(e) {
 	unhide(settingsDiv);
 	unhide(statusDiv);
 	statusDiv.innerHTML = statusStrs[0];
-	setSettings(id, nP, bSize, gameID, e.form);
+	setSettings(id, nP, bSize, gameId, e.form);
 
 	ReactDOM.render(< Game state={ state }/>, root);
 
@@ -67,7 +114,7 @@ function unhide(element) {
 	element.classList.remove('hidden');
 }
 
-function setSettings(id, nP, bSize, gameID, form) {
+function setSettings(id, nP, bSize, gameId, form) {
 	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20) {
 		window.alert('fail')
 		return false;
@@ -75,7 +122,6 @@ function setSettings(id, nP, bSize, gameID, form) {
 
 	let settings = state.settings;
 
-	settings.thisUser = id;
 	userNameElement.innerHTML = id;
 	form.choose_ID.value = '';
 
@@ -83,12 +129,42 @@ function setSettings(id, nP, bSize, gameID, form) {
 	numberOfPlayersElement.innerHTML = nP;
 	form.choose_num_of_players.value = '';
 
-	settings.gameId = gameID;
-	gameIdElement.innerHTML = gameID;
+	settings.gameId = gameId;
+	gameIdElement.innerHTML = gameId;
 	form.choose_game_name.value = '';
 
 	settings.boardSize = parseFloat(bSize);
 	form.choose_size.value = '';
+
+	initUser(id);
+
+	database.ref('games/' + gameId).set({state});
+	database.ref('games/' + gameId + '/state/users/' + thisUser).set(state.users[thisUser]);
+
+}
+
+function initUser(id) {
+	thisUser = id;
+
+	state.users[`${thisUser}`] = {
+		ships: {
+			a: {max: 5, locs: [], o: ""},
+			b: {max: 4, locs: [], o: ""},
+			c: {max: 3, locs: [], o: ""},
+			s: {max: 3, locs: [], o: ""},
+			d: {max: 2, locs: [], o: ""}
+		},
+		shots: [],
+		completion: 0,
+		connected: true
+	}
+	let gameId = state.settings.gameId;
+
+
+	let connected = database.ref(`games/${gameId}/state/users/${id}/connected`);
+	connected.onDisconnect().set(false);
+
+	let user = database.ref(`games/${gameId}/state/users/${id}`);
 }
 
 class Cell extends React.Component {
@@ -260,7 +336,8 @@ class Game extends React.Component {
 	}
 
 	handleInput(target) {
-		let ships = state.ships;
+		let ships = state.users[thisUser].ships;
+		console.log(ships);
 		let col = target.attributes.col.nodeValue;
 		let row = parseFloat(target.attributes.row.nodeValue);
 		let ship = target.value.toLowerCase();
@@ -281,7 +358,7 @@ class Game extends React.Component {
 
 		ship = ships[ship];
 
-		if (!(goodPlacement(ship, col, row))) {
+		if (!(goodPlacement(ship, col, row, target.value.toLowerCase()))) {
 			target.value = "";
 			state.completion = numShipsPlaced()/5;
 			return false;
@@ -289,6 +366,7 @@ class Game extends React.Component {
 
 		ship.locs.push([col, row]);
 		state.completion = numShipsPlaced()/5;
+		database.ref(`games/${state.settings.gameId}/state/users/${thisUser}/ships`).set(state.users[thisUser].ships);
 	}
 
 	render() {
@@ -297,13 +375,13 @@ class Game extends React.Component {
 			otherBoards.push({key: i + 1})
 		}
 		let className;
-		if (state.completion < 1) className='hidden'
+		if (state.users[thisUser].completion < 1) className='hidden'
 		return (
 			<div>
 				< Board
 					handleInput={ this.handleInput }
 					key='0'
-					player={ state.settings.thisUser }
+					player={ thisUser }
 					ships={ state.ships }
 					shots={ state.shots }
 				/>
@@ -331,8 +409,10 @@ function addClass(className, col, row) {
 	return className;
 }
 
-function goodPlacement(ship, col, row) {
-	if (ship.locs.length === 0) return true;
+function goodPlacement(ship, col, row, shipName) {
+	if (ship.locs.length === 0) {
+		return true;
+	}
 	if (ship.locs.length === ship.max) {
 		alert('too many of this ship')
 		return false;
@@ -425,22 +505,4 @@ function checkPWMOneShip(ship, index) {
 
 function showBoards() {
 	ReactDOM.render(< Game state={ state }/>, root);
-}
-
-let state = {
-	settings: {
-		gameId: 'someGameID',
-		thisUser: '',
-		numberOfPlayers: 0,
-		boardSize: 0
-	},
-	ships: {
-		a: {max: 5, locs: [], o: ""},
-		b: {max: 4, locs: [], o: ""},
-		c: {max: 3, locs: [], o: ""},
-		s: {max: 3, locs: [], o: ""},
-		d: {max: 2, locs: [], o: ""}
-	},
-	shots: [],
-	completion: 0
 }
