@@ -45,11 +45,28 @@ function chooseJoinGame() {
 			})
 			database.ref(`games/${gameId}/state/users`).once('value')
 			.then(function(data) {
-				if (data.numChildren() === parseFloat(state.settings.numberOfPlayers)) {
+				let users = data.val();
+				thisUser = prompt('Choose a User ID:');
+
+				if (data.hasChild(thisUser) && !users[thisUser].connected) {
+					{/* rejoin logic: set connected to true, reset the disconnect listener */}
+					let connected = database.ref(`games/${gameId}/state/users/${thisUser}/connected`);
+					connected.set(true);
+					connected.onDisconnect().set(false);
+
+					{/* set user board */}
+					database.ref(`games/${gameId}/state/users/${thisUser}`).once('value').then(
+						function(user) {
+							state.users[thisUser] = user.val();
+							joinGame()
+						}
+					)
+
+				} else if (data.numChildren() === parseFloat(state.settings.numberOfPlayers)) {
 					alert('This game is full');
 					return false;
+
 				} else {
-					thisUser = prompt('Choose a User ID:');
 					if (data.hasChild(thisUser)) {
 						thisUser = prompt('User ID taken, choose a different ID:')
 					}
@@ -58,7 +75,11 @@ function chooseJoinGame() {
 					joinGame();
 				}
 			})
+		} else {
+			alert('no such game');
 		}
+
+
 	})
 
 }
@@ -148,13 +169,13 @@ function initUser(id) {
 
 	state.users[`${thisUser}`] = {
 		ships: {
-			a: {max: 5, locs: [], o: ""},
-			b: {max: 4, locs: [], o: ""},
-			c: {max: 3, locs: [], o: ""},
-			s: {max: 3, locs: [], o: ""},
-			d: {max: 2, locs: [], o: ""}
+			a: {max: 5, locs: [0], o: ''},
+			b: {max: 4, locs: [0], o: ''},
+			c: {max: 3, locs: [0], o: ''},
+			s: {max: 3, locs: [0], o: ''},
+			d: {max: 2, locs: [0], o: ''},
 		},
-		shots: [],
+		shots: [0],
 		completion: 0,
 		connected: true
 	}
@@ -163,8 +184,6 @@ function initUser(id) {
 
 	let connected = database.ref(`games/${gameId}/state/users/${id}/connected`);
 	connected.onDisconnect().set(false);
-
-	let user = database.ref(`games/${gameId}/state/users/${id}`);
 }
 
 class Cell extends React.Component {
@@ -180,15 +199,26 @@ class Cell extends React.Component {
 	render() {
 		let className = 'cell';
 		className = addClass(className, this.props.col, this.props.row);
+		let value = checkForShipHere(this.props.ships, this.props.col, this.props.row);
 		return (
 			<input
 				className={ className }
 				col={ this.props.col }
 				row={ this.props.row }
+				value={ value }
 				onChange={ this.handleChange }
 			/>
 		)
 	}
+}
+
+function checkForShipHere(s, c, r) {
+	for (let ship in s) {
+		for (let loc in s[ship].locs) {
+			if (s[ship].locs[loc][0] === c && s[ship].locs[loc][1] === r) return ship;
+		}
+	}
+	return '';
 }
 
 class HeaderCell extends React.Component {
@@ -229,6 +259,8 @@ class Row extends React.Component {
 						key={ cell }
 						col={ cell }
 						row={ this.props.row }
+						ships={ this.props.ships }
+						shots={ this.props.shots }
 						handleChange={ this.handleChange }
 					/>
 				) }
@@ -272,9 +304,20 @@ class Board extends React.Component {
 
 	render() {
 		let rows = [];
+		let ships = [];
 		for (let i = 0; i < state.settings.boardSize; i++) {
-			rows.push( i )
+			rows.push( i );
+
+			for (let ship in this.state.ships) {
+				for (let loc in this.state.ships[ship].locs) {
+					let thisShipLoc = this.state.ships[ship].locs[loc];
+					if (thisShipLoc[0] === String.fromCharCode(i + 65)) {
+						ships[i] = "check"
+					}
+				}
+			}
 		}
+
 		let className='board';
 		if (this.props.className) {
 			className += " "+this.props.className;
@@ -288,6 +331,8 @@ class Board extends React.Component {
 						<Row
 							key={ row }
 							row={ row + 1 }
+							ships={ this.props.ships }
+							shots={ this.props.shots }
 							handleInput={ this.handleInput }
 						/>
 					) }
@@ -337,7 +382,6 @@ class Game extends React.Component {
 
 	handleInput(target) {
 		let ships = state.users[thisUser].ships;
-		console.log(ships);
 		let col = target.attributes.col.nodeValue;
 		let row = parseFloat(target.attributes.row.nodeValue);
 		let ship = target.value.toLowerCase();
@@ -365,8 +409,10 @@ class Game extends React.Component {
 		}
 
 		ship.locs.push([col, row]);
-		state.completion = numShipsPlaced()/5;
-		database.ref(`games/${state.settings.gameId}/state/users/${thisUser}/ships`).set(state.users[thisUser].ships);
+		state.users[thisUser].completion = numShipsPlaced()/5;
+		database.ref(`games/${state.settings.gameId}/state/users/${thisUser}`).set(state.users[thisUser]);
+
+		console.log(this.state);
 	}
 
 	render() {
@@ -382,8 +428,8 @@ class Game extends React.Component {
 					handleInput={ this.handleInput }
 					key='0'
 					player={ thisUser }
-					ships={ state.ships }
-					shots={ state.shots }
+					ships={ this.state.users[thisUser].ships }
+					shots={ this.state.users[thisUser].shots }
 				/>
 				{ otherBoards.map((board) =>
 					< Board
@@ -391,8 +437,8 @@ class Game extends React.Component {
 						key={ board.key }
 						className={ className }
 						player='unknown'
-						ships={ state.ships }
-						shots={ state.shots }
+						ships={ this.state.users[thisUser].ships }
+						shots={ this.state.users[thisUser].shots }
 					/>
 				) }
 				< SubmitButton
@@ -410,7 +456,8 @@ function addClass(className, col, row) {
 }
 
 function goodPlacement(ship, col, row, shipName) {
-	if (ship.locs.length === 0) {
+	if (ship.locs[0] === 0) {
+		ship.locs.pop();
 		return true;
 	}
 	if (ship.locs.length === ship.max) {
@@ -455,8 +502,8 @@ function removeLoc(col, row) {
 
 function numShipsPlaced() {
 	let num = 0;
-	for (let ship in state.ships) {
-		if (state.ships[ship].max === state.ships[ship].locs.length) {
+	for (let ship in state.users[thisUser].ships) {
+		if (state.users[thisUser].ships[ship].max === state.users[thisUser].ships[ship].locs.length) {
 			num ++;
 		}
 	}
