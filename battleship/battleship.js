@@ -11,9 +11,10 @@ let chooseConfigDiv = doc.getElementById('chooseConfig');
 let configDiv = doc.getElementById('config');
 let statusDiv = doc.getElementById('currentStatus');
 let database = firebase.database();
+let notDoneUsers = [];
 let statusStrs = [
-	'<b>INSTRUCTIONS:</b>\nNow you will place your ships.\nYou will place:\n5 \"a\"s -- These a\'s will be your aircraft carrier.\n4 \"b\"s -- These b\'s will be your battleship.\n3 \"c\"s -- These c\'s will be your cruiser.\n3 \"s\"s -- These s\'s will be your submarine.\n2 \"d\"s -- These d\'s will be your destroyer.\n\nEach ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. No ships may share a cell.',
-	'Waiting on other users...'
+	'<b>INSTRUCTIONS:</b>\nNow you will place your ships.\nYou will place:\n5 \"a\"s -- These a\'s will be your aircraft carrier.\n4 \"b\"s -- These b\'s will be your battleship.\n3 \"c\"s -- These c\'s will be your cruiser.\n3 \"s\"s -- These s\'s will be your submarine.\n2 \"d\"s -- These d\'s will be your destroyer.\n\nEach ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. (Currently you can actually just cross any ships you want...) No ships may share a cell.',
+	`Waiting on ${notDoneUsers.join(', ')}`
 ]
 let thisUser = '';
 let state = {
@@ -24,7 +25,7 @@ let state = {
 			eventually has a list of each user:
 			userName: {
 				connected: true/false,
-				completed: 0-1,
+				completed: 0-1
 			}
 			*/
 		},
@@ -80,7 +81,6 @@ function createGame(e) {
 	setConfig(userId, nP, bSize, gameId, e.form);
 	statusDiv.innerHTML = statusStrs[0];
 
-	ReactDOM.render(< Game state={ state }/>, root);
 
 	setUpdate();
 
@@ -218,6 +218,7 @@ function initUser(userId, gameId) {
 
 	database.ref(`${gameId}/${thisUser}`).set(state[thisUser]);
 	database.ref(`${gameId}/config/users/${thisUser}`).set(state.config.users[thisUser]);
+
 	let connected = database.ref(`${gameId}/config/users/${thisUser}/connected`);
 	connected.onDisconnect().set(false);
 }
@@ -234,6 +235,9 @@ class Cell extends React.Component {
 
 	render() {
 		let className = 'cell';
+		if (this.props.className) {
+			className += ` ${this.props.className}`
+		}
 		className = addClass(className, this.props.col, this.props.row);
 		let value = checkForShipHere(this.props.ships, this.props.col, this.props.row);
 		return (
@@ -278,6 +282,10 @@ class Row extends React.Component {
 		for (let i = 0; i < this.props.rowLength; i++) {
 			row.push(String.fromCharCode(i + 65))
 		}
+		let className = '';
+		if (this.props.className) {
+			className += ` ${this.props.className}`
+		}
 		return (
 			<div className = 'row'>
 				<HeaderCell label={ this.props.row } className='rowHeaderCell'/>
@@ -289,6 +297,7 @@ class Row extends React.Component {
 						ships={ this.props.ships }
 						shots={ this.props.shots }
 						handleChange={ this.handleChange }
+						className={ className }
 					/>
 				) }
 				<HeaderCell label={ this.props.row } className='rowHeaderCell'/>
@@ -320,7 +329,8 @@ class Board extends React.Component {
 		super(props);
 		this.handleInput = this.handleInput.bind(this);
 		this.state = {
-			ships: this.props.ships
+			ships: this.props.ships,
+			shots: this.props.shots
 		}
 	}
 
@@ -330,27 +340,18 @@ class Board extends React.Component {
 
 	render() {
 		let rows = [];
-		let ships = [];
 		for (let i = 0; i < this.props.boardSize; i++) {
 			rows.push( i );
-
-			for (let ship in this.state.ships) {
-				for (let loc in this.state.ships[ship].locs) {
-					let thisShipLoc = this.state.ships[ship].locs[loc];
-					if (thisShipLoc[0] === String.fromCharCode(i + 65)) {
-						ships[i] = "check"
-					}
-				}
-			}
 		}
 
-		let className='board';
+		let className='';
 		if (this.props.className) {
-			className += " "+this.props.className;
+			className += `${this.props.className}`;
 		}
+
 		return (
 			<div>
-				<div className={ className }>
+				<div className='board'>
 					<p>{ this.props.user }'s board</p>
 					<HeaderRow rowLength={ this.props.boardSize }/>
 					{ rows.map((row) =>
@@ -361,9 +362,10 @@ class Board extends React.Component {
 							ships={ this.props.ships }
 							shots={ this.props.shots }
 							handleInput={ this.handleInput }
+							className={ className }
 						/>
 					) }
-					<HeaderRow/>
+					<HeaderRow rowLength={ this.props.boardSize }/>
 				</div>
 			</div>
 		)
@@ -399,12 +401,14 @@ class Game extends React.Component {
 	}
 
 	handleSubmit() {
-		if (this.state.completed !== 1) {
+
+		let completed = checkCompletion(this.state.ships);
+		if (completed < 1) {
 			alert('you have more ships to place!')
 		} else {
 			let confirm = window.confirm('are you happy with your ship placement?');
 			if (confirm) {
-				statusDiv.innerHTML = statusStrs[1];
+				statusDiv.innerHTML = 'Waiting on:\n' + notDoneUsers.join('\n');
 			}
 		}
 	}
@@ -412,23 +416,29 @@ class Game extends React.Component {
 	handleInput(target) {
 
 		let thisCellValue = target.value.toLowerCase();
-		if (!(thisCellValue in this.state.ships)) {
-			//need a removeLoc function that works
+		let col = target.attributes.col.nodeValue;
+		let row = parseFloat(target.attributes.row.nodeValue);
+		if (!this.state.ships[thisCellValue] && thisCellValue.length > 0) this.state.ships[thisCellValue] = [];
+		let ship = this.state.ships[thisCellValue];
+
+		if (thisCellValue.length === 0) {
+			let newShips = removeLoc(col, row, this.state.ships);
+			this.setState({
+				ships: newShips
+			});
+
+			database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
+			updateCompleted(this.state.ships);
+
+			return false
+		};
+
+		if (!(thisCellValue in this.props.state.config.shipMax)) {
 			alert('must be a ship letter (a, b, c, s, or d)');
 			target.value = "";
 			return false;
 		}
 
-		//this doesn't work
-		if (thisCellValue.length === 0) {
-			removeLoc(col, row, ships);
-			state.completion = numShipsPlaced()/5;
-			return false
-		};
-
-		let col = target.attributes.col.nodeValue;
-		let row = parseFloat(target.attributes.row.nodeValue);
-		let ship = this.state.ships[thisCellValue];
 		let newShips = this.state.ships;
 
 		if (!goodPlacement(ship, col, row, thisCellValue)) {
@@ -438,17 +448,18 @@ class Game extends React.Component {
 
 		if (newShips[thisCellValue][0] === 0) newShips[thisCellValue].pop();
 
-		newShips[thisCellValue].push([col, row])
+		newShips[thisCellValue].push([col, row]);
 
-		this.setState({
-			ships: newShips
-		})
+		this.setState({ships: newShips});
+		database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
+		updateCompleted(this.state.ships);
 	}
 
 	render() {
 		let users = [];
+
 		for (let user in this.props.state.config.users) {
-			if (!this.props[user])
+			if (!this.props.state[user])
 			users.push(user);
 		}
 		return (
@@ -460,32 +471,33 @@ class Game extends React.Component {
 					user={ thisUser }
 					ships={ this.state.ships }
 				/>
+				< SubmitButton
+					handleClick={ this.handleSubmit }
+				/>
 				{ users.map(user =>
 					< Board
+						className='shaded'
 						boardSize={ this.props.state.config.boardSize }
 						key={ user }
 						user={ user }
 						shots={ this.state.shots }
 					/>
 				)}
-				< SubmitButton
-					handleClick={ this.handleSubmit }
-				/>
 			</div>
 		)
 	}
 }
 
 function removeLoc(col, row, ships) {
-	console.log(ships);
+
 	for (let ship in ships) {
-		ships[ship].locs.forEach(function(loc, i) {
-			if (loc[0] === col && loc[1] === row) {
-				ships[ship].locs.splice(i, 1);
+		for (let i = 0; i < ships[ship].length; i++) {
+			if (ships[ship][i][0] === col && ships[ship][i][1] === row) {
+				ships[ship].splice(i, 1);
 			}
-		})
+		}
 	}
-	console.log(ships);
+	return(ships);
 }
 
 function addClass(className, col, row) {
@@ -528,14 +540,20 @@ function isAdjacent(i1, i2) {
 	return o;
 }
 
-function numShipsPlaced() {
+function checkCompletion() {
 	let num = 0;
 	for (let ship in state[thisUser].ships) {
 		if (state.config.shipMax[ship] === state[thisUser].ships[ship].length) {
 			num ++;
 		}
 	}
-	return num;
+	return num/5;
+}
+
+function updateCompleted(ships) {
+	let completed = checkCompletion(ships);
+	state.config.users[thisUser].completed = completed;
+	database.ref(`${state.config.gameId}/config/users/${thisUser}/completed`).set(completed);
 }
 
 function checkPWOneShip(ship, index) {
@@ -603,7 +621,6 @@ function checkForShipHere(s, c, r) {
 	return '';
 }
 
-//this doesn't work yet... it's not re-rendering...
 function setUpdate() {
 	database.ref(`${state.config.gameId}/config`).on('value', function(dataSnapshot) {
 		let localState = {
@@ -614,6 +631,14 @@ function setUpdate() {
 		let playersElement = doc.getElementById('players');
 		let users = Object.keys(localState.config.users);
 		playersElement.innerHTML = users.join(', ');
+
+		for (let user of users) {
+			if (localState.config.users[user].completed < 1 && notDoneUsers.indexOf(user) === -1) {
+				notDoneUsers.push(user);
+			} else if (localState.config.users[user].completed === 1 && notDoneUsers.indexOf(user) > -1) {
+				notDoneUsers.splice(notDoneUsers.indexOf(user), 1)
+			}
+		}
 
 		ReactDOM.render(< Game state={ localState }/>, root);
 	})
