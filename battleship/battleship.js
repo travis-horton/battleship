@@ -70,7 +70,17 @@ function createGame(e) {
 	let bSize = e.form.choose_size.value;
 	let gameId = e.form.choose_game_name.value;
 
-	if (userId.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || gameId.length === 0) {
+	if (configError(userId) || userId.length === 0 || userId.length > 20) {
+		window.alert('fail -- userId')
+		return false;
+	}
+
+	if (configError(gameId) || gameId.length === 0 || gameId.length > 20) {
+		window.alert('fail -- gameId')
+		return false;
+	}
+
+	if (nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || nP%1 !== 0 || bSize%1 !== 0) {
 		window.alert('fail')
 		return false;
 	}
@@ -642,4 +652,13 @@ function setUpdate() {
 
 		ReactDOM.render(< Game state={ localState }/>, root);
 	})
+}
+
+function configError(item) {
+	var regx = /^[A-Za-z0-9]+$/;
+   if (!regx.test(item)) {
+		return true;
+	}
+
+	return false;
 }

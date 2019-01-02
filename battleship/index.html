@@ -39,9 +39,16 @@
 
 	<div id="chooseConfig" class="hidden">
 		<form id="chooseConfig">
+			<p>limit length to 20 characters</p>
+			<p>alphanumeric only</p>
 			<div>
 				<label for="choose_ID">user name:</label>
-				<input type="text" id="choose_ID" name="choose_ID">
+				<input
+					type="text"
+					id="choose_ID"
+					name="choose_ID"
+					autocomplete="off"
+				>
 			</div>
 			<div>
 				<label for="choose_size">board size:</label>
@@ -50,6 +57,7 @@
 					name="choose_size"
 					min="5" max="20"
 					placeholder="(10-20)"
+					autocomplete="off"
 				>
 			</div>
 			<div>
@@ -60,11 +68,16 @@
 					min="2"
 					max="4"
 					placeholder="(2-4)"
+					autocomplete="off"
 				>
 			</div>
 			<div>
 				<label for="choose_game_name">game id:</label>
-				<input type="text" name="choose_game_name">
+				<input
+					type="text"
+					name="choose_game_name"
+					autocomplete="off"
+				>
 			</div>
 			<div class="button">
 				<button type="submit" onclick="return createGame(this)">submit</button>
