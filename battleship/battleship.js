@@ -20,7 +20,8 @@ let state = {
 	config: {
 		gameId: '',
 		users: {
-			/*   eventually looks like this for each user:
+			/*
+			eventually has a list of each user:
 			userName: {
 				connected: true/false,
 				completed: 0-1,
@@ -28,7 +29,7 @@ let state = {
 			*/
 		},
 		boardSize: 0,
-		shipMaxes: {
+		shipMax: {
 			a: 5,
 			b: 4,
 			c: 3,
@@ -37,7 +38,8 @@ let state = {
 		},
 		maxUsers: ''
 	}
-	/*   eventually looks like this:
+	/*
+	eventually the user looks like this:
 	${thisUser}: {
 		ships: {
 			a: [0],
@@ -390,11 +392,14 @@ class Game extends React.Component {
 		super(props);
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.handleInput = this.handleInput.bind(this);
-		this.state = props.state;
+		this.state = {
+			ships: this.props.state[thisUser].ships,
+			shots: this.props.state[thisUser].shots
+		}
 	}
 
 	handleSubmit() {
-		if (this.state.completion !== 1) {
+		if (this.state.completed !== 1) {
 			alert('you have more ships to place!')
 		} else {
 			let confirm = window.confirm('are you happy with your ship placement?');
@@ -405,58 +410,62 @@ class Game extends React.Component {
 	}
 
 	handleInput(target) {
-		let ships = this.state[thisUser].ships;
-		let col = target.attributes.col.nodeValue;
-		let row = parseFloat(target.attributes.row.nodeValue);
-		let ship = target.value.toLowerCase();
 
-		if (target.value.length === 0) {
-			removeLoc(col, row);
+		let thisCellValue = target.value.toLowerCase();
+		if (!(thisCellValue in this.state.ships)) {
+			//need a removeLoc function that works
+			alert('must be a ship letter (a, b, c, s, or d)');
+			target.value = "";
+			return false;
+		}
+
+		//this doesn't work
+		if (thisCellValue.length === 0) {
+			removeLoc(col, row, ships);
 			state.completion = numShipsPlaced()/5;
 			return false
 		};
 
-		if (!(target.value in ships)) {
-			alert('must be a ship letter (a, b, c, s, or d)');
-			removeLoc(col, row);
-			state.completion = numShipsPlaced()/5;
+		let col = target.attributes.col.nodeValue;
+		let row = parseFloat(target.attributes.row.nodeValue);
+		let ship = this.state.ships[thisCellValue];
+		let newShips = this.state.ships;
+
+		if (!goodPlacement(ship, col, row, thisCellValue)) {
 			target.value = "";
 			return false;
 		}
 
-		ship = ships[ship];
+		if (newShips[thisCellValue][0] === 0) newShips[thisCellValue].pop();
 
-		if (!(goodPlacement(ship, col, row, target.value.toLowerCase()))) {
-			target.value = "";
-			state.completion = numShipsPlaced()/5;
-			return false;
-		}
-		
-		this.state.users[thisUser].completion = numShipsPlaced()/5;
-		database.ref(`${this.state.config.gameId}/config/users/${thisUser}`).set(this.state.users[thisUser]);
+		newShips[thisCellValue].push([col, row])
+
+		this.setState({
+			ships: newShips
+		})
 	}
 
 	render() {
 		let users = [];
-		for (let user in this.state.config.users) {
-			if (!this.state[user])
+		for (let user in this.props.state.config.users) {
+			if (!this.props[user])
 			users.push(user);
 		}
 		return (
 			<div>
 				< Board
-					boardSize={ this.state.config.boardSize }
+					boardSize={ this.props.state.config.boardSize }
 					handleInput={ this.handleInput }
 					key='0'
 					user={ thisUser }
-					ships={ this.state[thisUser].ships }
+					ships={ this.state.ships }
 				/>
 				{ users.map(user =>
 					< Board
-						boardSize={ this.state.config.boardSize }
+						boardSize={ this.props.state.config.boardSize }
 						key={ user }
 						user={ user }
-						shots={ this.state[thisUser].shots }
+						shots={ this.state.shots }
 					/>
 				)}
 				< SubmitButton
@@ -467,6 +476,18 @@ class Game extends React.Component {
 	}
 }
 
+function removeLoc(col, row, ships) {
+	console.log(ships);
+	for (let ship in ships) {
+		ships[ship].locs.forEach(function(loc, i) {
+			if (loc[0] === col && loc[1] === row) {
+				ships[ship].locs.splice(i, 1);
+			}
+		})
+	}
+	console.log(ships);
+}
+
 function addClass(className, col, row) {
 	if (col === String.fromCharCode(parseFloat(state.config.boardSize) + 64)) className += ' rightColumnCell';
 	if (row == state.config.boardSize) className += ' bottomRowCell';
@@ -474,11 +495,11 @@ function addClass(className, col, row) {
 }
 
 function goodPlacement(ship, col, row, shipName) {
-	if (ship.locs[0] === 0) {
-		ship.locs.pop();
+	if (ship[0] === 0) {
 		return true;
 	}
-	if (ship.locs.length === ship.max) {
+
+	if (ship.length === state.config.shipMax[shipName]) {
 		alert('too many of this ship')
 		return false;
 	}
@@ -487,12 +508,12 @@ function goodPlacement(ship, col, row, shipName) {
 	let row0 = row - 1;
 	let index = col0 + (row0 * state.config.boardSize);
 
-	if (ship.locs.length === 1) {
+	if (ship.length === 1) {
 		//check adjacency
 		return checkPWOneShip(ship, index);
 	}
 
-	if (ship.locs.length > 1) {
+	if (ship.length > 1) {
 		return checkPWMOneShip(ship, index);
 	}
 
@@ -507,21 +528,10 @@ function isAdjacent(i1, i2) {
 	return o;
 }
 
-function removeLoc(col, row) {
-	let ships = state.ships;
-	for (let ship in ships) {
-		ships[ship].locs.forEach(function(loc, i) {
-			if (loc[0] === col && loc[1] === row) {
-				ships[ship].locs.splice(i, 1);
-			}
-		})
-	}
-}
-
 function numShipsPlaced() {
 	let num = 0;
-	for (let ship in state.users[thisUser].ships) {
-		if (state.users[thisUser].ships[ship].max === state.users[thisUser].ships[ship].locs.length) {
+	for (let ship in state[thisUser].ships) {
+		if (state.config.shipMax[ship] === state[thisUser].ships[ship].length) {
 			num ++;
 		}
 	}
@@ -529,8 +539,8 @@ function numShipsPlaced() {
 }
 
 function checkPWOneShip(ship, index) {
-	let col1 = ship.locs[0][0].charCodeAt(0) - 65;
-	let row1 = ship.locs[0][1] - 1;
+	let col1 = ship[0][0].charCodeAt(0) - 65;
+	let row1 = ship[0][1] - 1;
 	let index1 = col1 + (row1 * state.config.boardSize);
 	let o = isAdjacent(index, index1);
 
@@ -538,21 +548,28 @@ function checkPWOneShip(ship, index) {
 		alert('ship is not adjacent')
 		return false;
 	} else {
-		ship.o = o;
 		return true;
 	}
 }
 
 function checkPWMOneShip(ship, index) {
-	let o = undefined;
-	for (let i = 0; i < ship.locs.length; i++) {
-		let loc = ship.locs[i];
-		let col1 = loc[0].charCodeAt(0) - 65;
-		let row1 = loc[1] - 1;
-		let index1 = col1 + (row1 * state.config.boardSize);
-		o = isAdjacent(index, index1);
-		if (o !== undefined) {
-			if (o === ship.o) {
+	//get orientation of ship
+	let col1 = ship[0][0].charCodeAt(0) - 65;
+	let row1 = ship[0][1] - 1;
+	let index1 = col1 + (row1 * state.config.boardSize);
+	let col2 = ship[1][0].charCodeAt(0) - 65;
+	let row2 = ship[1][1] - 1;
+	let index2 = col2 + (row2 * state.config.boardSize);
+	let shipO = isAdjacent(index2, index1);
+
+	for (let i = 0; i < ship.length; i++) {
+		let loc = ship[i];
+		let col = loc[0].charCodeAt(0) - 65;
+		let row = loc[1] - 1;
+		let indexHere = col + (row * state.config.boardSize);
+		let thisO = isAdjacent(index, indexHere);
+		if (thisO !== undefined) {
+			if (thisO === shipO) {
 				break;
 			} else {
 				alert('ship is not in line');
@@ -560,7 +577,7 @@ function checkPWMOneShip(ship, index) {
 			}
 
 		}
-		if (i === ship.locs.length - 1) {
+		if (i === ship.length - 1) {
 			alert('ship is not adjacent')
 			return false;
 		}
@@ -577,9 +594,10 @@ function unhide(element) {
 }
 
 function checkForShipHere(s, c, r) {
+
 	for (let ship in s) {
-		for (let loc in s[ship].locs) {
-			if (s[ship].locs[loc][0] === c && s[ship].locs[loc][1] === r) return ship;
+		for (let loc in s[ship]) {
+			if (s[ship][loc][0] === c && s[ship][loc][1] === r) return ship;
 		}
 	}
 	return '';
