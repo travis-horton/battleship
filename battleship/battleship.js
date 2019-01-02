@@ -1,188 +1,222 @@
+/*
+	in the middle of refactoring--changing the nature of the state object and changing how orientation of ships is determined...(needs to be done when needed, not stored)
+*/
+
 let doc = document;
 let root = doc.getElementById('root');
 let startNewGameButton = doc.getElementById('new');
 let joinGameButton = doc.getElementById('join');
 let joinOrNewGameButtons = doc.getElementById('join_or_start');
-let chooseSettingsDiv = doc.getElementById('chooseSettings');
-let settingsDiv = doc.getElementById('settings');
-let gameIdElement = doc.getElementById('game_id');
-let userNameElement = doc.getElementById('user_name');
-let numberOfPlayersElement = doc.getElementById('num_players');
-let chooseSettingsForm = doc.getElementById('chooseSettings');
+let chooseConfigDiv = doc.getElementById('chooseConfig');
+let configDiv = doc.getElementById('config');
 let statusDiv = doc.getElementById('currentStatus');
-let state = {
-	settings: {
-		gameId: 'someGameID',
-		numberOfPlayers: 0,
-		boardSize: 0
-	},
-	users: {}
-}
-let thisUser = '';
-
+let database = firebase.database();
 let statusStrs = [
 	'<b>INSTRUCTIONS:</b>\nNow you will place your ships.\nYou will place:\n5 \"a\"s -- These a\'s will be your aircraft carrier.\n4 \"b\"s -- These b\'s will be your battleship.\n3 \"c\"s -- These c\'s will be your cruiser.\n3 \"s\"s -- These s\'s will be your submarine.\n2 \"d\"s -- These d\'s will be your destroyer.\n\nEach ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. No ships may share a cell.',
-	'Waiting on other players...'
+	'Waiting on other users...'
 ]
-
-let database = firebase.database();
+let thisUser = '';
+let state = {
+	config: {
+		gameId: '',
+		users: {
+			/*   eventually looks like this for each user:
+			userName: {
+				connected: true/false,
+				completed: 0-1,
+			}
+			*/
+		},
+		boardSize: 0,
+		shipMaxes: {
+			a: 5,
+			b: 4,
+			c: 3,
+			s: 3,
+			d: 2
+		},
+		maxUsers: ''
+	}
+	/*   eventually looks like this:
+	${thisUser}: {
+		ships: {
+			a: [0],
+			b: [0],
+			c: [0],
+			s: [0],
+			d: [0]
+		},
+		shots: [0],
+	}
+	*/
+}
 
 startNewGameButton.onclick = chooseNewGame;
+
+function chooseNewGame() {
+	hide(joinOrNewGameButtons);
+	unhide(chooseConfigDiv);
+	doc.getElementById('choose_ID').focus();
+}
+
+chooseConfigDiv.onSubmit = createGame;
+
+function createGame(e) {
+	let userId = e.form.choose_ID.value;
+	let nP = e.form.choose_num_of_users.value;
+	let bSize = e.form.choose_size.value;
+	let gameId = e.form.choose_game_name.value;
+
+	if (userId.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || gameId.length === 0) {
+		window.alert('fail')
+		return false;
+	}
+
+	hide(chooseConfigDiv);
+	unhide(configDiv);
+	unhide(statusDiv);
+	setConfig(userId, nP, bSize, gameId, e.form);
+	statusDiv.innerHTML = statusStrs[0];
+
+	ReactDOM.render(< Game state={ state }/>, root);
+
+	setUpdate();
+
+	return false;
+};
+
+function setConfig(userId, nP, bSize, gameId, form) {
+
+	let gameIdElement = doc.getElementById('game_id');
+	let userNameElement = doc.getElementById('user_name');
+	let numberOfUsersElement = doc.getElementById('num_users');
+	let playersElement = doc.getElementById('players');
+	let config = state.config;
+
+	config.gameId = gameId;
+	gameIdElement.innerHTML = gameId;
+
+	config.maxUsers = nP;
+	numberOfUsersElement.innerHTML = nP;
+
+	config.boardSize = parseFloat(bSize);
+
+	initUser(userId, gameId);
+	userNameElement.innerHTML = thisUser;
+
+	let users = Object.keys(state.config.users);
+	playersElement.innerHTML = users.join(', ');
+
+	database.ref(gameId + '/config/').set(state.config)
+}
+
 joinGameButton.onclick = chooseJoinGame;
-chooseSettingsForm.onSubmit = createGame;
 
 function chooseJoinGame() {
 	let gameId = window.prompt('Enter game ID:');
-	let games = [];
 
-	database.ref('games/').once('value')
-	.then(function(data) {
+	database.ref().once('value')
+	.then(function(gamesData) {
+		if (!gamesData.hasChild(gameId)) {
+			alert('no such game');
+			return false;
+		};
 
-		if (data.hasChild(gameId)) {
-			database.ref(`games/${gameId}/state/settings`).once('value')
-			.then(function(data) {
-				state.settings = data.val();
-			})
-			database.ref(`games/${gameId}/state/users`).once('value')
-			.then(function(data) {
-				let users = data.val();
+
+		database.ref(`${gameId}/config`).once('value')
+		.then(function(configData) {
+			state.config = configData.val();
+
+			database.ref(`${gameId}/config/users`).once('value')
+			.then(function(usersData) {
+				let users = usersData.val();
 				thisUser = prompt('Choose a User ID:');
 
-				if (data.hasChild(thisUser) && !users[thisUser].connected) {
-					{/* rejoin logic: set connected to true, reset the disconnect listener */}
-					let connected = database.ref(`games/${gameId}/state/users/${thisUser}/connected`);
-					connected.set(true);
-					connected.onDisconnect().set(false);
+				if (usersData.hasChild(thisUser)) {
+					if (!users[thisUser].connected) {
+						{/* rejoin logic: set connected to true, reset the disconnected listener */}
+						let connected = database.ref(`${gameId}/config/users/${thisUser}/connected`);
+						connected.set(true);
+						connected.onDisconnect().set(false);
 
-					{/* set user board */}
-					database.ref(`games/${gameId}/state/users/${thisUser}`).once('value').then(
-						function(user) {
-							state.users[thisUser] = user.val();
-							joinGame()
-						}
-					)
+						{/* set user board */}
+						database.ref(`${gameId}/${thisUser}`).once('value').then(
+							function(user) {
+								state[thisUser] = user.val();
+								joinGame();
+							}
+						)
 
-				} else if (data.numChildren() === parseFloat(state.settings.numberOfPlayers)) {
+					} else {
+						alert('that user is already connected');
+						return false;
+					}
+
+				} else if (usersData.numChildren() >= parseFloat(state.config.maxUsers)) {
 					alert('This game is full');
 					return false;
 
 				} else {
-					if (data.hasChild(thisUser)) {
+					if (usersData.hasChild(thisUser)) {
 						thisUser = prompt('User ID taken, choose a different ID:')
 					}
-					initUser(thisUser);
-					database.ref(`games/${gameId}/state/users/${thisUser}`).set(state.users[thisUser]);
+					initUser(thisUser, gameId);
 					joinGame();
 				}
 			})
-		} else {
-			alert('no such game');
-		}
-
-
+		})
 	})
 
 }
 
 function joinGame() {
 	hide(joinOrNewGameButtons);
-	unhide(settingsDiv);
+	unhide(configDiv);
 	unhide(statusDiv);
+
+	let gameIdElement = doc.getElementById('game_id');
+	let userNameElement = doc.getElementById('user_name');
+	let numberOfUsersElement = doc.getElementById('num_users');
+
 	statusDiv.innerHTML = statusStrs[0];
 
 	userNameElement.innerHTML = thisUser;
-	numberOfPlayersElement.innerHTML = state.settings.numberOfPlayers;
-	gameIdElement.innerHTML = state.settings.gameId;
+	numberOfUsersElement.innerHTML = state.config.maxUsers;
+	gameIdElement.innerHTML = state.config.gameId;
 
 	ReactDOM.render(< Game state={ state }/>, root);
+
+	setUpdate();
+
+	let playersElement = doc.getElementById('players');
+	let users = Object.keys(state.config.users);
+	playersElement.innerHTML = users.join(', ');
 
 	return false;
 }
 
-function chooseNewGame() {
-	hide(joinOrNewGameButtons);
-	unhide(chooseSettingsDiv);
-	doc.getElementById('choose_ID').focus();
-}
+function initUser(userId, gameId) {
+	thisUser = userId;
 
-function createGame(e) {
-	let id = e.form.choose_ID.value;
-	let nP = e.form.choose_num_of_players.value;
-	let bSize = e.form.choose_size.value;
-	let gameId = e.form.choose_game_name.value;
-
-	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || gameId.length === 0) {
-		window.alert('fail')
-		return false;
-	}
-
-	hide(chooseSettingsDiv);
-	unhide(settingsDiv);
-	unhide(statusDiv);
-	statusDiv.innerHTML = statusStrs[0];
-	setSettings(id, nP, bSize, gameId, e.form);
-
-	ReactDOM.render(< Game state={ state }/>, root);
-
-	return false;
-};
-
-function hide(element) {
-	element.classList.add('hidden');
-}
-
-function unhide(element) {
-	element.classList.remove('hidden');
-}
-
-function setSettings(id, nP, bSize, gameId, form) {
-	if (id.length === 0 || nP < 2 || nP > 4 || bSize < 10 || bSize > 20) {
-		window.alert('fail')
-		return false;
-	}
-
-	let settings = state.settings;
-
-	userNameElement.innerHTML = id;
-	form.choose_ID.value = '';
-
-	settings.numberOfPlayers = nP;
-	numberOfPlayersElement.innerHTML = nP;
-	form.choose_num_of_players.value = '';
-
-	settings.gameId = gameId;
-	gameIdElement.innerHTML = gameId;
-	form.choose_game_name.value = '';
-
-	settings.boardSize = parseFloat(bSize);
-	form.choose_size.value = '';
-
-	initUser(id);
-
-	database.ref('games/' + gameId).set({state});
-	database.ref('games/' + gameId + '/state/users/' + thisUser).set(state.users[thisUser]);
-
-}
-
-function initUser(id) {
-	thisUser = id;
-
-	state.users[`${thisUser}`] = {
+	state[thisUser] = {
 		ships: {
-			a: {max: 5, locs: [0], o: ''},
-			b: {max: 4, locs: [0], o: ''},
-			c: {max: 3, locs: [0], o: ''},
-			s: {max: 3, locs: [0], o: ''},
-			d: {max: 2, locs: [0], o: ''},
+			a: [0],
+			b: [0],
+			c: [0],
+			s: [0],
+			d: [0]
 		},
-		shots: [0],
-		completion: 0,
-		connected: true
+		shots: [0]
 	}
-	let gameId = state.settings.gameId;
 
+	state.config.users[thisUser] = {
+		connected: true,
+		completed: 0
+	}
 
-	let connected = database.ref(`games/${gameId}/state/users/${id}/connected`);
+	database.ref(`${gameId}/${thisUser}`).set(state[thisUser]);
+	database.ref(`${gameId}/config/users/${thisUser}`).set(state.config.users[thisUser]);
+	let connected = database.ref(`${gameId}/config/users/${thisUser}/connected`);
 	connected.onDisconnect().set(false);
 }
 
@@ -212,15 +246,6 @@ class Cell extends React.Component {
 	}
 }
 
-function checkForShipHere(s, c, r) {
-	for (let ship in s) {
-		for (let loc in s[ship].locs) {
-			if (s[ship].locs[loc][0] === c && s[ship].locs[loc][1] === r) return ship;
-		}
-	}
-	return '';
-}
-
 class HeaderCell extends React.Component {
 	constructor(props) {
 		super(props);
@@ -248,7 +273,7 @@ class Row extends React.Component {
 
 	render() {
 		let row = [];
-		for (let i = 0; i < state.settings.boardSize; i++) {
+		for (let i = 0; i < this.props.rowLength; i++) {
 			row.push(String.fromCharCode(i + 65))
 		}
 		return (
@@ -273,7 +298,7 @@ class Row extends React.Component {
 class HeaderRow extends Row {
 	render() {
 		let row = [];
-		for (let i = 0; i < state.settings.boardSize; i++) {
+		for (let i = 0; i < this.props.rowLength; i++) {
 			row.push(String.fromCharCode(i + 65))
 		}
 		return (
@@ -293,8 +318,7 @@ class Board extends React.Component {
 		super(props);
 		this.handleInput = this.handleInput.bind(this);
 		this.state = {
-			ships: this.props.ships,
-			shots: this.props.shots
+			ships: this.props.ships
 		}
 	}
 
@@ -305,7 +329,7 @@ class Board extends React.Component {
 	render() {
 		let rows = [];
 		let ships = [];
-		for (let i = 0; i < state.settings.boardSize; i++) {
+		for (let i = 0; i < this.props.boardSize; i++) {
 			rows.push( i );
 
 			for (let ship in this.state.ships) {
@@ -325,10 +349,11 @@ class Board extends React.Component {
 		return (
 			<div>
 				<div className={ className }>
-					<p>{ this.props.player }'s board</p>
-					<HeaderRow/>
+					<p>{ this.props.user }'s board</p>
+					<HeaderRow rowLength={ this.props.boardSize }/>
 					{ rows.map((row) =>
 						<Row
+							rowLength={ this.props.boardSize }
 							key={ row }
 							row={ row + 1 }
 							ships={ this.props.ships }
@@ -369,19 +394,18 @@ class Game extends React.Component {
 	}
 
 	handleSubmit() {
-		if (state.completion !== 1) {
+		if (this.state.completion !== 1) {
 			alert('you have more ships to place!')
 		} else {
 			let confirm = window.confirm('are you happy with your ship placement?');
 			if (confirm) {
 				statusDiv.innerHTML = statusStrs[1];
-				showBoards();
 			}
 		}
 	}
 
 	handleInput(target) {
-		let ships = state.users[thisUser].ships;
+		let ships = this.state[thisUser].ships;
 		let col = target.attributes.col.nodeValue;
 		let row = parseFloat(target.attributes.row.nodeValue);
 		let ship = target.value.toLowerCase();
@@ -407,40 +431,34 @@ class Game extends React.Component {
 			state.completion = numShipsPlaced()/5;
 			return false;
 		}
-
-		ship.locs.push([col, row]);
-		state.users[thisUser].completion = numShipsPlaced()/5;
-		database.ref(`games/${state.settings.gameId}/state/users/${thisUser}`).set(state.users[thisUser]);
-
-		console.log(this.state);
+		
+		this.state.users[thisUser].completion = numShipsPlaced()/5;
+		database.ref(`${this.state.config.gameId}/config/users/${thisUser}`).set(this.state.users[thisUser]);
 	}
 
 	render() {
-		let otherBoards = [];
-		for (let i = 0; i < state.settings.numberOfPlayers - 1; i++) {
-			otherBoards.push({key: i + 1})
+		let users = [];
+		for (let user in this.state.config.users) {
+			if (!this.state[user])
+			users.push(user);
 		}
-		let className;
-		if (state.users[thisUser].completion < 1) className='hidden'
 		return (
 			<div>
 				< Board
+					boardSize={ this.state.config.boardSize }
 					handleInput={ this.handleInput }
 					key='0'
-					player={ thisUser }
-					ships={ this.state.users[thisUser].ships }
-					shots={ this.state.users[thisUser].shots }
+					user={ thisUser }
+					ships={ this.state[thisUser].ships }
 				/>
-				{ otherBoards.map((board) =>
+				{ users.map(user =>
 					< Board
-						handleInput={ this.handleInput }
-						key={ board.key }
-						className={ className }
-						player='unknown'
-						ships={ this.state.users[thisUser].ships }
-						shots={ this.state.users[thisUser].shots }
+						boardSize={ this.state.config.boardSize }
+						key={ user }
+						user={ user }
+						shots={ this.state[thisUser].shots }
 					/>
-				) }
+				)}
 				< SubmitButton
 					handleClick={ this.handleSubmit }
 				/>
@@ -450,8 +468,8 @@ class Game extends React.Component {
 }
 
 function addClass(className, col, row) {
-	if (col === String.fromCharCode(parseFloat(state.settings.boardSize) + 64)) className += ' rightColumnCell';
-	if (row == state.settings.boardSize) className += ' bottomRowCell';
+	if (col === String.fromCharCode(parseFloat(state.config.boardSize) + 64)) className += ' rightColumnCell';
+	if (row == state.config.boardSize) className += ' bottomRowCell';
 	return className;
 }
 
@@ -467,7 +485,7 @@ function goodPlacement(ship, col, row, shipName) {
 
 	let col0 = col.charCodeAt(0) - 65;
 	let row0 = row - 1;
-	let index = col0 + (row0 * state.settings.boardSize);
+	let index = col0 + (row0 * state.config.boardSize);
 
 	if (ship.locs.length === 1) {
 		//check adjacency
@@ -483,7 +501,7 @@ function goodPlacement(ship, col, row, shipName) {
 
 function isAdjacent(i1, i2) {
 	let colDif = Math.abs(i1 - i2);
-	let bSize = state.settings.boardSize
+	let bSize = state.config.boardSize
 	let adj = [1, bSize - 1, bSize, bSize + 1];
 	let o = ['h', 'db', 'v', 'df'][adj.indexOf(colDif)];
 	return o;
@@ -513,7 +531,7 @@ function numShipsPlaced() {
 function checkPWOneShip(ship, index) {
 	let col1 = ship.locs[0][0].charCodeAt(0) - 65;
 	let row1 = ship.locs[0][1] - 1;
-	let index1 = col1 + (row1 * state.settings.boardSize);
+	let index1 = col1 + (row1 * state.config.boardSize);
 	let o = isAdjacent(index, index1);
 
 	if (o === undefined) {
@@ -531,7 +549,7 @@ function checkPWMOneShip(ship, index) {
 		let loc = ship.locs[i];
 		let col1 = loc[0].charCodeAt(0) - 65;
 		let row1 = loc[1] - 1;
-		let index1 = col1 + (row1 * state.settings.boardSize);
+		let index1 = col1 + (row1 * state.config.boardSize);
 		o = isAdjacent(index, index1);
 		if (o !== undefined) {
 			if (o === ship.o) {
@@ -550,6 +568,35 @@ function checkPWMOneShip(ship, index) {
 	return true;
 }
 
-function showBoards() {
-	ReactDOM.render(< Game state={ state }/>, root);
+function hide(element) {
+	element.classList.add('hidden');
+}
+
+function unhide(element) {
+	element.classList.remove('hidden');
+}
+
+function checkForShipHere(s, c, r) {
+	for (let ship in s) {
+		for (let loc in s[ship].locs) {
+			if (s[ship].locs[loc][0] === c && s[ship].locs[loc][1] === r) return ship;
+		}
+	}
+	return '';
+}
+
+//this doesn't work yet... it's not re-rendering...
+function setUpdate() {
+	database.ref(`${state.config.gameId}/config`).on('value', function(dataSnapshot) {
+		let localState = {
+			config: dataSnapshot.val(),
+		}
+		localState[thisUser] = state[thisUser];
+
+		let playersElement = doc.getElementById('players');
+		let users = Object.keys(localState.config.users);
+		playersElement.innerHTML = users.join(', ');
+
+		ReactDOM.render(< Game state={ localState }/>, root);
+	})
 }

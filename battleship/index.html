@@ -37,8 +37,8 @@
 		</span>
 	</div>
 
-	<div id="chooseSettings" class="hidden">
-		<form id="chooseSettings">
+	<div id="chooseConfig" class="hidden">
+		<form id="chooseConfig">
 			<div>
 				<label for="choose_ID">user name:</label>
 				<input type="text" id="choose_ID" name="choose_ID">
@@ -53,10 +53,10 @@
 				>
 			</div>
 			<div>
-				<label for="choose_num_of_players">number of players:</label>
+				<label for="choose_num_of_users">number of users:</label>
 				<input
 					type="number"
-					name="choose_num_of_players"
+					name="choose_num_of_users"
 					min="2"
 					max="4"
 					placeholder="(2-4)"
@@ -75,10 +75,11 @@
 	<span class="flex-box">
 		<div class="left_column">
 			<div id="currentStatus" class="hidden"></div>
-			<div id="settings" class="hidden">
+			<div id="config" class="hidden">
 				<p>Game ID:<span id="game_id" class="highlighted"></span></p>
 				<p>User Name:<span id="user_name" class="highlighted"></span></p>
-				<p>Number of Players:<span id="num_players" class="highlighted"></span></p>
+				<p>Number of Players:<span id="num_users" class="highlighted"></span></p>
+				<p>Players:<span id="players" class"highlighted"></span><p>
 			</div>
 		</div>
 
