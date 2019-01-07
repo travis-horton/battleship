@@ -1,7 +1,3 @@
-/*
-	in the middle of refactoring--changing the nature of the state object and changing how orientation of ships is determined...(needs to be done when needed, not stored)
-*/
-
 let doc = document;
 let root = doc.getElementById('root');
 let startNewGameButton = doc.getElementById('new');
@@ -71,19 +67,26 @@ function createGame(e) {
 	let gameId = e.form.choose_game_name.value;
 
 	if (configError(userId) || userId.length === 0 || userId.length > 20) {
-		window.alert('fail -- userId')
+		window.alert('fail -- user name must be only letters or numbers')
+		return false;
+	}
+
+	if (bSize < 10 || bSize > 20 || bSize%1 !== 0) {
+		window.alert('fail -- board size must be between 10 & 20')
+		return false;
+	}
+
+	if (nP < 2 || nP > 4 || nP%1 !== 0) {
+		window.alert('fail -- number of players must be between 2 & 4')
 		return false;
 	}
 
 	if (configError(gameId) || gameId.length === 0 || gameId.length > 20) {
-		window.alert('fail -- gameId')
+		window.alert('fail -- game id must be only letters or numbers')
 		return false;
 	}
 
-	if (nP < 2 || nP > 4 || bSize < 10 || bSize > 20 || nP%1 !== 0 || bSize%1 !== 0) {
-		window.alert('fail')
-		return false;
-	}
+	bSize < 10 || bSize > 20 || bSize%1 !== 0
 
 	hide(chooseConfigDiv);
 	unhide(configDiv);
@@ -507,6 +510,7 @@ function removeLoc(col, row, ships) {
 			}
 		}
 	}
+
 	return(ships);
 }
 
