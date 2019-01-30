@@ -11,7 +11,7 @@ let notDoneUsers = [];
 let statusStrs = [
 	'<b>INSTRUCTIONS:</b>\nNow you will place your ships.\nYou will place:\n5 \"a\"s -- These a\'s will be your aircraft carrier.\n4 \"b\"s -- These b\'s will be your battleship.\n3 \"c\"s -- These c\'s will be your cruiser.\n3 \"s\"s -- These s\'s will be your submarine.\n2 \"d\"s -- These d\'s will be your destroyer.\n\nEach ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. (Currently you can actually just cross any ships you want...) No ships may share a cell.',
 	`Waiting on other players: ${notDoneUsers.join(', ')}`
-]
+];
 let thisUser = '';
 let state = {
 	config: {
@@ -48,7 +48,7 @@ let state = {
 		shots: [0],
 	}
 	*/
-}
+};
 
 startNewGameButton.onclick = chooseNewGame;
 
@@ -427,7 +427,6 @@ class Game extends React.Component {
 	}
 
 	handleInput(target) {
-
 		let thisCellValue = target.value.toLowerCase();
 		let col = target.attributes.col.nodeValue;
 		let row = parseFloat(target.attributes.row.nodeValue);
