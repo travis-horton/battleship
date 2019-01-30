@@ -9,8 +9,12 @@
   "keywords": [],
   "author": "kiddspazz (https://www.travish.com)",
   "license": "ISC",
-  "description": "",
+  "description": "my battleship game",
   "dependencies": {
     "express": "^4.16.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kiddspazz/battleship"
   }
 }
