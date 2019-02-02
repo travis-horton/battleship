@@ -1,6 +1,155 @@
 let doc = document;
 let root = doc.getElementById("root");
 
+class Game extends React.Component {
+	constructor(props) {
+		super(props);
+		this.handleNewGame = this.handleNewGame.bind(this);
+		this.handleJoinGame = this.handleJoinGame.bind(this);
+		this.handleConfigSubmit = this.handleConfigSubmit.bind(this);
+		this.handleBoardInput = this.handleBoardInput.bind(this);
+		this.handleBoardSubmit = this.handleBoardSubmit.bind(this);
+	}
+
+	handleNewGame() {
+		this.setState({
+			configDone: false
+		});
+	}
+
+	handleJoinGame() {
+		alert("This is still under construction -- can't connect to games yet.")
+	}
+
+	handleConfigSubmit(e) {
+		let button = e.target;
+		let inputs = getInputsFromChildren(button.parentNode.children);
+
+		if (!errorsInConfigInput(inputs)) {
+			let state = createState(inputs);
+			this.setState({...state});
+		};
+	}
+
+	handleBoardInput(e) {
+		let thisInput = e.target.value;
+		let c = e.target.attributes.col.nodeValue;
+		let r = parseInt(e.target.attributes.row.nodeValue);
+		testLocationThisIsABadName(c, r);
+
+		if (!isShip(thisInput)) {
+			alert("You didn't enter a ship letter (a, b, c, s, or d).");
+			return false;
+		}
+
+		if (thisShipCanGoHere(thisInput, c, r, this.state.ships)) {
+			let newShips = this.state.ships;
+			if (newShips[thisInput].locs[0] === null) {
+				newShips[thisInput]
+				newShips[thisInput].locs[0] = [c, r];
+			} else {
+				newShips[thisInput].locs.push([c, r]);
+			}
+
+			this.setState({
+				ships: newShips
+			})
+		}
+
+		{/*
+		let thisCellValue = e.target.value.toLowerCase();
+		let col = target.attributes.col.nodeValue;
+		let row = parseFloat(target.attributes.row.nodeValue);
+		if (!this.state.ships[thisCellValue] && thisCellValue.length > 0) this.state.ships[thisCellValue] = [];
+		let ship = this.state.ships[thisCellValue];
+
+		if (thisCellValue.length === 0) {
+			let newShips = removeLoc(col, row, this.state.ships);
+			this.setState({
+				ships: newShips
+			});
+
+			database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
+			updateCompleted(this.state.ships);
+
+			return false
+		};
+
+		if (!(thisCellValue in this.props.state.config.shipMax)) {
+			alert('must be a ship letter (a, b, c, s, or d)');
+			target.value = "";
+			return false;
+		}
+
+		let newShips = this.state.ships;
+
+		if (!goodPlacement(ship, col, row, thisCellValue)) {
+			target.value = "";
+			return false;
+		}
+
+		if (newShips[thisCellValue][0] === 0) newShips[thisCellValue].pop();
+
+		newShips[thisCellValue].push([col, row]);
+
+		this.setState({ships: newShips});
+		database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
+		updateCompleted(this.state.ships);
+		*/}
+
+	}
+
+
+	handleBoardSubmit(e) {
+		{/*
+		let completed = checkCompletion(this.state.ships);
+		if (completed < 1) {
+			alert('you have more ships to place!')
+		} else {
+			let confirm = window.confirm('are you happy with your ship placement?');
+			if (confirm) {
+				statusDiv.innerHTML = 'Waiting on:\n' + notDoneUsers.join('\n');
+			}
+		}
+		*/}
+	}
+
+
+	render() {
+		let toDisplay = whatToDisplay(this.state);
+		if (toDisplay === "chooseJoinOrNew") {
+			return (
+				<div>
+					<button onClick = {this.handleNewGame}>New game</button>
+					<button onClick = {this.handleJoinGame}>Join game</button>
+				</div>
+			)
+		}
+
+		if (toDisplay === "SetupDiv") {
+			return (
+				<SetupDiv handleSubmit = {this.handleConfigSubmit}/>
+			)
+		}
+
+		if (toDisplay === "PlaceShips") {
+			return (
+				<div className = "flex_box">
+					<LeftColumn toDisplay = {toDisplay}/>
+					<RightColumn
+						toDisplay = {toDisplay}
+						handleInput = {this.handleBoardInput}
+						boardSize = {this.state.boardSize}
+						player = {this.state.playerName}
+						ships = {this.state.ships}
+						handleSubmit = {this.handleBoardSubmit}
+					/>
+				</div>
+			)
+		}
+	}
+}
+
 class SetupDiv extends React.Component {
 	constructor(props) {
 		super(props);
@@ -63,82 +212,62 @@ class ConfigSelector extends React.Component {
 	}
 }
 
-class Game extends React.Component {
+class LeftColumn extends React.Component {
 	constructor(props) {
 		super(props);
-		this.handleNewGame = this.handleNewGame.bind(this);
-		this.handleJoinGame = this.handleJoinGame.bind(this);
-		this.handleConfigSubmit = this.handleConfigSubmit.bind(this);
-		this.handleBoardInput = this.handleBoardInput.bind(this);
-	}
-
-	handleNewGame() {
-		this.setState({
-			configDone: false
-		});
-	}
-
-	handleJoinGame() {
-		alert("This is still under construction -- can't connect to games yet.")
-	}
-
-	handleConfigSubmit(e) {
-		let button = e.target;
-		let inputs = getInputsFromChildren(button.parentNode.children);
-
-		if (!errorsInConfigInput(inputs)) {
-			let state = createState(inputs);
-			this.setState({...state});
-		};
-	}
-
-	handleBoardInput(e) {
-		console.log(e);
 	}
 
 	render() {
-		let toDisplay = whatToDisplay(this.state);
-		if (toDisplay === "chooseJoinOrNew") {
-			return (
-				<div>
-					<button onClick = {this.handleNewGame}>New game</button>
-					<button onClick = {this.handleJoinGame}>Join game</button>
+		if (this.props.toDisplay === "PlaceShips") {
+			return(
+				<div className="left_column">
+					<p><b>INSTRUCTIONS</b></p>
+					<p>Now you will place your ships. You will place:</p>
+					<p>5 "a"s -- These a's will be your aircraft carrier.</p>
+					<p>4 "b"s -- These b's will be your battleship.</p>
+					<p>3 "c"s -- These c's will be your cruiser.</p>
+					<p>3 "s"s -- These s's will be your submarine.</p>
+					<p>2 "d"s -- These d's will be your destroyer.</p>
+					<p>Each ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. (Currently you can actually just cross any ships you want...) No ships may share a cell.</p>
 				</div>
 			)
+		} else {
+			return <p>shit i fucked up</p>
 		}
+	}
+}
 
-		if (toDisplay === "SetupDiv") {
-			return (
-				<SetupDiv handleSubmit = {this.handleConfigSubmit}/>
-			)
-		}
+class RightColumn extends React.Component {
+	constructor(props) {
+		super(props);
+		this.handleBoardInput = this.handleBoardInput.bind(this);
+		this.handleSubmit = this.handleSubmit.bind(this);
+	}
 
-		if (toDisplay === "PickShips") {
-			let shipPlacingInstructions = 'INSTRUCTIONS:\nNow you will place your ships.\nYou will place:\n5 \"a\"s -- These a\'s will be your aircraft carrier.\n4 \"b\"s -- These b\'s will be your battleship.\n3 \"c\"s -- These c\'s will be your cruiser.\n3 \"s\"s -- These s\'s will be your submarine.\n2 \"d\"s -- These d\'s will be your destroyer.\n\nEach ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. (Currently you can actually just cross any ships you want...) No ships may share a cell.'
+	handleBoardInput(e) {
+		this.props.handleInput(e);
+	}
 
-			return (
-				<div className="flex_box">
-					<div className="left_column">
-						<p><b>INSTRUCTIONS</b></p>
-						<p>Now you will place your ships. You will place:</p>
-						<p>5 "a"s -- These a's will be your aircraft carrier.</p>
-						<p>4 "b"s -- These b's will be your battleship.</p>
-						<p>3 "c"s -- These c's will be your cruiser.</p>
-						<p>3 "s"s -- These s's will be your submarine.</p>
-						<p>2 "d"s -- These d's will be your destroyer.</p>
-						<p>Each ship must be in a line horizontally, vertically, or diagonally. In general, your ships are not allowed to cross one another. However, your submarine is allowed to cross other ships on the diagonal. (Currently you can actually just cross any ships you want...) No ships may share a cell.</p>
-					</div>
-					<div className="right_column">
-						<Board
-							boardSize = {this.state.boardSize}
-							handleInput = {this.handleBoardInput}
-							player = {this.state.playerName}
-							ships = {this.state.ships}
-						/>
-						<button onClick = {this.handleBoardSubmit}>Submit ship placement</button>
-					</div>
+	handleSubmit(e) {
+		this.props.handleSubmit(e);
+	}
+
+	render() {
+		if (this.props.toDisplay === "PlaceShips") {
+			return(
+				<div className = "right_column">
+					<Board
+						boardSize = {this.props.boardSize}
+						handleInput = {this.handleBoardInput}
+						player = {this.props.player}
+						ships = {this.props.ships}
+					/>
+					<br/>
+					<button onClick = {this.handleSubmit}>Submit ship placement</button>
 				</div>
 			)
+		} else {
+			return <p>shit i fucked up</p>
 		}
 	}
 }
@@ -161,7 +290,7 @@ class Board extends React.Component {
 
 		return (
 			<div className = "board">
-				<p>{this.props.player}'s board</p>
+				<span>{this.props.player}'s board</span>
 				<HeaderRow rowLength = {this.props.boardSize}/>
 				{nRows.map((row) =>
 					<Row
@@ -220,7 +349,7 @@ class HeaderRow extends Row {
 			nCol.push(String.fromCharCode(i + 65))
 		}
 		return (
-			<div className="row">
+			<div className="headerRow">
 				<HeaderCell label = ""/>
 				{nCol.map((col) =>
 					<HeaderCell key = {col} label = {col}/>
@@ -242,27 +371,26 @@ class Cell extends React.Component {
 	}
 
 	render() {
+		let ship = whatShipIsHere(this.props.col, this.props.row, this.props.ships);
 		return (
 			<input
 				col = {this.props.col}
 				row = {this.props.row}
 				onChange = {this.handleInput}
 				className = "cell"
+				value = {ship}
 			/>
 		)
 	}
 }
 
 class HeaderCell extends React.Component {
-	constructor(props) {
-		super(props);
-	}
-
 	render() {
 		return (
-			<span> {this.props.label} </span>
+			<span className = "headerCell"> {this.props.label} </span>
 		)
 	}
+
 }
 
 ReactDOM.render(<Game/>, root);
@@ -272,7 +400,7 @@ function whatToDisplay(state) {
 	if (!state.configDone) {
 		return "SetupDiv";
 	} else {
-		return "PickShips";
+		return "PlaceShips";
 	}
 }
 
@@ -333,15 +461,97 @@ function createState(inputs) {
 	let state = {...inputs};
 
 	state["ships"] = {
-		a: {loc: null, max: 5},
-		b: {loc: null, max: 4},
-		c: {loc: null, max: 3},
-		s: {loc: null, max: 3},
-		d: {loc: null, max: 2}
+		a: {locs: [null], max: 5},
+		b: {locs: [null], max: 4},
+		c: {locs: [null], max: 3},
+		s: {locs: [null], max: 3},
+		d: {locs: [null], max: 2}
 	}
 	state.users = {};
 	state.users[inputs.playerName] = {connected: true, completed: false, turn: false, shots: [0]};
 	state["configDone"] = true;
 
 	return state;
+}
+
+function testLocationThisIsABadName(c, r) {
+	let cRegex = /[A-Za-z]/;
+	if (!cRegex.test(c)) {
+		throw new Error("Column is not a letter");
+	}
+	if (!Number.isInteger(r)) {
+		throw new Error("Row is not an integer");
+	}
+}
+
+function isShip(value) {
+	let regex = /[ABCDSabcds]/
+	if (regex.test(value)) return true;
+	return false;
+}
+
+function thisShipCanGoHere(thisShip, c, r, allShips) {
+	let countOfThisShip = howManyShipsOfThisType(thisShip, allShips);
+	if (countOfThisShip === 0) return true;
+	if (countOfThisShip === 1) return isAdjacent(thisShip, c, r, allShips[thisShip].locs)
+	return (isAdjacent(thisShip, c, r, allShips[thisShip].locs) && isInLine(thisShip, c, r, allShips[thisShip].locs))
+}
+
+function howManyShipsOfThisType(type, allShips) {
+	if (allShips[type].locs[0] === null) return 0;
+	return allShips[type].locs.length;
+}
+
+function isAdjacent(thisShip, c, r, otherShips) {
+	for (let i = 0; i < otherShips.length; i++) {
+		let testShipColumn = otherShips[i][0];
+		let testShipRow = otherShips[i][1];
+
+		if (isAdjacentColumn(testShipColumn, c) && isAdjacentRow(testShipRow, r)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function isInLine(thisShip, c, r, otherShips) {
+	let otherShipsOrientation = getOrientation(otherShips);
+	let thisShipsOrientation = getOrientation([...otherShips, thisShip])
+	return false;
+}
+
+function whatShipIsHere(c, r, ships) {
+	for (let ship in ships) {
+		if (ships[ship].locs[0] === null) continue;
+		for (let loc in ships[ship].locs) {
+			if (ships[ship].locs[loc][0] === c && ships[ship].locs[loc][1] === r) {
+				return (ship);
+			}
+		}
+	}
+	return "";
+}
+
+function isAdjacentColumn(c1, c2) {
+	if (
+		String.fromCharCode(c1.charCodeAt(0) - 1) === c2 ||
+		String.fromCharCode(c1.charCodeAt(0) + 1) === c2 ||
+		c1 === c2
+	) {
+		return true;
+	}
+
+	return false;
+}
+
+function isAdjacentRow(r1, r2) {
+	if (r1 - 1 === r2 || r1 + 1 === r2 || r1 === r2) return true;
+
+	return false;
+}
+
+function getOrientation(arrayOfCells) {
+	let orientations = ["v", "h", "bd", "fd"];
+	//some magic here to get orientation;
+	return orientations[];
 }
