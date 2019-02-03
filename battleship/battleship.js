@@ -32,17 +32,25 @@ class Game extends React.Component {
 	}
 
 	handleBoardInput(e) {
-		let thisInput = e.target.value;
+		let thisInput = e.target.value.toLowerCase();
 		let c = e.target.attributes.col.nodeValue;
 		let r = parseInt(e.target.attributes.row.nodeValue);
-		testLocationThisIsABadName(c, r);
+		thatGuy_ohDontWorryAboutThatGuy(c, r);
+
+		if (thisInput.length === 0) {
+			let newShips = newShipsWithoutThisLoc(c, r, this.state.ships);
+			this.setState({
+				ships: newShips
+			})
+			return;
+		}
 
 		if (!isShip(thisInput)) {
-			alert("You didn't enter a ship letter (a, b, c, s, or d).");
+			alert(`"${thisInput}" is not a ship letter (a, b, c, s, or d).`);
 			return false;
 		}
 
-		if (thisShipCanGoHere(thisInput, c, r, this.state.ships)) {
+		if (thisShipCanGoHere(thisInput, c, r, this.state.ships[thisInput])) {
 			let newShips = this.state.ships;
 			if (newShips[thisInput].locs[0] === null) {
 				newShips[thisInput]
@@ -474,7 +482,7 @@ function createState(inputs) {
 	return state;
 }
 
-function testLocationThisIsABadName(c, r) {
+function thatGuy_ohDontWorryAboutThatGuy(c, r) {
 	let cRegex = /[A-Za-z]/;
 	if (!cRegex.test(c)) {
 		throw new Error("Column is not a letter");
@@ -485,38 +493,47 @@ function testLocationThisIsABadName(c, r) {
 }
 
 function isShip(value) {
-	let regex = /[ABCDSabcds]/
+	let regex = /^[ABCDSabcds]$/
 	if (regex.test(value)) return true;
 	return false;
 }
 
-function thisShipCanGoHere(thisShip, c, r, allShips) {
-	let countOfThisShip = howManyShipsOfThisType(thisShip, allShips);
+function thisShipCanGoHere(thisShip, c, r, allShipsOfType) {
+	let thisShipLoc = [c, r]
+	let countOfThisShip = howManyShipsOfThisType(thisShip, allShipsOfType.locs);
+	if (countOfThisShip >= allShipsOfType.max) {
+		alert(`You can only place ${allShipsOfType.max} "${thisShip}"s and you've already placed ${allShipsOfType.max}.`)
+		return false;
+	}
 	if (countOfThisShip === 0) return true;
-	if (countOfThisShip === 1) return isAdjacent(thisShip, c, r, allShips[thisShip].locs)
-	return (isAdjacent(thisShip, c, r, allShips[thisShip].locs) && isInLine(thisShip, c, r, allShips[thisShip].locs))
+	if (countOfThisShip === 1) return isAdjacent(thisShipLoc, allShipsOfType.locs)
+	return (isAdjacent(thisShipLoc, allShipsOfType.locs) && isInLine(thisShipLoc, allShipsOfType.locs))
 }
 
 function howManyShipsOfThisType(type, allShips) {
-	if (allShips[type].locs[0] === null) return 0;
-	return allShips[type].locs.length;
+	if (allShips[0] === null) return 0;
+	return allShips.length;
 }
 
-function isAdjacent(thisShip, c, r, otherShips) {
+function isAdjacent(thisShipLoc, otherShips) {
 	for (let i = 0; i < otherShips.length; i++) {
 		let testShipColumn = otherShips[i][0];
 		let testShipRow = otherShips[i][1];
 
-		if (isAdjacentColumn(testShipColumn, c) && isAdjacentRow(testShipRow, r)) {
+		if (isAdjacentColumn(testShipColumn, thisShipLoc[0]) && isAdjacentRow(testShipRow, thisShipLoc[1])) {
 			return true;
 		}
 	}
+	alert("That placement is not adjacent to others of its kind.")
 	return false;
 }
 
-function isInLine(thisShip, c, r, otherShips) {
-	let otherShipsOrientation = getOrientation(otherShips);
-	let thisShipsOrientation = getOrientation([...otherShips, thisShip])
+function isInLine(thisShipsLoc, otherShips) {
+	let otherShipsOrientation = getOrientation([otherShips[0], otherShips[1]]);
+	let thisShipsOrientation = getOrientation([otherShips[0], thisShipsLoc])
+	console.log(otherShipsOrientation, thisShipsOrientation)
+	if (otherShipsOrientation === thisShipsOrientation) return true;
+	alert("That placement is not in line with others of its kind.")
 	return false;
 }
 
@@ -550,8 +567,30 @@ function isAdjacentRow(r1, r2) {
 	return false;
 }
 
-function getOrientation(arrayOfCells) {
-	let orientations = ["v", "h", "bd", "fd"];
-	//some magic here to get orientation;
-	return orientations[];
+function getOrientation(twoCells) {
+	let firstCellC = twoCells[0][0];
+	let firstCellR = twoCells[0][1];
+	let secondCellC = twoCells[1][0];
+	let secondCellR = twoCells[1][1];
+	if (firstCellC === secondCellC) return "v";
+	if (firstCellR === secondCellR) return "h";
+
+	let firstCToNumber = firstCellC.charCodeAt(0);
+	let secondCToNumber = secondCellC.charCodeAt(0);
+
+	if (firstCToNumber-secondCToNumber === firstCellR-secondCellR) return "bd";
+	if (firstCToNumber-secondCToNumber === -(firstCellR-secondCellR)) return "fd";
+}
+
+function newShipsWithoutThisLoc(c, r, ships) {
+	let newShips = ships;
+	for (let ship in ships) {
+		for (let i = 0; i < ships[ship].locs.length; i++) {
+			if (!ships[ship].locs[i]) continue;
+			if (c === ships[ship].locs[i][0] && r === ships[ship].locs[i][1]) {
+				newShips[ship].locs = [null];
+				return newShips;
+			}
+		}
+	}
 }

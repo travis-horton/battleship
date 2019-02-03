@@ -35,7 +35,7 @@
 }
 
 .row:nth-child(3n+1) {
-	background-color: rgb(245,245,245);
+	background-color: rgb(245,245,255);
 }
 
 .headerCell {
@@ -63,5 +63,5 @@
 }
 
 .cell:nth-child(3n) {
-	background-color: rgb(245,245,245);
+	background-color: rgb(245,245,255);
 }
