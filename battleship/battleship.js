@@ -65,48 +65,10 @@ class Game extends React.Component {
 		}
 
 		{/*
-		let thisCellValue = e.target.value.toLowerCase();
-		let col = target.attributes.col.nodeValue;
-		let row = parseFloat(target.attributes.row.nodeValue);
-		if (!this.state.ships[thisCellValue] && thisCellValue.length > 0) this.state.ships[thisCellValue] = [];
-		let ship = this.state.ships[thisCellValue];
-
-		if (thisCellValue.length === 0) {
-			let newShips = removeLoc(col, row, this.state.ships);
-			this.setState({
-				ships: newShips
-			});
-
-			database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
-			updateCompleted(this.state.ships);
-
-			return false
-		};
-
-		if (!(thisCellValue in this.props.state.config.shipMax)) {
-			alert('must be a ship letter (a, b, c, s, or d)');
-			target.value = "";
-			return false;
-		}
-
-		let newShips = this.state.ships;
-
-		if (!goodPlacement(ship, col, row, thisCellValue)) {
-			target.value = "";
-			return false;
-		}
-
-		if (newShips[thisCellValue][0] === 0) newShips[thisCellValue].pop();
-
-		newShips[thisCellValue].push([col, row]);
-
-		this.setState({ships: newShips});
 		database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
-		updateCompleted(this.state.ships);
 		*/}
 
 	}
-
 
 	handleBoardSubmit(e) {
 		{/*
@@ -121,7 +83,6 @@ class Game extends React.Component {
 		}
 		*/}
 	}
-
 
 	render() {
 		let toDisplay = whatToDisplay(this.state);
