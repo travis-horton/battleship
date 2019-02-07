@@ -2,6 +2,24 @@ let doc = document;
 let root = doc.getElementById("root");
 
 class Game extends React.Component {
+	state = {
+		toDisplay: "chooseJoinOrNew",
+		boardSize: 0,
+		gameID: "",
+		numPlayers: 0,
+		playerName: "",
+		ships: {
+			a: {locs: [null], max: 5},
+			b: {locs: [null], max: 4},
+			c: {locs: [null], max: 3},
+			s: {locs: [null], max: 3},
+			d: {locs: [null], max: 2}
+		},
+		players: [
+			{name: "", connected: true, thisPlayerTurn: false}
+		]
+	}
+
 	constructor(props) {
 		super(props);
 		this.handleNewGame = this.handleNewGame.bind(this);
@@ -13,29 +31,30 @@ class Game extends React.Component {
 
 	handleNewGame() {
 		this.setState({
-			configDone: false
+			toDisplay: "Setup"
 		});
 	}
 
 	handleJoinGame() {
-		alert("This is still under construction -- can't connect to games yet.")
+		alert("This is still under construction -- can't connect to games yet.");
 	}
 
-	handleConfigSubmit(e) {
-		let button = e.target;
-		let inputs = getInputsFromChildren(button.parentNode.children);
-
-		if (!errorsInConfigInput(inputs)) {
-			let state = createState(inputs);
-			this.setState({...state});
-		};
+	handleConfigSubmit(config) {
+		if (!errorsInConfigInput(config)) {
+			let players = [{name: config.playerName, connected: true, thisPlayerTurn: false}];
+			let newState = {
+				toDisplay: "PlaceShips",
+				players,
+				...config
+			};
+			this.setState(newState)
+		}
 	}
 
 	handleBoardInput(e) {
 		let thisInput = e.target.value.toLowerCase();
 		let c = e.target.attributes.col.nodeValue;
-		let r = parseInt(e.target.attributes.row.nodeValue);
-		thatGuy_ohDontWorryAboutThatGuy(c, r);
+		let r = parseInt(e.target.attributes.row.nodeValue, 10);
 
 		if (thisInput.length === 0) {
 			let newShips = newShipsWithoutThisLoc(c, r, this.state.ships);
@@ -53,7 +72,6 @@ class Game extends React.Component {
 		if (thisShipCanGoHere(thisInput, c, r, this.state.ships[thisInput])) {
 			let newShips = this.state.ships;
 			if (newShips[thisInput].locs[0] === null) {
-				newShips[thisInput]
 				newShips[thisInput].locs[0] = [c, r];
 			} else {
 				newShips[thisInput].locs.push([c, r]);
@@ -85,33 +103,33 @@ class Game extends React.Component {
 	}
 
 	render() {
-		let toDisplay = whatToDisplay(this.state);
+		let toDisplay = this.state.toDisplay;
 		if (toDisplay === "chooseJoinOrNew") {
 			return (
 				<div>
-					<button onClick = {this.handleNewGame}>New game</button>
-					<button onClick = {this.handleJoinGame}>Join game</button>
+					<button onClick={this.handleNewGame}>New game</button>
+					<button onClick={this.handleJoinGame}>Join game</button>
 				</div>
 			)
 		}
 
-		if (toDisplay === "SetupDiv") {
+		if (toDisplay === "Setup") {
 			return (
-				<SetupDiv handleSubmit = {this.handleConfigSubmit}/>
+				<Setup handleSubmit={this.handleConfigSubmit}/>
 			)
 		}
 
 		if (toDisplay === "PlaceShips") {
 			return (
-				<div className = "flex_box">
-					<LeftColumn toDisplay = {toDisplay}/>
+				<div className="flex_box">
+					<LeftColumn toDisplay={toDisplay} />
 					<RightColumn
-						toDisplay = {toDisplay}
-						handleInput = {this.handleBoardInput}
-						boardSize = {this.state.boardSize}
-						player = {this.state.playerName}
-						ships = {this.state.ships}
-						handleSubmit = {this.handleBoardSubmit}
+						toDisplay={toDisplay}
+						handleInput={this.handleBoardInput}
+						boardSize={this.state.boardSize}
+						player={this.state.playerName}
+						ships={this.state.ships}
+						handleSubmit={this.handleBoardSubmit}
 					/>
 				</div>
 			)
@@ -119,36 +137,74 @@ class Game extends React.Component {
 	}
 }
 
-class SetupDiv extends React.Component {
+class Setup extends React.Component {
+	state = {
+		playerName: "",
+		gameID: "",
+		boardSize: 0,
+		numPlayers: 0
+	}
+
 	constructor(props) {
 		super(props);
+		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
 	}
 
+	handleChange(e, id) {
+		this.setState({
+			[id]: e.target.value
+		})
+	}
+
 	handleSubmit(e) {
-		this.props.handleSubmit(e);
+		e.preventDefault();
+		this.props.handleSubmit({
+			playerName: this.state.playerName,
+			gameID: this.state.gameID,
+			boardSize: Number(this.state.boardSize),
+			numPlayers: Number(this.state.numPlayers)
+		});
 	}
 
 	render() {
 		return (
 			<div>
 				<p>Limit length to 20 characters, which must be letters or numbers!</p>
-				<ConfigSelector id = "playerName" type = "text" labelText = "Choose a player name: "/>
-				<ConfigSelector id = "gameID" type = "text" labelText = "Choose a game id: "/>
-				<ConfigSelector id = "boardSize"
-					type = "number"
-					labelText = "Choose your board size (10-20): "
-					min = {10}
-					max = {20}
-				/>
-				<ConfigSelector
-					id = "numPlayers"
-					type = "number"
-					labelText = "Choose the number of players (2-4): "
-					min = {2}
-					max = {4}
-				/>
-				<button onClick = {this.handleSubmit}>Submit</button>
+				<form onSubmit={this.props.onSubmit}>
+					<ConfigSelector
+						id="playerName"
+						type="text"
+						labelText="Choose a player name: "
+						value={this.state.playerName}
+						onChange={this.handleChange}
+					/>
+					<ConfigSelector
+						id="gameID"
+						type="text"
+						labelText="Choose a game id: "
+						value={this.state.gameID}
+						onChange={this.handleChange}
+					/>
+					<ConfigSelector id="boardSize"
+						type="number"
+						labelText="Choose your board size (10-20): "
+						min={10}
+						max={20}
+						value={this.state.boardSize}
+						onChange={this.handleChange}
+					/>
+					<ConfigSelector
+						id="numPlayers"
+						type="number"
+						labelText="Choose the number of players (2-4): "
+						min={2}
+						max={4}
+						value={this.state.numPlayers}
+						onChange={this.handleChange}
+					/>
+					<button type="submit" onClick={this.handleSubmit}>Submit</button>
+				</form>
 			</div>
 		);
 	}
@@ -157,6 +213,11 @@ class SetupDiv extends React.Component {
 class ConfigSelector extends React.Component {
 	constructor(props) {
 		super(props);
+		this.onChange = this.onChange.bind(this);
+	}
+
+	onChange(e) {
+		this.props.onChange(e, this.props.id);
 	}
 
 	render() {
@@ -174,8 +235,8 @@ class ConfigSelector extends React.Component {
 
 		return (
 			<div>
-				<label htmlFor = {this.props.id}>{this.props.labelText}</label>
-				<input {...options}/>
+				<label htmlFor={this.props.id}>{this.props.labelText}</label>
+				<input onChange={this.onChange} {...options}/>
 			</div>
 		);
 	}
@@ -224,15 +285,15 @@ class RightColumn extends React.Component {
 	render() {
 		if (this.props.toDisplay === "PlaceShips") {
 			return(
-				<div className = "right_column">
+				<div className="right_column">
 					<Board
-						boardSize = {this.props.boardSize}
-						handleInput = {this.handleBoardInput}
-						player = {this.props.player}
-						ships = {this.props.ships}
+						boardSize={this.props.boardSize}
+						handleInput={this.handleBoardInput}
+						player={this.props.player}
+						ships={this.props.ships}
 					/>
 					<br/>
-					<button onClick = {this.handleSubmit}>Submit ship placement</button>
+					<button onClick={this.handleSubmit}>Submit ship placement</button>
 				</div>
 			)
 		} else {
@@ -258,20 +319,20 @@ class Board extends React.Component {
 		}
 
 		return (
-			<div className = "board">
+			<div className="board">
 				<span>{this.props.player}'s board</span>
-				<HeaderRow rowLength = {this.props.boardSize}/>
+				<HeaderRow rowLength={this.props.boardSize}/>
 				{nRows.map((row) =>
 					<Row
-						rowLength = {this.props.boardSize}
-						key = {row}
-						row = {row + 1}
-						ships = {this.props.ships}
-						shots = {this.props.shots}
-						handleInput = {this.handleInput}
+						rowLength={this.props.boardSize}
+						key={row}
+						row={row + 1}
+						ships={this.props.ships}
+						shots={this.props.shots}
+						handleInput={this.handleInput}
 					/>
 				)}
-				<HeaderRow rowLength = {this.props.boardSize}/>
+				<HeaderRow rowLength={this.props.boardSize}/>
 			</div>
 		)
 	}
@@ -294,18 +355,18 @@ class Row extends React.Component {
 		}
 		return (
 			<div className="row">
-				<HeaderCell label = {this.props.row}/>
+				<HeaderCell label={this.props.row}/>
 				{nCol.map((col) =>
 					<Cell
-						key = {col}
-						col = {col}
-						row = {this.props.row}
-						ships = {this.props.ships}
-						shots = {this.props.shots}
-						handleInput = {this.handleInput}
+						key={col}
+						col={col}
+						row={this.props.row}
+						ships={this.props.ships}
+						shots={this.props.shots}
+						handleInput={this.handleInput}
 					/>
 				)}
-				<HeaderCell label = {this.props.row}/>
+				<HeaderCell label={this.props.row}/>
 			</div>
 		)
 	}
@@ -319,11 +380,11 @@ class HeaderRow extends Row {
 		}
 		return (
 			<div className="headerRow">
-				<HeaderCell label = ""/>
+				<HeaderCell label=""/>
 				{nCol.map((col) =>
-					<HeaderCell key = {col} label = {col}/>
+					<HeaderCell key={col} label={col}/>
 				)}
-				<HeaderCell label = ""/>
+				<HeaderCell label=""/>
 			</div>
 		)
 	}
@@ -336,6 +397,7 @@ class Cell extends React.Component {
 	}
 
 	handleInput(e) {
+		// this.props.onChange(this.props.row, this.props.col, e.target.value)
 		this.props.handleInput(e);
 	}
 
@@ -343,11 +405,11 @@ class Cell extends React.Component {
 		let ship = whatShipIsHere(this.props.col, this.props.row, this.props.ships);
 		return (
 			<input
-				col = {this.props.col}
-				row = {this.props.row}
-				onChange = {this.handleInput}
-				className = "cell"
-				value = {ship}
+				col={this.props.col}
+				row={this.props.row}
+				onChange={this.handleInput}
+				className="cell"
+				value={ship}
 			/>
 		)
 	}
@@ -356,7 +418,7 @@ class Cell extends React.Component {
 class HeaderCell extends React.Component {
 	render() {
 		return (
-			<span className = "headerCell"> {this.props.label} </span>
+			<span className="headerCell"> {this.props.label} </span>
 		)
 	}
 
@@ -364,93 +426,46 @@ class HeaderCell extends React.Component {
 
 ReactDOM.render(<Game/>, root);
 
-function whatToDisplay(state) {
-	if (!state) return "chooseJoinOrNew";
-	if (!state.configDone) {
-		return "SetupDiv";
-	} else {
-		return "PlaceShips";
-	}
-}
-
-function errorsInConfigInput(input) {
+function errorsInConfigInput(config) {
+	config.playerName = config.playerName.trim();
+	config.gameID = config.gameID.trim();
+		console.log(config);
+	let errorMsg = "";
 	let computerToHuman = {
 		playerName: "player name",
 		gameID: "game id",
 		boardSize: "board size",
 		numPlayers: "number of players"
 	}
-	let regx = /^[A-Za-z0-9]+$/;
+	let regx = /[^a-zA-Z0-9]/;
 
-	for (let entry in input) {
-		if (input[entry].length === 0) {
-			alert(`You didn't choose a ${computerToHuman[entry]}. Try again.`);
-			return true;
+	for (let entry in config) {
+		if (config[entry].length === 0) {
+			errorMsg += `You didn't choose a ${computerToHuman[entry]}.\n`;
+		} else if (config[entry].length > 20) {
+			errorMsg += `Your ${computerToHuman[entry]} is greater than 20 characters.\n`;
+		}
+
+		if (regx.test(config[entry])) {
+			errorMsg += `You can only use letters or numbers in ${computerToHuman[entry]}.\n`;
 		}
 	}
 
-	if (!regx.test(input.playerName)) {
-		alert(`You can only use letters or numbers in player name. Try again.`);
+	if (!Number.isInteger(config.boardSize) || config.boardSize < 10 || config.boardSize > 20) {
+		errorMsg += `You must enter a whole number between 10 and 20 for board size.\n`;
+	}
+
+	if (!Number.isInteger(config.numPlayers) || config.numPlayers < 2 || config.numPlayers > 4) {
+		errorMsg += `You must enter a whole number between 2 and 4 for number of players.\n`;
+	}
+
+	if (errorMsg.length > 0) {
+		errorMsg += "Try again.";
+		alert(errorMsg);
 		return true;
-	}
-
-	if (!regx.test(input.gameID)) {
-		alert(`You can only use letters or numbers in game id. Try again.`);
-		return true;
-	}
-
-	if (!Number.isInteger(input.boardSize) || input.boardSize < 10 || input.boardSize > 20) {
-		alert(`You must enter a whole number between 10 and 20 for board size. Try again.`);
-		return true;
-	}
-
-	if (!Number.isInteger(input.numPlayers) || input.numPlayers < 2 || input.numPlayers > 4) {
-		alert(`You must enter a whole number between 2 and 4 for number of players. Try again.`);
-		return true;
-	}
-
-	return false;
-}
-
-function getInputsFromChildren(children) {
-	let inputs = {};
-	for (let i = 0; i < children.length; i ++) {
-		let thisDiv = children[i];
-		if (thisDiv.localName === "div") {
-			let label = thisDiv.children[1].id;
-			let value = thisDiv.children[1].value;
-			if (!isNaN(parseFloat(value))) value = parseFloat(value);
-			inputs[label] = value;
-		}
-	}
-	return inputs;
-}
-
-function createState(inputs) {
-	let state = {...inputs};
-
-	state["ships"] = {
-		a: {locs: [null], max: 5},
-		b: {locs: [null], max: 4},
-		c: {locs: [null], max: 3},
-		s: {locs: [null], max: 3},
-		d: {locs: [null], max: 2}
-	}
-	state.users = {};
-	state.users[inputs.playerName] = {connected: true, completed: false, turn: false, shots: [0]};
-	state["configDone"] = true;
-
-	return state;
-}
-
-function thatGuy_ohDontWorryAboutThatGuy(c, r) {
-	let cRegex = /[A-Za-z]/;
-	if (!cRegex.test(c)) {
-		throw new Error("Column is not a letter");
-	}
-	if (!Number.isInteger(r)) {
-		throw new Error("Row is not an integer");
-	}
+	} else {
+		return false;
+	};
 }
 
 function isShip(value) {
