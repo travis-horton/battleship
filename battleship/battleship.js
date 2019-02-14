@@ -111,20 +111,15 @@ class Game extends React.Component {
 					<button onClick={this.handleJoinGame}>Join game</button>
 				</div>
 			)
-		}
-
-		if (toDisplay === "Setup") {
+		} else if (toDisplay === "Setup") {
 			return (
 				<Setup handleSubmit={this.handleConfigSubmit}/>
 			)
-		}
-
-		if (toDisplay === "PlaceShips") {
+		} else if (toDisplay === "PlaceShips") {
 			return (
 				<div className="flex_box">
-					<LeftColumn toDisplay={toDisplay} />
-					<RightColumn
-						toDisplay={toDisplay}
+					<Instructions />
+					<BoardArea
 						handleInput={this.handleBoardInput}
 						boardSize={this.state.boardSize}
 						player={this.state.playerName}
@@ -242,7 +237,7 @@ class ConfigSelector extends React.Component {
 	}
 }
 
-class LeftColumn extends React.Component {
+class Instructions extends React.Component {
 	constructor(props) {
 		super(props);
 	}
@@ -267,7 +262,7 @@ class LeftColumn extends React.Component {
 	}
 }
 
-class RightColumn extends React.Component {
+class BoardArea extends React.Component {
 	constructor(props) {
 		super(props);
 		this.handleBoardInput = this.handleBoardInput.bind(this);
