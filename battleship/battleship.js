@@ -43,7 +43,7 @@ class Game extends React.Component {
 		if (!errorsInConfigInput(config)) {
 			let players = [{name: config.playerName, connected: true, thisPlayerTurn: false}];
 			let newState = {
-				toDisplay: "PlaceShips",
+				toDisplay: "Boards",
 				players,
 				...config
 			};
@@ -115,11 +115,12 @@ class Game extends React.Component {
 			return (
 				<Setup handleSubmit={this.handleConfigSubmit}/>
 			)
-		} else if (toDisplay === "PlaceShips") {
+		} else if (toDisplay === "Boards") {
 			return (
 				<div className="flex_box">
-					<Instructions />
+					<Instructions ships={this.state.ships}/>
 					<BoardArea
+						toDisplay={this.state.toDisplay}
 						handleInput={this.handleBoardInput}
 						boardSize={this.state.boardSize}
 						player={this.state.playerName}
@@ -243,7 +244,7 @@ class Instructions extends React.Component {
 	}
 
 	render() {
-		if (this.props.toDisplay === "PlaceShips") {
+		if (!allShipsArePlaced(this.props.ships)) {
 			return(
 				<div className="left_column">
 					<p><b>INSTRUCTIONS</b></p>
@@ -257,7 +258,7 @@ class Instructions extends React.Component {
 				</div>
 			)
 		} else {
-			return <p>shit i fucked up</p>
+			return <p>you've placed enough ships</p>
 		}
 	}
 }
@@ -278,7 +279,7 @@ class BoardArea extends React.Component {
 	}
 
 	render() {
-		if (this.props.toDisplay === "PlaceShips") {
+		if (!allShipsArePlaced(this.props.ships)) {
 			return(
 				<div className="right_column">
 					<Board
@@ -292,7 +293,7 @@ class BoardArea extends React.Component {
 				</div>
 			)
 		} else {
-			return <p>shit i fucked up</p>
+			return <p>you've placed enough ships</p>
 		}
 	}
 }
@@ -424,7 +425,6 @@ ReactDOM.render(<Game/>, root);
 function errorsInConfigInput(config) {
 	config.playerName = config.playerName.trim();
 	config.gameID = config.gameID.trim();
-		console.log(config);
 	let errorMsg = "";
 	let computerToHuman = {
 		playerName: "player name",
@@ -502,7 +502,6 @@ function isAdjacent(thisShipLoc, otherShips) {
 function isInLine(thisShipsLoc, otherShips) {
 	let otherShipsOrientation = getOrientation([otherShips[0], otherShips[1]]);
 	let thisShipsOrientation = getOrientation([otherShips[0], thisShipsLoc])
-	console.log(otherShipsOrientation, thisShipsOrientation)
 	if (otherShipsOrientation === thisShipsOrientation) return true;
 	alert("That placement is not in line with others of its kind.")
 	return false;
@@ -564,4 +563,13 @@ function newShipsWithoutThisLoc(c, r, ships) {
 			}
 		}
 	}
+}
+
+function allShipsArePlaced(ships) {
+	for (let e in ships) {
+		if (!(ships[e].locs.length === ships[e].max)) {
+			return false;
+		}
+	}
+	return true;
 }

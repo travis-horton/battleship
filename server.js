@@ -4,7 +4,7 @@ const express = require('express');
 
 const app = express();
 const server = http.Server(app);
-const port = 80;
+const port = 8080;
 
 server.listen(port, function() {
 	console.log(`Battleship server listening on ${port}`);
