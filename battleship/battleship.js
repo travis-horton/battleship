@@ -1,11 +1,12 @@
 let doc = document;
 let root = doc.getElementById("root");
+let database = firebase.database();
 
 class Game extends React.Component {
 	state = {
 		toDisplay: "chooseJoinOrNew",
 		boardSize: 0,
-		gameID: "",
+		gameId: "",
 		numPlayers: 0,
 		playerName: "",
 		ships: {
@@ -15,9 +16,9 @@ class Game extends React.Component {
 			s: {locs: [null], max: 3},
 			d: {locs: [null], max: 2}
 		},
-		players: [
-			{name: "", connected: true, thisPlayerTurn: false}
-		]
+		players: {
+			"": {connected: true, thisPlayerTurn: false, shipsCommitted: false}
+		}
 	}
 
 	constructor(props) {
@@ -41,13 +42,15 @@ class Game extends React.Component {
 
 	handleConfigSubmit(config) {
 		if (!errorsInConfigInput(config)) {
-			let players = [{name: config.playerName, connected: true, thisPlayerTurn: false}];
+			let players = {};
+			players[config.playerName] = {connected: true, thisPlayerTurn: false};
 			let newState = {
 				toDisplay: "Boards",
 				players,
 				...config
 			};
-			this.setState(newState)
+			this.setState(newState);
+			database.ref(newState.gameId).set(newState);
 		}
 	}
 
@@ -82,10 +85,9 @@ class Game extends React.Component {
 			})
 		}
 
-		{/*
-		database.ref(`${this.props.state.config.gameId}/${thisUser}/ships`).set(newShips);
-		*/}
-
+		if (allShipsArePlaced(this.state.ships)) {
+			database.ref(`${this.state.gameId}/${this.state.playerName}/ships`).set(this.state.ships);
+		}
 	}
 
 	handleBoardSubmit(e) {
@@ -136,7 +138,7 @@ class Game extends React.Component {
 class Setup extends React.Component {
 	state = {
 		playerName: "",
-		gameID: "",
+		gameId: "",
 		boardSize: 0,
 		numPlayers: 0
 	}
@@ -157,7 +159,7 @@ class Setup extends React.Component {
 		e.preventDefault();
 		this.props.handleSubmit({
 			playerName: this.state.playerName,
-			gameID: this.state.gameID,
+			gameId: this.state.gameId,
 			boardSize: Number(this.state.boardSize),
 			numPlayers: Number(this.state.numPlayers)
 		});
@@ -176,10 +178,10 @@ class Setup extends React.Component {
 						onChange={this.handleChange}
 					/>
 					<ConfigSelector
-						id="gameID"
+						id="gameId"
 						type="text"
 						labelText="Choose a game id: "
-						value={this.state.gameID}
+						value={this.state.gameId}
 						onChange={this.handleChange}
 					/>
 					<ConfigSelector id="boardSize"
@@ -424,11 +426,11 @@ ReactDOM.render(<Game/>, root);
 
 function errorsInConfigInput(config) {
 	config.playerName = config.playerName.trim();
-	config.gameID = config.gameID.trim();
+	config.gameId = config.gameId.trim();
 	let errorMsg = "";
 	let computerToHuman = {
 		playerName: "player name",
-		gameID: "game id",
+		gameId: "game id",
 		boardSize: "board size",
 		numPlayers: "number of players"
 	}
