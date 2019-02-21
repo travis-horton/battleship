@@ -401,7 +401,7 @@ class StaticBoard extends React.Component {
 	}
 
 	handleClick(e) {
-		this.props.HandleClick(e);
+		this.props.handleClick(e);
 	}
 
 	render() {
@@ -437,6 +437,7 @@ class StaticBoard extends React.Component {
 							key={row}
 							row={row + 1}
 							shots={this.props.shots}
+							handleClick={this.handleClick}
 						/>
 					)}
 					<HeaderRow rowLength={this.props.boardSize}/>
@@ -534,6 +535,15 @@ class Row extends React.Component {
 }
 
 class StaticRow extends React.Component {
+	constructor(props) {
+		super(props);
+		this.handleClick = this.handleClick.bind(this);
+	}
+
+	handleClick(e) {
+		this.props.handleClick(e);
+	}
+
 	render() {
 		let nCol = [];
 		for (let i = 0; i < this.props.rowLength; i++) {
@@ -547,6 +557,7 @@ class StaticRow extends React.Component {
 						key={col}
 						col={col}
 						className="cell"
+						handleClick={this.handleClick}
 					>{whatShipIsHere(col, this.props.row, this.props.ships)}</p>
 				)}
 				<HeaderCell label={this.props.row}/>
@@ -745,7 +756,7 @@ function newShipsWithoutThisLoc(c, r, ships) {
 		for (let i = 0; i < ships[ship].locs.length; i++) {
 			if (!ships[ship].locs[i]) continue;
 			if (c === ships[ship].locs[i][0] && r === ships[ship].locs[i][1]) {
-				newShips[ship].locs = [null];
+				newShips[ship].locs = [0];
 				return newShips;
 			}
 		}

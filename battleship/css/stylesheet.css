@@ -30,6 +30,7 @@
 	margin: auto;
 	max-height: 18px;
 	vertical-align: center;
+	border-bottom: 1px solid grey;
 }
 
 .headerRow {
@@ -40,6 +41,10 @@
 
 .row:nth-child(3n+1) {
 	background-color: rgb(245,245,255);
+}
+
+.row:first-of-type {
+	border-top: 1px solid grey;
 }
 
 .headerCell {
@@ -60,8 +65,14 @@
 	width: 18px;
 	min-height: 18px;
 	background-color: inherit;
+	border: inherit;
+	border-right: 1px solid grey;
 }
 
 .cell:nth-child(3n) {
 	background-color: rgb(245,245,255);
+}
+
+.cell:first-of-type {
+	border-left: 1px solid grey;
 }
