@@ -15,6 +15,7 @@ class Game extends React.Component {
 			s: {locs: [0], max: 3},
 			d: {locs: [0], max: 2}
 		},
+		shots: [],
 		players: {
 			"": {connected: true, thisPlayerTurn: false, shipsCommitted: false}
 		}
@@ -38,6 +39,7 @@ class Game extends React.Component {
 	handleJoinGame() {
 		let self = this;
 		let gameId = prompt("Enter game id: ");
+		while (!gameId) gameId = prompt("Enter game id: ");
 		database.ref(gameId).once('value', function(snapshot) {
 			if (!snapshot.exists()) {
 				alert("No such game in database.");
@@ -68,8 +70,6 @@ class Game extends React.Component {
 				database.ref(gameId).on('value', function(snapshot) {
 					let fBState = snapshot.val();
 
-					console.log(fBState);
-
 					let newState = {
 						boardSize: fBState.boardSize,
 						gameId: gameId,
@@ -78,10 +78,12 @@ class Game extends React.Component {
 						players: fBState.players
 					}
 
-					console.log((playerName + "Ships"))
-
 					if (snapshot.val()[(playerName + "Ships")] !== undefined) {
 						newState.ships = snapshot.val()[(playerName + "Ships")];
+					}
+
+					if (snapshot.val()[(playerName + "Shots")] !== undefined) {
+						newState.shots = snapshot.val()[(playerName + "Shots")];
 					}
 
 					self.setState(newState);
@@ -152,7 +154,8 @@ class Game extends React.Component {
 
 		} else if (confirm("Are you happy with your ship placement?")) {
 			database.ref(`${this.state.gameId}/players/${this.state.playerName}/shipsCommitted`).set(true);
-			database.ref(`${this.state.gameId}/${this.state.playerName + "Ships"}`).set(this.state.ships)
+			database.ref(`${this.state.gameId}/${this.state.playerName + "Ships"}`).set(this.state.ships);
+			database.ref(`${this.state.gameId}/${this.state.playerName + "Shots"}`).set([0]);
 		}
 	}
 
@@ -184,14 +187,17 @@ class Game extends React.Component {
 			)
 		} else {
 			let thisPlayer = {name: this.state.playerName, ...this.state.players[this.state.playerName]};
+			let allPlayers = Object.keys(this.state.players);
 			return (
 				<div>
 					<BoardArea
 						handleInput={this.handleBoardInput}
+						handleSubmit={this.handleBoardSubmit}
 						boardSize={this.state.boardSize}
 						thisPlayer={thisPlayer}
 						ships={this.state.ships}
-						handleSubmit={this.handleBoardSubmit}
+						shots={this.state.shots}
+						players={allPlayers}
 					/>
 				</div>
 			)
@@ -359,13 +365,29 @@ class BoardArea extends React.Component {
 				</div>
 			)
 		} else {
+			let players = this.props.players;
 			return (
 				<div>
 					<StaticBoard
 						boardSize={this.props.boardSize}
-						player={this.props.thisPlayer.name}
+						boardOwner={"shooting"}
 						ships={this.props.ships}
+						shots={this.props.shots}
+						thisPlayer={this.props.thisPlayer.name}
 					/>
+					<br/>
+					<button onClick={this.handleShoot}>Fire ze missiles!</button>
+					<br/>
+					{players.map((boardOwner) =>
+						<StaticBoard
+							key={boardOwner}
+							boardSize={this.props.boardSize}
+							boardOwner={boardOwner}
+							ships={this.props.ships}
+							shots={this.props.shots}
+							thisPlayer={this.props.thisPlayer.name}
+						/>
+					)}
 				</div>
 			)
 		}
@@ -373,28 +395,71 @@ class BoardArea extends React.Component {
 }
 
 class StaticBoard extends React.Component {
+	constructor(props) {
+		super(props);
+		this.handleClick = this.handleClick.bind(this);
+	}
+
+	handleClick(e) {
+		this.props.HandleClick(e);
+	}
+
 	render() {
 		let nRows = [];
 		for (let i = 0; i < this.props.boardSize; i++) {
 			nRows.push(i);
 		}
 
-		return (
-			<div className="board">
-				<span><mark>{this.props.player}</mark>'s board</span>
-				<HeaderRow rowLength={this.props.boardSize}/>
-				{nRows.map((row) =>
-					<StaticRow
-						rowLength={this.props.boardSize}
-						key={row}
-						row={row + 1}
-						ships={this.props.ships}
-						shots={this.props.shots}
-					/>
-				)}
-				<HeaderRow rowLength={this.props.boardSize}/>
-			</div>
-		)
+		if (this.props.boardOwner === this.props.thisPlayer) {
+			return (
+				<div className="board">
+					<span><mark>your ships</mark></span>
+					<HeaderRow rowLength={this.props.boardSize}/>
+					{nRows.map((row) =>
+						<StaticRow
+							rowLength={this.props.boardSize}
+							key={row}
+							row={row + 1}
+							ships={this.props.ships}
+						/>
+					)}
+					<HeaderRow rowLength={this.props.boardSize}/>
+				</div>
+			)
+		} else if (this.props.boardOwner === "shooting") {
+			return (
+				<div className="board">
+					<span><mark>your shooting board</mark></span>
+					<HeaderRow rowLength={this.props.boardSize}/>
+					{nRows.map((row) =>
+						<StaticRow
+							rowLength={this.props.boardSize}
+							key={row}
+							row={row + 1}
+							shots={this.props.shots}
+						/>
+					)}
+					<HeaderRow rowLength={this.props.boardSize}/>
+				</div>
+			)
+
+		} else {
+			return (
+				<div className="board">
+					<span><mark>shots at {this.props.boardOwner}</mark></span>
+					<HeaderRow rowLength={this.props.boardSize}/>
+					{nRows.map((row) =>
+						<StaticRow
+							rowLength={this.props.boardSize}
+							key={row}
+							row={row + 1}
+							shots={this.props.shots}
+						/>
+					)}
+					<HeaderRow rowLength={this.props.boardSize}/>
+				</div>
+			)
+		}
 	}
 }
 
@@ -478,9 +543,11 @@ class StaticRow extends React.Component {
 			<div className="row">
 				<HeaderCell label={this.props.row}/>
 				{nCol.map((col) =>
-					<p key={col} col={col} row={this.props.row} className="cell">
-
-					</p>
+					<p
+						key={col}
+						col={col}
+						className="cell"
+					>{whatShipIsHere(col, this.props.row, this.props.ships)}</p>
 				)}
 				<HeaderCell label={this.props.row}/>
 			</div>

@@ -19,9 +19,10 @@
 }
 
 .board {
-	padding: 0;
+	padding: 2px;
 	border: 1px dashed grey;
 	display: inline-block;
+	margin: 4px;
 }
 
 .row {
@@ -35,10 +36,6 @@
 	border: none;
 	margin: auto;
 	max-height: 18px;
-}
-
-.row:nth-last-child(2) > input {
-	border-bottom: 1px solid grey;
 }
 
 .row:nth-child(3n+1) {
@@ -62,14 +59,7 @@
 	padding: 0;
 	width: 18px;
 	min-height: 18px;
-	border: inherit;
-	border-top: 1px solid grey;
-	border-left: 1px solid grey;
 	background-color: inherit;
-}
-
-.cell:last-of-type {
-	border-right: 1px solid grey;
 }
 
 .cell:nth-child(3n) {
