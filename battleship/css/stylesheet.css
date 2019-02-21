@@ -24,10 +24,17 @@
 	display: inline-block;
 }
 
-.row .headerRow {
+.row {
 	border: none;
 	margin: auto;
-	display: inline-block;
+	max-height: 18px;
+	vertical-align: center;
+}
+
+.headerRow {
+	border: none;
+	margin: auto;
+	max-height: 18px;
 }
 
 .row:nth-last-child(2) > input {
@@ -40,7 +47,9 @@
 
 .headerCell {
 	padding: 0;
+	margin: 0;
 	min-width: 18px;
+	min-height: 18px;
 	border: none;
 	text-align: center;
 	display: inline-block;
@@ -48,10 +57,11 @@
 }
 
 .cell {
+	display: inline-block;
 	margin: 0;
 	padding: 0;
 	width: 18px;
-	height: 18px;
+	min-height: 18px;
 	border: inherit;
 	border-top: 1px solid grey;
 	border-left: 1px solid grey;

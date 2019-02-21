@@ -4,17 +4,16 @@ let database = firebase.database();
 
 class Game extends React.Component {
 	state = {
-		toDisplay: "chooseJoinOrNew",
 		boardSize: 0,
 		gameId: "",
 		numPlayers: 0,
 		playerName: "",
 		ships: {
-			a: {locs: [null], max: 5},
-			b: {locs: [null], max: 4},
-			c: {locs: [null], max: 3},
-			s: {locs: [null], max: 3},
-			d: {locs: [null], max: 2}
+			a: {locs: [0], max: 5},
+			b: {locs: [0], max: 4},
+			c: {locs: [0], max: 3},
+			s: {locs: [0], max: 3},
+			d: {locs: [0], max: 2}
 		},
 		players: {
 			"": {connected: true, thisPlayerTurn: false, shipsCommitted: false}
@@ -32,25 +31,86 @@ class Game extends React.Component {
 
 	handleNewGame() {
 		this.setState({
-			toDisplay: "Setup"
+			numPlayers: 1
 		});
 	}
 
 	handleJoinGame() {
-		alert("This is still under construction -- can't connect to games yet.");
+		let self = this;
+		let gameId = prompt("Enter game id: ");
+		database.ref(gameId).once('value', function(snapshot) {
+			if (!snapshot.exists()) {
+				alert("No such game in database.");
+				return;
+			}
+
+			if (snapshot.val().players.length >= snapshot.val().numPlayers) {
+				alert("Game is full.");
+				return;
+			}
+
+			let playerName = choosePlayerName();
+
+			database.ref(`${gameId}/players`).once("value").then(function(players) {
+				while (players.hasChild(playerName) && players.val()[playerName].connected) {
+					playerName = choosePlayerName("That name is already taken. ");
+				}
+
+				if (players.hasChild(playerName) && !players.val()[playerName].connected) {
+					database.ref(`${gameId}/players/${playerName}/connected`).set(true);
+					database.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
+
+				} else {
+					let thisPlayerInfo = {connected: true, thisPlayerTurn: false, shipsCommitted: false};
+					database.ref(`${gameId}/players/${playerName}`).set(thisPlayerInfo)
+				}
+
+				database.ref(gameId).on('value', function(snapshot) {
+					let fBState = snapshot.val();
+
+					console.log(fBState);
+
+					let newState = {
+						boardSize: fBState.boardSize,
+						gameId: gameId,
+						numPlayers: fBState.numPlayers,
+						playerName: playerName,
+						players: fBState.players
+					}
+
+					console.log((playerName + "Ships"))
+
+					if (snapshot.val()[(playerName + "Ships")] !== undefined) {
+						newState.ships = snapshot.val()[(playerName + "Ships")];
+					}
+
+					self.setState(newState);
+				});
+			})
+		})
+
 	}
 
 	handleConfigSubmit(config) {
 		if (!errorsInConfigInput(config)) {
 			let players = {};
-			players[config.playerName] = {connected: true, thisPlayerTurn: false};
-			let newState = {
-				toDisplay: "Boards",
-				players,
-				...config
-			};
-			this.setState(newState);
-			database.ref(newState.gameId).set(newState);
+			players[config.playerName] = {connected: true, thisPlayerTurn: false, shipsCommitted: false};
+
+			let firebaseState = {
+				boardSize: config.boardSize,
+				gameId: config.gameId,
+				numPlayers: config.numPlayers,
+				players: {...players}
+			}
+
+			let self = this;
+			database.ref(config.gameId).set(firebaseState);
+			database.ref(config.gameId).on('value', function(snapshot) {
+				let newState = snapshot.val();
+				newState.playerName = config.playerName;
+				self.setState(newState);
+			});
+			database.ref(`${config.gameId}/players/${config.playerName}/connected`).onDisconnect().set(false);
 		}
 	}
 
@@ -74,7 +134,7 @@ class Game extends React.Component {
 
 		if (thisShipCanGoHere(thisInput, c, r, this.state.ships[thisInput])) {
 			let newShips = this.state.ships;
-			if (newShips[thisInput].locs[0] === null) {
+			if (newShips[thisInput].locs[0] === 0) {
 				newShips[thisInput].locs[0] = [c, r];
 			} else {
 				newShips[thisInput].locs.push([c, r]);
@@ -84,48 +144,52 @@ class Game extends React.Component {
 				ships: newShips
 			})
 		}
-
-		if (allShipsArePlaced(this.state.ships)) {
-			database.ref(`${this.state.gameId}/${this.state.playerName}/ships`).set(this.state.ships);
-		}
 	}
 
 	handleBoardSubmit(e) {
-		{/*
-		let completed = checkCompletion(this.state.ships);
-		if (completed < 1) {
-			alert('you have more ships to place!')
-		} else {
-			let confirm = window.confirm('are you happy with your ship placement?');
-			if (confirm) {
-				statusDiv.innerHTML = 'Waiting on:\n' + notDoneUsers.join('\n');
-			}
+		if (!allShipsArePlaced(this.state.ships)) {
+			alert("You have more ships to place!");
+
+		} else if (confirm("Are you happy with your ship placement?")) {
+			database.ref(`${this.state.gameId}/players/${this.state.playerName}/shipsCommitted`).set(true);
+			database.ref(`${this.state.gameId}/${this.state.playerName + "Ships"}`).set(this.state.ships)
 		}
-		*/}
 	}
 
 	render() {
-		let toDisplay = this.state.toDisplay;
-		if (toDisplay === "chooseJoinOrNew") {
+		if (this.state.numPlayers === 0) {
 			return (
 				<div>
 					<button onClick={this.handleNewGame}>New game</button>
 					<button onClick={this.handleJoinGame}>Join game</button>
 				</div>
 			)
-		} else if (toDisplay === "Setup") {
+		} else if (this.state.numPlayers === 1) {
 			return (
 				<Setup handleSubmit={this.handleConfigSubmit}/>
 			)
-		} else if (toDisplay === "Boards") {
+		} else if (!this.state.players[this.state.playerName].shipsCommitted) {
+			let thisPlayer = {name: this.state.playerName, ...this.state.players[this.state.playerName]};
 			return (
 				<div className="flex_box">
-					<Instructions ships={this.state.ships}/>
+					<Instructions/>
 					<BoardArea
-						toDisplay={this.state.toDisplay}
 						handleInput={this.handleBoardInput}
 						boardSize={this.state.boardSize}
-						player={this.state.playerName}
+						thisPlayer={thisPlayer}
+						ships={this.state.ships}
+						handleSubmit={this.handleBoardSubmit}
+					/>
+				</div>
+			)
+		} else {
+			let thisPlayer = {name: this.state.playerName, ...this.state.players[this.state.playerName]};
+			return (
+				<div>
+					<BoardArea
+						handleInput={this.handleBoardInput}
+						boardSize={this.state.boardSize}
+						thisPlayer={thisPlayer}
 						ships={this.state.ships}
 						handleSubmit={this.handleBoardSubmit}
 					/>
@@ -246,7 +310,7 @@ class Instructions extends React.Component {
 	}
 
 	render() {
-		if (!allShipsArePlaced(this.props.ships)) {
+		if (!this.props.ships) {
 			return(
 				<div className="left_column">
 					<p><b>INSTRUCTIONS</b></p>
@@ -281,26 +345,60 @@ class BoardArea extends React.Component {
 	}
 
 	render() {
-		if (!allShipsArePlaced(this.props.ships)) {
+		if (!this.props.thisPlayer.shipsCommitted) {
 			return(
 				<div className="right_column">
-					<Board
+					<InputBoard
 						boardSize={this.props.boardSize}
 						handleInput={this.handleBoardInput}
-						player={this.props.player}
+						player={this.props.thisPlayer.name}
 						ships={this.props.ships}
 					/>
-					<br/>
+					<br/><br/>
 					<button onClick={this.handleSubmit}>Submit ship placement</button>
 				</div>
 			)
 		} else {
-			return <p>you've placed enough ships</p>
+			return (
+				<div>
+					<StaticBoard
+						boardSize={this.props.boardSize}
+						player={this.props.thisPlayer.name}
+						ships={this.props.ships}
+					/>
+				</div>
+			)
 		}
 	}
 }
 
-class Board extends React.Component {
+class StaticBoard extends React.Component {
+	render() {
+		let nRows = [];
+		for (let i = 0; i < this.props.boardSize; i++) {
+			nRows.push(i);
+		}
+
+		return (
+			<div className="board">
+				<span><mark>{this.props.player}</mark>'s board</span>
+				<HeaderRow rowLength={this.props.boardSize}/>
+				{nRows.map((row) =>
+					<StaticRow
+						rowLength={this.props.boardSize}
+						key={row}
+						row={row + 1}
+						ships={this.props.ships}
+						shots={this.props.shots}
+					/>
+				)}
+				<HeaderRow rowLength={this.props.boardSize}/>
+			</div>
+		)
+	}
+}
+
+class InputBoard extends React.Component {
 	constructor(props) {
 		super(props);
 		this.handleInput = this.handleInput.bind(this);
@@ -318,7 +416,7 @@ class Board extends React.Component {
 
 		return (
 			<div className="board">
-				<span>{this.props.player}'s board</span>
+				<span><mark>{this.props.player}</mark>'s board</span>
 				<HeaderRow rowLength={this.props.boardSize}/>
 				{nRows.map((row) =>
 					<Row
@@ -363,6 +461,26 @@ class Row extends React.Component {
 						shots={this.props.shots}
 						handleInput={this.handleInput}
 					/>
+				)}
+				<HeaderCell label={this.props.row}/>
+			</div>
+		)
+	}
+}
+
+class StaticRow extends React.Component {
+	render() {
+		let nCol = [];
+		for (let i = 0; i < this.props.rowLength; i++) {
+			nCol.push(String.fromCharCode(i + 65))
+		}
+		return (
+			<div className="row">
+				<HeaderCell label={this.props.row}/>
+				{nCol.map((col) =>
+					<p key={col} col={col} row={this.props.row} className="cell">
+
+					</p>
 				)}
 				<HeaderCell label={this.props.row}/>
 			</div>
@@ -416,7 +534,7 @@ class Cell extends React.Component {
 class HeaderCell extends React.Component {
 	render() {
 		return (
-			<span className="headerCell"> {this.props.label} </span>
+			<p className="headerCell"> {this.props.label} </p>
 		)
 	}
 
@@ -484,7 +602,7 @@ function thisShipCanGoHere(thisShip, c, r, allShipsOfType) {
 }
 
 function howManyShipsOfThisType(type, allShips) {
-	if (allShips[0] === null) return 0;
+	if (allShips[0] === 0) return 0;
 	return allShips.length;
 }
 
@@ -574,4 +692,19 @@ function allShipsArePlaced(ships) {
 		}
 	}
 	return true;
+}
+
+function choosePlayerName(extraPrompt) {
+	extraPrompt = extraPrompt ? (extraPrompt + "\n") : "";
+	let playerName = prompt(extraPrompt + "Choose a player name (or enter your player name to log back in): ");
+	let regx = /[^a-zA-Z0-9]/;
+	while (regx.test(playerName)) {
+		playerName = choosePlayerName("Name must contain only numbers and/or letters. ");
+	}
+
+	while (playerName.length > 20 || playerName.length === 0) {
+		playerName = choosePlayerName("Name must be between 1 & 20 characters long. ");
+	}
+
+	return playerName;
 }
