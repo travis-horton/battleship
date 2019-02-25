@@ -553,12 +553,12 @@ class StaticRow extends React.Component {
 			<div className="row">
 				<HeaderCell label={this.props.row}/>
 				{nCol.map((col) =>
-					<p
+					<div
 						key={col}
 						col={col}
 						className="cell"
 						handleClick={this.handleClick}
-					>{whatShipIsHere(col, this.props.row, this.props.ships)}</p>
+					>{whatShipIsHere(col, this.props.row, this.props.ships)}</div>
 				)}
 				<HeaderCell label={this.props.row}/>
 			</div>
