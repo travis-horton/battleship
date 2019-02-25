@@ -1,78 +1,78 @@
 * {
-	box-sizing: border-box;
-	font-size: small;
-	font-family: verdana;
-	text-align: center;
+   box-sizing: border-box;
+   font-size: small;
+   font-family: verdana;
+   text-align: center;
 }
 
 .flex_box {
-	display: flex;
+   display: flex;
 }
 
 .left_column {
-	width: 30%;
+   width: 30%;
 }
 
 .right_column {
-	width: 70%;
-	justify-content: center;
+   width: 70%;
+   justify-content: center;
 }
 
 .board {
-	padding: 2px;
-	border: 1px dashed grey;
-	display: inline-block;
-	margin: 4px;
+   padding: 2px;
+   border: 1px dashed grey;
+   display: inline-block;
+   margin: 4px;
 }
 
 .row {
-	border: none;
-	margin: auto;
-	max-height: 18px;
-	vertical-align: center;
-	border-bottom: 1px solid grey;
+   border: none;
+   margin: auto;
+   max-height: 18px;
+   vertical-align: center;
+   border-bottom: 1px solid grey;
 }
 
 .headerRow {
-	border: none;
-	margin: auto;
-	max-height: 18px;
+   border: none;
+   margin: auto;
+   max-height: 18px;
 }
 
 .row:nth-child(3n+1) {
-	background-color: rgb(245,245,255);
+   background-color: rgb(245, 245, 255);
 }
 
 .row:first-of-type {
-	border-top: 1px solid grey;
+   border-top: 1px solid grey;
 }
 
 .headerCell {
-	padding: 0;
-	margin: 0;
-	min-width: 18px;
-	min-height: 18px;
-	border: none;
-	text-align: center;
-	display: inline-block;
-	background-color: white;
+   padding: 0;
+   margin: 0;
+   min-width: 18px;
+   min-height: 18px;
+   border: none;
+   text-align: center;
+   display: inline-block;
+   background-color: white;
 }
 
 .cell {
-	display: inline-block;
-	margin: 0;
-	padding: 0;
-	width: 18px;
-	min-height: 18px;
-	background-color: inherit;
-	border: inherit;
-	border-right: 1px solid grey;
+   display: inline-block;
+   margin: 0;
+   padding: 0;
+   width: 18px;
+   min-height: 18px;
+   background-color: inherit;
+   border: inherit;
+   border-right: 1px solid grey;
 }
 
 .cell:nth-child(3n) {
-	background-color: rgb(245,245,255);
+   background-color: rgb(245, 245, 255);
 }
 
 .cell:first-of-type {
-	border-left: 1px solid grey;
+   border-left: 1px solid grey;
 }
