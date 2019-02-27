@@ -585,20 +585,21 @@ class StaticRow extends React.Component {
         for (let i = 0; i < this.props.rowLength; i++) {
             nCol.push(String.fromCharCode(i + 65))
         }
+        let className = "cell";
+        if (this.props.row === 1) className += " toprow";
 
         return (
             <div className="row">
                 <HeaderCell label={this.props.row}/>
                 {
                     nCol.map((col) =>
-                        <div
+                        <span
                             key={col}
                             col={col}
-                            className="cell"
-                            handleClick={this.handleClick}
+                            className={className}
                         >
                             {whatShipIsHere(col, this.props.row, this.props.ships)}
-                        </div>
+                        </span>
                     )
                 }
                 <HeaderCell label={this.props.row}/>
@@ -641,12 +642,14 @@ class Cell extends React.Component {
 
     render() {
         let ship = whatShipIsHere(this.props.col, this.props.row, this.props.ships);
+        let className = "cell";
+        if (this.props.row === 1) className += " toprow";
         return (
             <input
                 col={this.props.col}
                 row={this.props.row}
                 onChange={this.handleInput}
-                className="cell"
+                className={className}
                 value={ship}
             />
         )

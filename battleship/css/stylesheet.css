@@ -30,21 +30,6 @@
    margin: auto;
    max-height: 18px;
    vertical-align: center;
-   border-bottom: 1px solid grey;
-}
-
-.headerRow {
-   border: none;
-   margin: auto;
-   max-height: 18px;
-}
-
-.row:nth-child(3n+1) {
-   background-color: rgb(245, 245, 255);
-}
-
-.row:first-of-type {
-   border-top: 1px solid grey;
 }
 
 .headerCell {
@@ -67,6 +52,7 @@
    background-color: inherit;
    border: inherit;
    border-right: 1px solid grey;
+   border-bottom: 1px solid grey;
 }
 
 .cell:nth-child(3n) {
@@ -75,4 +61,8 @@
 
 .cell:first-of-type {
    border-left: 1px solid grey;
+}
+
+.toprow {
+    border-top: 1px solid grey;
 }
