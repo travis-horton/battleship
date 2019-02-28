@@ -126,12 +126,8 @@ class Game extends React.Component {
         }
     }
 
-    handleBoardInput(e) {
-        let thisInput = e.target.value.toLowerCase();
-        let c = e.target.attributes.col.nodeValue;
-        let r = parseInt(e.target.attributes.row.nodeValue, 10);
-
-        if (thisInput.length === 0) {
+    handleBoardInput(c, r, val) {
+        if (val.length === 0) {
             let newShips = newShipsWithoutThisLoc(c, r, this.state.ships);
                 this.setState({
                 ships: newShips
@@ -139,18 +135,18 @@ class Game extends React.Component {
             return;
         }
 
-        if (!isShip(thisInput)) {
-            alert(`"${thisInput}" is not a ship letter (a, b, c, s, or d).`);
+        if (!isShip(val)) {
+            alert(`"${val}" is not a ship letter (a, b, c, s, or d).`);
             return false;
         }
 
-        if (thisShipCanGoHere(thisInput, c, r, this.state.ships[thisInput])) {
+        if (thisShipCanGoHere(val, c, r, this.state.ships[val])) {
             let newShips = this.state.ships;
-            if (newShips[thisInput].locs[0] === 0) {
-                newShips[thisInput].locs[0] = [c, r];
+            if (newShips[val].locs[0] === 0) {
+                newShips[val].locs[0] = [c, r];
 
             } else {
-                newShips[thisInput].locs.push([c, r]);
+                newShips[val].locs.push([c, r]);
             }
 
             this.setState({
@@ -363,8 +359,8 @@ class BoardArea extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    handleBoardInput(e) {
-        this.props.handleInput(e);
+    handleBoardInput(c, r, val) {
+        this.props.handleInput(c, r, val);
     }
 
     handleSubmit(e) {
@@ -375,8 +371,9 @@ class BoardArea extends React.Component {
         if (!this.props.thisPlayer.shipsCommitted) {
             return (
                 <div className="right_column">
-                    <InputBoard
+                    <Board
                         boardSize={this.props.boardSize}
+                        boardStyle="input"
                         handleInput={this.handleBoardInput}
                         player={this.props.thisPlayer.name}
                         ships={this.props.ships}
@@ -391,10 +388,9 @@ class BoardArea extends React.Component {
 
             return (
                 <div>
-                    <StaticBoard
+                    <Board
                         boardSize={this.props.boardSize}
                         boardOwner={"shooting"}
-                        ships={this.props.ships}
                         shots={this.props.shots}
                         thisPlayer={this.props.thisPlayer.name}
                     />
@@ -403,9 +399,10 @@ class BoardArea extends React.Component {
                     <br/>
                     {
                         players.map((boardOwner) =>
-                            <StaticBoard
+                            <Board
                                 key={boardOwner}
                                 boardSize={this.props.boardSize}
+                                boardStyle="static"
                                 boardOwner={boardOwner}
                                 ships={this.props.ships}
                                 shots={this.props.shots}
@@ -419,115 +416,54 @@ class BoardArea extends React.Component {
     }
 }
 
-class StaticBoard extends React.Component {
-    constructor(props) {
-        super(props);
-        this.handleClick = this.handleClick.bind(this);
-    }
-
-    handleClick(e) {
-        this.props.handleClick(e);
-    }
-
-    render() {
-        let nRows = [];
-        for (let i = 0; i < this.props.boardSize; i++) {
-            nRows.push(i);
-        }
-
-        if (this.props.boardOwner === this.props.thisPlayer) {
-            return (
-                <div className="board">
-                    <span><mark>your ships</mark></span>
-                    <HeaderRow rowLength={this.props.boardSize}/>
-                    {
-                        nRows.map((row) =>
-                            <StaticRow
-                                rowLength={this.props.boardSize}
-                                key={row}
-                                row={row + 1}
-                                ships={this.props.ships}
-                            />
-                        )
-                    }
-                    <HeaderRow rowLength={this.props.boardSize}/>
-                </div>
-            )
-        } else if (this.props.boardOwner === "shooting") {
-            return (
-                <div className="board">
-                    <span><mark>your shooting board</mark></span>
-                    <HeaderRow rowLength={this.props.boardSize}/>
-                    {
-                        nRows.map((row) =>
-                            <StaticRow
-                                rowLength={this.props.boardSize}
-                                key={row}
-                                row={row + 1}
-                                shots={this.props.shots}
-                                handleClick={this.handleClick}
-                            />
-                        )
-                    }
-                    <HeaderRow rowLength={this.props.boardSize}/>
-                </div>
-            )
-
-        } else {
-            return (
-                <div className="board" >
-                    <span><mark>shots at {this.props.boardOwner}</mark></span>
-                    <HeaderRow rowLength={this.props.boardSize}/>
-                    {
-                        nRows.map((row) =>
-                            <StaticRow
-                                rowLength={this.props.boardSize}
-                                key={row}
-                                row={row + 1}
-                                shots={this.props.shots}
-                            />
-                        )
-                    }
-                    <HeaderRow rowLength={this.props.boardSize}/>
-                </div>
-            )
-        }
-    }
-}
-
-class InputBoard extends React.Component {
+class Board extends React.Component {
     constructor(props) {
         super(props);
         this.handleInput = this.handleInput.bind(this);
     }
 
-    handleInput(e) {
-        this.props.handleInput(e);
+    handleInput(c, r, val) {
+        this.props.handleInput(c, r, val);
     }
 
     render() {
-        let nRows = [];
+        let rows = [];
         for (let i = 0; i < this.props.boardSize; i++) {
-            nRows.push(i);
+            rows.push(i);
+        }
+
+        let cols = [];
+        for (let i = 0; i < this.props.boardSize; i++) {
+            cols.push(String.fromCharCode(i + 65))
         }
 
         return (
             <div className="board">
                 <span><mark>{this.props.player}</mark>'s board</span>
-                <HeaderRow rowLength={this.props.boardSize}/>
+                <Row
+                    rowLength={this.props.boardSize}
+                    cols={cols}
+                    row="header"
+                />
                 {
-                    nRows.map((row) =>
+                    rows.map((row) =>
                         <Row
                             rowLength={this.props.boardSize}
+                            boardStyle={this.props.boardStyle}
                             key={row}
                             row={row + 1}
+                            cols={cols}
                             ships={this.props.ships}
                             shots={this.props.shots}
                             handleInput={this.handleInput}
                         />
                     )
                 }
-                <HeaderRow rowLength={this.props.boardSize}/>
+                <Row
+                    rowLength={this.props.boardSize}
+                    cols={cols}
+                    row="header"
+                />
             </div>
         )
     }
@@ -539,94 +475,46 @@ class Row extends React.Component {
         this.handleInput = this.handleInput.bind(this);
     }
 
-    handleInput(e) {
-        this.props.handleInput(e);
+    handleInput(c, r, val) {
+        this.props.handleInput(c, r, val);
     }
 
     render() {
-        let nCol = [];
-        for (let i = 0; i < this.props.rowLength; i++) {
-            nCol.push(String.fromCharCode(i + 65))
+        let className = "row";
+        if (this.props.row === "header") {
+            return (
+                <div className={className}>
+                    <Cell label=" "/>
+                    {
+                        this.props.cols.map((col) =>
+                            <Cell label={col} key={col}/>
+                        )
+                    }
+                    <Cell label=" "/>
+                </div>
+
+            )
+        } else {
+            return (
+                <div className={className}>
+                    <Cell label={this.props.row}/>
+                    {
+                        this.props.cols.map((col) =>
+                            <Cell
+                                boardStyle={this.props.boardStyle}
+                                key={col}
+                                col={col}
+                                row={this.props.row}
+                                ships={this.props.ships}
+                                shots={this.props.shots}
+                                handleInput={this.handleInput}
+                            />
+                        )
+                    }
+                    <Cell label={this.props.row}/>
+                </div>
+            )
         }
-
-        return (
-            <div className = "row">
-                <HeaderCell label={this.props.row}/>
-                {
-                    nCol.map((col) =>
-                        <Cell
-                            key={col}
-                            col={col}
-                            row={this.props.row}
-                            ships={this.props.ships}
-                            shots={this.props.shots}
-                            handleInput={this.handleInput}
-                        />
-                    )
-                }
-                <HeaderCell label={this.props.row}/>
-            </div>
-        )
-    }
-}
-
-class StaticRow extends React.Component {
-    constructor(props) {
-        super(props);
-        this.handleClick = this.handleClick.bind(this);
-    }
-
-    handleClick(e) {
-        this.props.handleClick(e);
-    }
-
-    render() {
-        let nCol = [];
-        for (let i = 0; i < this.props.rowLength; i++) {
-            nCol.push(String.fromCharCode(i + 65))
-        }
-        let className = "cell";
-        if (this.props.row === 1) className += " toprow";
-
-        return (
-            <div className="row">
-                <HeaderCell label={this.props.row}/>
-                {
-                    nCol.map((col) =>
-                        <span
-                            key={col}
-                            col={col}
-                            className={className}
-                        >
-                            {whatShipIsHere(col, this.props.row, this.props.ships)}
-                        </span>
-                    )
-                }
-                <HeaderCell label={this.props.row}/>
-            </div>
-        )
-    }
-}
-
-class HeaderRow extends Row {
-    render() {
-        let nCol = [];
-        for (let i = 0; i < this.props.rowLength; i++) {
-            nCol.push(String.fromCharCode(i + 65))
-        }
-        return (
-            <div className="headerRow">
-                <HeaderCell label=""/>
-                {
-                    nCol.map((col) =>
-                        <HeaderCell
-                            key={col}
-                            label={col}
-                        />
-                    )
-                } <HeaderCell label=""/>
-            </div>
-        )
     }
 }
 
@@ -637,30 +525,34 @@ class Cell extends React.Component {
     }
 
     handleInput(e) {
-        this.props.handleInput(e);
+        e.preventDefault();
+        this.props.handleInput(this.props.col, this.props.row, e.target.value.toLowerCase());
     }
 
     render() {
         let ship = whatShipIsHere(this.props.col, this.props.row, this.props.ships);
         let className = "cell";
         if (this.props.row === 1) className += " toprow";
-        return (
-            <input
-                col={this.props.col}
-                row={this.props.row}
-                onChange={this.handleInput}
-                className={className}
-                value={ship}
-            />
-        )
-    }
-}
+        if (this.props.col === "A") className += " leftcol";
 
-class HeaderCell extends React.Component {
-    render() {
-        return (
-            <p className="headerCell">{this.props.label}</p>
-        )
+        if (this.props.label) {
+            className += " header"
+            return (
+                <span className={className}>{this.props.label}</span>
+            )
+        } else if (this.props.boardStyle === "static") {
+            return (
+                <span className={className}>{ship}</span>
+            )
+        } else {
+            return (
+                <input
+                    onChange={this.handleInput}
+                    className={className}
+                    value={ship}
+                />
+            )
+        }
     }
 }
 
