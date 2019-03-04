@@ -48,30 +48,40 @@ class Game extends React.Component {
                 return;
             }
 
-            if (snapshot.val().players.length >= snapshot.val().numPlayers) {
-                alert("Game is full.");
-                return;
-            }
+            let maxNumPlayers = snapshot.val().numPlayers;
+            let curNumPlayers = Object.keys(snapshot.val().players).length
 
             let playerName = choosePlayerName();
 
             database.ref(`${gameId}/players`).once("value").then(function(players) {
+                let areShipsCommitted = false;
+
+                if (players.hasChild(playerName)) {
+                    if (!players.val()[playerName].connected) {
+                        database.ref(`${gameId}/players/${playerName}/connected`).set(true);
+                        database.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
+                        areShipsCommitted = players.val()[playerName].shipsCommitted;
+                    } else {
+                        alert("That player is already connected.")
+                        return;
+                    }
+                } else if (curNumPlayers >= maxNumPlayers) {
+                    alert("Game is full.");
+                    return;
+                }
+
                 while (players.hasChild(playerName) && players.val()[playerName].connected) {
-                    playerName = choosePlayerName("That name is already taken. ");
+                    playerName = choosePlayerName("That name is already taken.");
                 }
 
-                if (players.hasChild(playerName) && !players.val()[playerName].connected) {
-                    database.ref(`${gameId}/players/${playerName}/connected`).set(true);
-                    database.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
+                let thisPlayerInfo = {
+                    connected: true,
+                    thisPlayerTurn: false,
+                    shipsCommitted: areShipsCommitted
+                };
 
-                } else {
-                    let thisPlayerInfo = {
-                        connected: true,
-                        thisPlayerTurn: false,
-                        shipsCommitted: false
-                    };
-                    database.ref(`${gameId}/players/${playerName}`).set(thisPlayerInfo)
-                }
+                database.ref(`${gameId}/players/${playerName}`).set(thisPlayerInfo);
+                database.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
 
                 database.ref(gameId).on('value', function(snapshot) {
                     let fBState = snapshot.val();
@@ -88,8 +98,8 @@ class Game extends React.Component {
                         newState.ships = snapshot.val()[(playerName + "Ships")];
                     }
 
-                    if (snapshot.val()[(playerName + "Shots")] !== undefined) {
-                        newState.shots = snapshot.val()[(playerName + "Shots")];
+                    if (snapshot.val().shots !== undefined) {
+                        newState.shots = snapshot.val().shots;
                     }
 
                     self.setState(newState);
@@ -162,11 +172,13 @@ class Game extends React.Component {
         } else if (confirm("Are you happy with your ship placement?")) {
             database.ref(`${this.state.gameId}/players/${this.state.playerName}/shipsCommitted`).set(true);
             database.ref(`${this.state.gameId}/${this.state.playerName + "Ships"}`).set(this.state.ships);
-            database.ref(`${this.state.gameId}/${this.state.playerName + "Shots"}`).set([0]);
+            database.ref(`${this.state.gameId}/shots/${this.state.playerName}`).set([0]);
         }
     }
 
     render() {
+        let shipsCommitted = this.state.players[this.state.playerName].shipsCommitted;
+
         if (this.state.numPlayers === 0) {
             return (
                 <div>
@@ -180,7 +192,7 @@ class Game extends React.Component {
                 <Setup handleSubmit={this.handleConfigSubmit}/>
             )
 
-        } else if (!this.state.players[this.state.playerName].shipsCommitted) {
+        } else if (!shipsCommitted) {
             let thisPlayer = {
                 name: this.state.playerName,
                 ...this.state.players[this.state.playerName]
@@ -204,6 +216,7 @@ class Game extends React.Component {
                 ...this.state.players[this.state.playerName]
             };
             let allPlayers = Object.keys(this.state.players);
+            allPlayers.delete(this.state.PlayerName);
 
             return (
                 <div>
@@ -375,10 +388,10 @@ class BoardArea extends React.Component {
                         boardSize={this.props.boardSize}
                         boardStyle="input"
                         handleInput={this.handleBoardInput}
-                        player={this.props.thisPlayer.name}
+                        boardOwner={this.props.thisPlayer.name}
                         ships={this.props.ships}
+                        thisPlayer={this.props.thisPlayer.name}
                     />
-                    <br/>
                     <br/>
                     <button onClick={this.handleSubmit}>Submit ship placement</button>
                 </div>
@@ -394,15 +407,19 @@ class BoardArea extends React.Component {
                         shots={this.props.shots}
                         thisPlayer={this.props.thisPlayer.name}
                     />
-                    <br/>
+                    <Board
+                        boardSize={this.props.boardSize}
+                        boardOwner={this.props.thisPlayer.name}
+                        ships={this.props.ships}
+                        //shots={this.props.shots}
+                        thisPlayer={this.props.thisPlayer.name}
+                    />
                     <button onClick={this.handleShoot}> Fire ze missiles! </button>
-                    <br/>
                     {
                         players.map((boardOwner) =>
                             <Board
                                 key={boardOwner}
                                 boardSize={this.props.boardSize}
-                                boardStyle="static"
                                 boardOwner={boardOwner}
                                 ships={this.props.ships}
                                 shots={this.props.shots}
@@ -428,18 +445,35 @@ class Board extends React.Component {
 
     render() {
         let rows = [];
+        let cols = [];
+        let playerLabel = (
+            this.props.boardOwner === "shooting" ?
+            "your shooting board" :
+            this.props.boardOwner + "'s board"
+        )
+        let ships = (
+            this.props.boardOwner === this.props.thisPlayer ?
+            this.props.ships :
+            []
+        );
+
+        let shots = [];
+        for (let e in this.props.shots) {
+            if (e !== this.props.boardOwner) {
+                shots.push(...this.props.shots[e])
+            }
+        }
+
         for (let i = 0; i < this.props.boardSize; i++) {
             rows.push(i);
         }
-
-        let cols = [];
         for (let i = 0; i < this.props.boardSize; i++) {
             cols.push(String.fromCharCode(i + 65))
         }
 
         return (
-            <div className="board">
-                <span><mark>{this.props.player}</mark>'s board</span>
+            <span className="board">
+                <span>{playerLabel}</span>
                 <Row
                     rowLength={this.props.boardSize}
                     cols={cols}
@@ -453,7 +487,7 @@ class Board extends React.Component {
                             key={row}
                             row={row + 1}
                             cols={cols}
-                            ships={this.props.ships}
+                            ships={ships}
                             shots={this.props.shots}
                             handleInput={this.handleInput}
                         />
@@ -464,7 +498,7 @@ class Board extends React.Component {
                     cols={cols}
                     row="header"
                 />
-            </div>
+            </span>
         )
     }
 }
@@ -481,6 +515,7 @@ class Row extends React.Component {
 
     render() {
         let className = "row";
+
         if (this.props.row === "header") {
             return (
                 <div className={className}>
@@ -530,27 +565,34 @@ class Cell extends React.Component {
     }
 
     render() {
-        let ship = whatShipIsHere(this.props.col, this.props.row, this.props.ships);
+        let col = this.props.col;
+        let row = this.props.row;
+        let val = whatShipIsHere(col, row, this.props.ships)
         let className = "cell";
-        if (this.props.row === 1) className += " toprow";
-        if (this.props.col === "A") className += " leftcol";
+
+        if (isShotAt(col, row)) {}
+        if (row === 1) className += " toprow";
+        if (col === "A") className += " leftcol";
 
         if (this.props.label) {
             className += " header"
             return (
                 <span className={className}>{this.props.label}</span>
             )
-        } else if (this.props.boardStyle === "static") {
-            return (
-                <span className={className}>{ship}</span>
-            )
-        } else {
+        } else if (this.props.boardStyle === "input") {
             return (
                 <input
                     onChange={this.handleInput}
                     className={className}
-                    value={ship}
+                    value={val}
                 />
+            )
+        } else {
+            return (
+                <span
+                    className={className}
+                    onClick={this.handleClick}
+                >{val}</span>
             )
         }
     }
@@ -725,4 +767,16 @@ function choosePlayerName(extraPrompt) {
     }
 
     return playerName;
+}
+
+function isShotAt(c, r, shots) {
+    for (let shot in shots) {
+        if (shots[shot].locs[0] === null) continue;
+        for (let loc in shots[shot].locs) {
+            if (shots[shot].locs[loc][0] === c && shots[shot].locs[loc][1] === r) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
