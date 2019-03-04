@@ -398,6 +398,8 @@ class BoardArea extends React.Component {
             )
         } else {
             let players = this.props.players;
+            //have to change shots to reflect which board has which shots
+            let shots = this.props.shots;
 
             return (
                 <div>
@@ -411,7 +413,7 @@ class BoardArea extends React.Component {
                         boardSize={this.props.boardSize}
                         boardOwner={this.props.thisPlayer.name}
                         ships={this.props.ships}
-                        //shots={this.props.shots}
+                        shots={this.props.shots}
                         thisPlayer={this.props.thisPlayer.name}
                     />
                     <button onClick={this.handleShoot}> Fire ze missiles! </button>
