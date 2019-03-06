@@ -2,7 +2,7 @@ let doc = document;
 let root = doc.getElementById("root");
 let database = firebase.database();
 
-class Game extends React.Component {
+class App extends React.Component {
     state = {
         boardSize: 0,
         gameId: "",
@@ -22,7 +22,8 @@ class Game extends React.Component {
                 thisPlayerTurn: false,
                 shipsCommitted: false
             }
-        }
+        },
+        turn: 0
     }
 
     constructor(props) {
@@ -32,6 +33,7 @@ class Game extends React.Component {
        this.handleConfigSubmit = this.handleConfigSubmit.bind(this);
        this.handleBoardInput = this.handleBoardInput.bind(this);
        this.handleBoardSubmit = this.handleBoardSubmit.bind(this);
+       this.handleClick = this.handleClick.bind(this);
     }
 
     handleNewGame() {
@@ -176,6 +178,31 @@ class Game extends React.Component {
         }
     }
 
+    handleClick(c, r) {
+        let thisPlayersShots = [...this.state.shots[this.state.playerName]];
+        let thisTurn = this.state.turn;
+
+        if (isShotAt(c, r, thisPlayersShots)) {
+            thisPlayersShots[thisTurn].splice(indexOf(c, r, thisPlayersShots[thisTurn]), 1);
+
+        } else if (thisPlayersShots[thisTurn] === 0) {
+            thisPlayersShots[thisTurn] = [[c, r]]
+
+        } else if (thisPlayersShots[thisTurn].length >= numberOfShotsYouGet(this.state.ships)) {
+            alert(`You only get ${numberOfShotsYouGet(this.state.ships)} shots.`);
+
+
+        } else {
+            thisPlayersShots[this.state.turn].push([c, r]);
+        }
+
+        this.setState({
+            shots: {
+                [this.state.playerName]: thisPlayersShots
+            }
+        })
+    }
+
     render() {
         let shipsCommitted = this.state.players[this.state.playerName].shipsCommitted;
 
@@ -205,6 +232,7 @@ class Game extends React.Component {
                         boardSize={this.state.boardSize}
                         thisPlayer={thisPlayer}
                         ships={this.state.ships}
+                        shots={this.state.shots}
                         handleSubmit={this.handleBoardSubmit}
                     />
                 </div>
@@ -216,13 +244,15 @@ class Game extends React.Component {
                 ...this.state.players[this.state.playerName]
             };
             let allPlayers = Object.keys(this.state.players);
-            allPlayers.delete(this.state.PlayerName);
+
+            allPlayers.splice(allPlayers.indexOf(this.state.PlayerName), 1);
 
             return (
                 <div>
                     <BoardArea
                         handleInput={this.handleBoardInput}
                         handleSubmit={this.handleBoardSubmit}
+                        handleClick={this.handleClick}
                         boardSize={this.state.boardSize}
                         thisPlayer={thisPlayer}
                         ships={this.state.ships}
@@ -370,6 +400,7 @@ class BoardArea extends React.Component {
         super(props);
         this.handleBoardInput = this.handleBoardInput.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleClick = this.handleClick.bind(this);
     }
 
     handleBoardInput(c, r, val) {
@@ -378,6 +409,10 @@ class BoardArea extends React.Component {
 
     handleSubmit(e) {
         this.props.handleSubmit(e);
+    }
+
+    handleClick(c, r) {
+        this.props.handleClick(c, r);
     }
 
     render() {
@@ -389,6 +424,7 @@ class BoardArea extends React.Component {
                         boardStyle="input"
                         handleInput={this.handleBoardInput}
                         boardOwner={this.props.thisPlayer.name}
+                        shots={this.props.shots}
                         ships={this.props.ships}
                         thisPlayer={this.props.thisPlayer.name}
                     />
@@ -398,25 +434,18 @@ class BoardArea extends React.Component {
             )
         } else {
             let players = this.props.players;
-            //have to change shots to reflect which board has which shots
             let shots = this.props.shots;
 
             return (
-                <div>
+                <div className="board_area">
                     <Board
                         boardSize={this.props.boardSize}
                         boardOwner={"shooting"}
                         shots={this.props.shots}
                         thisPlayer={this.props.thisPlayer.name}
+                        handleClick={this.handleClick}
                     />
-                    <Board
-                        boardSize={this.props.boardSize}
-                        boardOwner={this.props.thisPlayer.name}
-                        ships={this.props.ships}
-                        shots={this.props.shots}
-                        thisPlayer={this.props.thisPlayer.name}
-                    />
-                    <button onClick={this.handleShoot}> Fire ze missiles! </button>
+                    <button onClick={this.handleShoot}>Fire ze missiles!</button>
                     {
                         players.map((boardOwner) =>
                             <Board
@@ -429,6 +458,13 @@ class BoardArea extends React.Component {
                             />
                         )
                     }
+                    <Board
+                        boardSize={this.props.boardSize}
+                        boardOwner={this.props.thisPlayer.name}
+                        ships={this.props.ships}
+                        shots={this.props.shots}
+                        thisPlayer={this.props.thisPlayer.name}
+                    />
                 </div>
             )
         }
@@ -439,10 +475,15 @@ class Board extends React.Component {
     constructor(props) {
         super(props);
         this.handleInput = this.handleInput.bind(this);
+        this.handleClick = this.handleClick.bind(this);
     }
 
     handleInput(c, r, val) {
         this.props.handleInput(c, r, val);
+    }
+
+    handleClick(c, r) {
+        this.props.handleClick(c, r);
     }
 
     render() {
@@ -464,6 +505,15 @@ class Board extends React.Component {
             if (e !== this.props.boardOwner) {
                 shots.push(...this.props.shots[e])
             }
+        }
+
+        const objectWithoutKey = (object, key) => {
+            const {[key]: deletedKey, ...otherKeys} = object;
+            let newShots = []
+            for (let person in otherKeys) {
+                newShots.push(...otherKeys[person])
+            }
+            return newShots;
         }
 
         for (let i = 0; i < this.props.boardSize; i++) {
@@ -490,8 +540,12 @@ class Board extends React.Component {
                             row={row + 1}
                             cols={cols}
                             ships={ships}
-                            shots={this.props.shots}
+                            shots={
+                                objectWithoutKey(this.props.shots, this.props.boardOwner)
+                            }
                             handleInput={this.handleInput}
+                            handleClick={this.handleClick}
+                            playerName={playerLabel}
                         />
                     )
                 }
@@ -509,10 +563,15 @@ class Row extends React.Component {
     constructor(props) {
         super(props);
         this.handleInput = this.handleInput.bind(this);
+        this.handleClick = this.handleClick.bind(this);
     }
 
     handleInput(c, r, val) {
         this.props.handleInput(c, r, val);
+    }
+
+    handleClick(c, r) {
+        this.props.handleClick(c, r);
     }
 
     render() {
@@ -545,6 +604,7 @@ class Row extends React.Component {
                                 ships={this.props.ships}
                                 shots={this.props.shots}
                                 handleInput={this.handleInput}
+                                handleClick={this.handleClick}
                             />
                         )
                     }
@@ -559,6 +619,7 @@ class Cell extends React.Component {
     constructor(props) {
         super(props);
         this.handleInput = this.handleInput.bind(this);
+        this.handleClick = this.handleClick.bind(this);
     }
 
     handleInput(e) {
@@ -566,18 +627,24 @@ class Cell extends React.Component {
         this.props.handleInput(this.props.col, this.props.row, e.target.value.toLowerCase());
     }
 
+    handleClick(e) {
+        this.props.handleClick(this.props.col, this.props.row);
+    }
+
     render() {
         let col = this.props.col;
         let row = this.props.row;
-        let val = whatShipIsHere(col, row, this.props.ships)
+        let val = whatShipIsHere(col, row, this.props.ships);
         let className = "cell";
 
-        if (isShotAt(col, row)) {}
+        if (this.props.shots && isShotAt(col, row, this.props.shots)) {
+            className += " potentialshot"
+        }
         if (row === 1) className += " toprow";
         if (col === "A") className += " leftcol";
 
         if (this.props.label) {
-            className += " header"
+            className += " header";
             return (
                 <span className={className}>{this.props.label}</span>
             )
@@ -600,7 +667,7 @@ class Cell extends React.Component {
     }
 }
 
-ReactDOM.render(<Game/>, root);
+ReactDOM.render(<App/>, root);
 
 function errorsInConfigInput(config) {
     config.playerName = config.playerName.trim();
@@ -772,13 +839,30 @@ function choosePlayerName(extraPrompt) {
 }
 
 function isShotAt(c, r, shots) {
-    for (let shot in shots) {
-        if (shots[shot].locs[0] === null) continue;
-        for (let loc in shots[shot].locs) {
-            if (shots[shot].locs[loc][0] === c && shots[shot].locs[loc][1] === r) {
+    for (let turn = 0; turn < shots.length; turn++) {
+        for (let i = 0; i < shots[turn].length; i++) {
+            if (shots[turn][i][0] === c && shots[turn][i][1] === r) {
                 return true;
             }
         }
     }
+
     return false;
+}
+
+function numberOfShotsYouGet(ships) {
+    let shots = 6;
+    for (let ships in ships) {
+        if (ships[ship].locs[0] === 0) shots --;
+    }
+
+    return shots;
+}
+
+function indexOf(c, r, shots) {
+    for (let shot in shots)
+    if (shots[shot][0] === c && shots[shot][1] === r) {
+        return shot;
+    }
+    return -1;
 }

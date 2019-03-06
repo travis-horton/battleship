@@ -19,6 +19,10 @@
     justify-content: center;
 }
 
+.board_area {
+    display: flex;
+}
+
 .board {
     padding: 2px;
     border: 1px dashed grey;
@@ -64,4 +68,8 @@
 
 .leftcol {
     border-left: 1px solid grey;
+}
+
+.potentialshot {
+    background-color: orange !important;
 }
