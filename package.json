@@ -5,6 +5,9 @@
   "author": "kiddspazz (https://www.travish.com)",
   "license": "ISC",
   "description": "my battleship game",
+  "scripts": {
+    "serve": "./node_modules/.bin/parcel ./battleship/index.html"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/kiddspazz/battleship"
