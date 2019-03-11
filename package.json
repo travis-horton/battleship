@@ -6,7 +6,8 @@
   "license": "ISC",
   "description": "my battleship game",
   "scripts": {
-    "serve": "./node_modules/.bin/parcel ./battleship/index.html"
+    "serve": "./node_modules/.bin/parcel ./battleship/index.html",
+    "build": "./node_modules/.bin/parcel build ./battleship/index.html"
   },
   "repository": {
     "type": "git",
