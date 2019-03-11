@@ -1,5 +1,6 @@
-let doc = document;
-let root = doc.getElementById("root");
+import React from "react";
+import ReactDOM from "react-dom";
+
 let database = firebase.database();
 
 
@@ -301,4 +302,7 @@ class App extends React.Component {
   }
 }
 
-ReactDOM.render(<App/>, root);
+ReactDOM.render(
+  <App />,
+  document.getElementById("root")
+);
