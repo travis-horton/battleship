@@ -14,6 +14,8 @@
     "url": "https://github.com/kiddspazz/battleship"
   },
   "dependencies": {
-    "parcel-bundler": "^1.12.0"
+    "parcel-bundler": "^1.12.0",
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4"
   }
 }
