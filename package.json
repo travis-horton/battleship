@@ -8,5 +8,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/kiddspazz/battleship"
+  },
+  "dependencies": {
+    "parcel-bundler": "^1.12.0"
   }
 }
