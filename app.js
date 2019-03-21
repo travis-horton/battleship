@@ -264,7 +264,19 @@ class App extends Component {
     } else if (!shipsCommitted) {
       let thisPlayer = this.state.players[this.state.playerName];
       thisPlayer.name = this.state.playerName;
-      return (<div>hello</div>);
+      return (
+        <div className="flex_box">
+        <Instructions />
+        <BoardArea
+        handleInput={this.handleBoardInput}
+        boardSize={this.state.boardSize}
+        thisPlayer={thisPlayer}
+        ships={this.state.ships}
+        shots={this.state.shots}
+        handleSubmit={this.handleBoardSubmit}
+        />
+        </div>
+      )
 
     } else {
       let thisPlayer = this.state.players[this.state.playerName];
