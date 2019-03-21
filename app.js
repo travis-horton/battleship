@@ -252,60 +252,54 @@ class App extends Component {
     if (this.state.numPlayers === 0) {
       return (
         <div>
-          <button onClick={this.handleNewGame}>New game</button>
-          <button onClick={this.handleJoinGame}>Join game</button>
+        <button onClick={this.handleNewGame}>New game</button>
+        <button onClick={this.handleJoinGame}>Join game</button>
         </div>
       )
 
     } else if (this.state.numPlayers === 1) {
       return (
         <Setup handleSubmit={this.handleConfigSubmit}/>
-      )
-
-    } else if (!shipsCommitted) {
-      let thisPlayer = {
-        name: this.state.playerName,
-        ...this.state.players[this.state.playerName]
-      };
-      return (
-        <div className="flex_box">
+      ) } else if (!shipsCommitted) { 
+        let thisPlayer = this.state.players[this.state.playerName];
+        thisPlayer.name = this.state.playerName;
+        return (
+          <div className="flex_box">
           <Instructions />
           <BoardArea
-            handleInput={this.handleBoardInput}
-            boardSize={this.state.boardSize}
-            thisPlayer={thisPlayer}
-            ships={this.state.ships}
-            shots={this.state.shots}
-            handleSubmit={this.handleBoardSubmit}
+          handleInput={this.handleBoardInput}
+          boardSize={this.state.boardSize}
+          thisPlayer={thisPlayer}
+          ships={this.state.ships}
+          shots={this.state.shots}
+          handleSubmit={this.handleBoardSubmit}
           />
-        </div>
-      )
+          </div>
+        )
 
-    } else {
-      let thisPlayer = {
-        name: this.state.playerName,
-        ...this.state.players[this.state.playerName]
-      };
-      let allPlayers = Object.keys(this.state.players);
+      } else {
+        let thisPlayer = this.state.players[this.state.playerName];
+        thisPlayer.name = this.state.playerName;
+        let allPlayers = Object.keys(this.state.players);
 
-      allPlayers.splice(allPlayers.indexOf(this.state.playerName), 1);
+        allPlayers.splice(allPlayers.indexOf(this.state.playerName), 1);
 
-      return (
-        <div>
+        return (
+          <div>
           <BoardArea
-            handleInput={this.handleBoardInput}
-            handleSubmit={this.handleBoardSubmit}
-            handleClick={this.handleClick}
-            handleShoot={this.handleShoot}
-            boardSize={this.state.boardSize}
-            thisPlayer={thisPlayer}
-            ships={this.state.ships}
-            shots={this.state.shots}
-            players={allPlayers}
+          handleInput={this.handleBoardInput}
+          handleSubmit={this.handleBoardSubmit}
+          handleClick={this.handleClick}
+          handleShoot={this.handleShoot}
+          boardSize={this.state.boardSize}
+          thisPlayer={thisPlayer}
+          ships={this.state.ships}
+          shots={this.state.shots}
+          players={allPlayers}
           />
-        </div>
-      )
-    }
+          </div>
+        )
+      }
   }
 }
 
