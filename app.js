@@ -260,46 +260,35 @@ class App extends Component {
     } else if (this.state.numPlayers === 1) {
       return (
         <Setup handleSubmit={this.handleConfigSubmit}/>
-      ) } else if (!shipsCommitted) { 
-        let thisPlayer = this.state.players[this.state.playerName];
-        thisPlayer.name = this.state.playerName;
-        return (
-          <div className="flex_box">
-          <Instructions />
-          <BoardArea
-          handleInput={this.handleBoardInput}
-          boardSize={this.state.boardSize}
-          thisPlayer={thisPlayer}
-          ships={this.state.ships}
-          shots={this.state.shots}
-          handleSubmit={this.handleBoardSubmit}
-          />
-          </div>
-        )
+      )
+    } else if (!shipsCommitted) {
+      let thisPlayer = this.state.players[this.state.playerName];
+      thisPlayer.name = this.state.playerName;
+      return (<div>hello</div>);
 
-      } else {
-        let thisPlayer = this.state.players[this.state.playerName];
-        thisPlayer.name = this.state.playerName;
-        let allPlayers = Object.keys(this.state.players);
+    } else {
+      let thisPlayer = this.state.players[this.state.playerName];
+      thisPlayer.name = this.state.playerName;
+      let allPlayers = Object.keys(this.state.players);
 
-        allPlayers.splice(allPlayers.indexOf(this.state.playerName), 1);
+      allPlayers.splice(allPlayers.indexOf(this.state.playerName), 1);
 
-        return (
-          <div>
-          <BoardArea
-          handleInput={this.handleBoardInput}
-          handleSubmit={this.handleBoardSubmit}
-          handleClick={this.handleClick}
-          handleShoot={this.handleShoot}
-          boardSize={this.state.boardSize}
-          thisPlayer={thisPlayer}
-          ships={this.state.ships}
-          shots={this.state.shots}
-          players={allPlayers}
-          />
-          </div>
-        )
-      }
+      return (
+        <div>
+        <BoardArea
+        handleInput={this.handleBoardInput}
+        handleSubmit={this.handleBoardSubmit}
+        handleClick={this.handleClick}
+        handleShoot={this.handleShoot}
+        boardSize={this.state.boardSize}
+        thisPlayer={thisPlayer}
+        ships={this.state.ships}
+        shots={this.state.shots}
+        players={allPlayers}
+        />
+        </div>
+      )
+    }
   }
 }
 
