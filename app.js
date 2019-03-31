@@ -1,12 +1,9 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { errorsInConfigInput, whatShipIsHere, isShip, thisShipCanGoHere, howManyShipsOfThisType, isAdjacent, isInLine, isAdjacentColumn, isAdjacentRow, getOrientation, newShipsWithoutThisLoc, allShipsArePlaced, choosePlayerName, isShotAt, numberOfShotsYouGet, indexOf } from "./modules/functions"
-import Setup from "./components/setup";
+import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
-import Board from "./components/board";
 import Instructions from "./components/instructions";
-import Row from "./components/row";
-import Cell from "./components/cell";
 
 let database = firebase.database();
 
@@ -147,6 +144,7 @@ class App extends Component {
           database.ref(config.gameId).on('value', function(snapshot) {
             let newState = snapshot.val();
             newState.playerName = config.playerName;
+            console.log(newState);
             self.setState(newState);
           });
           database.ref(`${config.gameId}/players/${config.playerName}/connected`).onDisconnect().set(false);
@@ -248,7 +246,6 @@ class App extends Component {
 
   render() {
     let shipsCommitted = this.state.players[this.state.playerName].shipsCommitted;
-
     if (this.state.numPlayers === 0) {
       return (
         <div>

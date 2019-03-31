@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import Row from "./row";
 
 export default class Board extends React.Component {
   constructor(props) {
@@ -60,35 +61,35 @@ export default class Board extends React.Component {
 
     return (
       <span className="board">
-      <span>{playerLabel}</span>
-      <Row
-      rowLength={this.props.boardSize}
-      cols={cols}
-      row="header"
-      />
-      {
-        rows.map((row) =>
-          <Row
+        <span>{playerLabel}</span>
+        <Row
           rowLength={this.props.boardSize}
-          boardStyle={this.props.boardStyle}
-          key={row}
-          row={row + 1}
           cols={cols}
-          ships={ships}
-          shots={
-            objectWithoutKey(this.props.shots, this.props.boardOwner)
-          }
-          handleInput={this.handleInput}
-          handleClick={this.handleClick}
-          playerName={playerLabel}
-          />
-        )
-      }
-      <Row
-      rowLength={this.props.boardSize}
-      cols={cols}
-      row="header"
-      />
+          row="header"
+        />
+        {
+          rows.map((row) =>
+            <Row
+              rowLength={this.props.boardSize}
+              boardStyle={this.props.boardStyle}
+              key={row}
+              row={row + 1}
+              cols={cols}
+              ships={ships}
+              shots={
+                objectWithoutKey(this.props.shots, this.props.boardOwner)
+              }
+              handleInput={this.handleInput}
+              handleClick={this.handleClick}
+              playerName={playerLabel}
+            />
+          )
+        }
+        <Row
+          rowLength={this.props.boardSize}
+          cols={cols}
+          row="header"
+        />
       </span>
     )
   }

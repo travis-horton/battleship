@@ -1,6 +1,7 @@
 import React, { Component } from "react";
+import Board from "./board";
 
-class BoardArea extends React.Component {
+export default class BoardArea extends React.Component {
     constructor(props) {
         super(props);
         this.handleBoardInput = this.handleBoardInput.bind(this);

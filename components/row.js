@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-class Row extends React.Component {
+import Cell from "./cell";
+
+export default class Row extends React.Component {
     constructor(props) {
         super(props);
         this.handleInput = this.handleInput.bind(this);

@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-class Cell extends React.Component {
+
+export default class Cell extends React.Component {
     constructor(props) {
         super(props);
         this.handleInput = this.handleInput.bind(this);

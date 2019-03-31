@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 
-class Instructions extends React.Component {
+export default class Instructions extends React.Component {
   render() {
     if (!this.props.ships) {
       return (
