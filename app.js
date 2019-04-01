@@ -278,7 +278,11 @@ class App extends Component {
     } else {
       let thisPlayer = this.state.players[this.state.playerName];
       thisPlayer.name = this.state.playerName;
-      let allPlayers = Object.keys(this.state.players);
+      let allPlayers = [];
+      for (let key in this.state.players) {
+        allPlayers.push(key);
+      }
+      //let allPlayers = Object.keys(this.state.players);
 
       allPlayers.splice(allPlayers.indexOf(this.state.playerName), 1);
 
