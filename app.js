@@ -235,6 +235,11 @@ class App extends Component {
       return;
     }
 
+    if (!playerName.turn) {
+      alert("It's not your turn!");
+      return;
+    }
+
     if (!confirm("Are you happy with your shots?")) {
       return;
     }

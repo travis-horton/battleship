@@ -1,22 +1,3 @@
-export {
-  errorsInConfigInput,
-  whatShipIsHere,
-  isShip,
-  thisShipCanGoHere,
-  howManyShipsOfThisType,
-  isAdjacent,
-  isInLine,
-  isAdjacentColumn,
-  isAdjacentRow,
-  getOrientation,
-  newShipsWithoutThisLoc,
-  allShipsArePlaced,
-  choosePlayerName,
-  isShotAt,
-  numberOfShotsYouGet,
-  indexOf
-};
-
 function errorsInConfigInput(config) {
   config.playerName = config.playerName.trim();
   config.gameId = config.gameId.trim();
@@ -214,3 +195,22 @@ function indexOf(c, r, shots) {
     }
   return -1;
 }
+
+export {
+  errorsInConfigInput,
+  whatShipIsHere,
+  isShip,
+  thisShipCanGoHere,
+  howManyShipsOfThisType,
+  isAdjacent,
+  isInLine,
+  isAdjacentColumn,
+  isAdjacentRow,
+  getOrientation,
+  newShipsWithoutThisLoc,
+  allShipsArePlaced,
+  choosePlayerName,
+  isShotAt,
+  numberOfShotsYouGet,
+  indexOf
+};
