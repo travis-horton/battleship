@@ -15,13 +15,12 @@
   },
   "dependencies": {
     "components": "^0.1.0",
-    "parcel": "^1.12.3",
-    "parcel-bundler": "^1.12.0",
-    "react": "^16.8.4",
-    "react-dom": "^16.8.4"
+    "parcel-bundler": "^1.12.3",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "devDependencies": {
-    "@babel/plugin-transform-destructuring": "^7.3.2",
+    "@babel/plugin-transform-destructuring": "^7.5.0",
     "babel-core": "^6.26.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
