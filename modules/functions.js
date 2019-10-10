@@ -59,21 +59,30 @@ function isShip(value) {
 
 function thisShipCanGoHere(thisShip, c, r, allShipsOfType) {
   let thisShipLoc = [c, r]
-  let countOfThisShip = howManyShipsOfThisType(thisShip, allShipsOfType.locs);
+  //check if there are no ships of type (can go anywhere) or max ships of type (can't go anywhere)
+  let countOfThisShip = allShipsOfType.locs[0] === 0 ? 0 : allShipsOfType.locs.length;
   if (countOfThisShip >= allShipsOfType.max) {
     alert(
       `You can only place ${allShipsOfType.max} "${thisShip}"s and you've already placed ${allShipsOfType.max}.`
     )
     return false;
   }
+
   if (countOfThisShip === 0) return true;
   if (countOfThisShip === 1) return isAdjacent(thisShipLoc, allShipsOfType.locs)
   return (isAdjacent(thisShipLoc, allShipsOfType.locs) && isInLine(thisShipLoc, allShipsOfType.locs))
 }
 
-function howManyShipsOfThisType(type, allShips) {
-  if (allShips[0] === 0) return 0;
-  return allShips.length;
+function crossingShip(thisShip, allLocsOfShips) {
+  if (thisShip === "s") return true;
+  //check bottom left box
+  //allLocsOfShips = [["","",""],["a",etc...
+
+  //change these numbers for different directions
+  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
+  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
+  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
+  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
 }
 
 function isAdjacent(thisShipLoc, otherShips) {
@@ -196,12 +205,20 @@ function indexOf(c, r, shots) {
   return -1;
 }
 
+function allPlayersReady(players, numPlayers) {
+  if (Object.keys(players).length < numPlayers) return false;
+  for (let p in players) {
+    if (!p.shipsCommitted) return false;
+  }
+  return true;
+}
+
 export {
+  allPlayersReady,
   errorsInConfigInput,
   whatShipIsHere,
   isShip,
   thisShipCanGoHere,
-  howManyShipsOfThisType,
   isAdjacent,
   isInLine,
   isAdjacentColumn,
