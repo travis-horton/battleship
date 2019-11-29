@@ -48,8 +48,10 @@ class App extends Component {
 
   handleJoinGame() {
     let self = this;
+
     let gameId = prompt("Enter game id: ");
     while (!gameId) gameId = prompt("Enter game id: ");
+
     database.ref(gameId).once('value', function(snapshot) {
       if (!snapshot.exists()) {
         alert("No such game in database.");
@@ -227,8 +229,7 @@ class App extends Component {
     if (shots[turn].length < numOfShots || !shots[turn]) {
       let howManyShots = shots[turn].length;
       if (!howManyShots) howManyShots = 0;
-      let time = "times";
-      if (shots[turn].length === 1) time = "time";
+      let time = (shots[turn].length === 1 ? "time" : "times");
       alert(`You get ${numOfShots} shots!\nYou've only shot ${howManyShots} ${time}.`)
       return;
     }
@@ -239,7 +240,7 @@ class App extends Component {
     }
 
     if (!playerName.turn) {
-      // should probably say whos turn it is
+      // should probably say whose turn it is
       alert("It's not your turn!");
       return;
     }
@@ -249,12 +250,11 @@ class App extends Component {
     }
 
     //do some stuff with firebase to update shots and boards...
-
     console.log("fire ze missiles!");
+
   }
 
   render() {
-    let shipsCommitted = this.state.players[this.state.playerName].shipsCommitted;
     if (this.state.numPlayers === 0) {
       return (
         <div>
@@ -263,41 +263,42 @@ class App extends Component {
         </div>
       )
 
-    } else if (this.state.numPlayers === 1) {
+    } 
+
+    if (this.state.numPlayers === 1) {
       return (
         <Setup handleSubmit={this.handleConfigSubmit}/>
       )
-    } else if (!shipsCommitted) {
-      let thisPlayer = this.state.players[this.state.playerName];
-      thisPlayer.name = this.state.playerName;
+    } 
+
+    let thisPlayer = this.state.players[this.state.playerName];
+    thisPlayer.name = this.state.playerName;
+
+    if (!thisPlayer.shipsCommitted) {
       return (
         <div className="flex_box">
         <Instructions />
         <BoardArea
-        handleInput={this.handleBoardInput}
-        boardSize={this.state.boardSize}
-        thisPlayer={thisPlayer}
-        ships={this.state.ships}
-        shots={this.state.shots}
-        handleSubmit={this.handleBoardSubmit}
+          handleInput={this.handleBoardInput}
+          boardSize={this.state.boardSize}
+          thisPlayer={thisPlayer}
+          ships={this.state.ships}
+          shots={this.state.shots}
+          handleSubmit={this.handleBoardSubmit}
         />
         </div>
       )
 
-    } else {
-      let thisPlayer = this.state.players[this.state.playerName];
-      thisPlayer.name = this.state.playerName;
-      let allPlayers = [];
-      for (let key in this.state.players) {
-        allPlayers.push(key);
-      }
-      //let allPlayers = Object.keys(this.state.players);
+    } 
 
-      allPlayers.splice(allPlayers.indexOf(this.state.playerName), 1);
+    let allOtherPlayers = [];
+    for (let key in this.state.players) {
+      if (this.state.playerName !== key) allOtherPlayers.push(key);
+    }
 
-      return (
-        <div>
-        <BoardArea
+    return (
+      <div>
+      <BoardArea
         handleInput={this.handleBoardInput}
         handleSubmit={this.handleBoardSubmit}
         handleClick={this.handleClick}
@@ -306,11 +307,10 @@ class App extends Component {
         thisPlayer={thisPlayer}
         ships={this.state.ships}
         shots={this.state.shots}
-        players={allPlayers}
-        />
-        </div>
-      )
-    }
+        players={allOtherPlayers}
+      />
+      </div>
+    )
   }
 }
 
