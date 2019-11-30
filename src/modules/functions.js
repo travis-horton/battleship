@@ -205,10 +205,13 @@ function indexOf(c, r, shots) {
   return -1;
 }
 
-function allPlayersReady(players, numPlayers) {
-  if (Object.keys(players).length < numPlayers) return false;
+function allPlayersReady(players, maxPlayers) {
+  let numPlayers = Object.keys(players).length;
+  if (numPlayers < maxPlayers) return false;
   for (let p in players) {
-    if (!p.shipsCommitted) return false;
+    if (!players[p].shipsCommitted) {
+      return false;
+    }
   }
   return true;
 }
