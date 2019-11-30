@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import {whatShipIsHere, isShotAt} from "../modules/functions";
+import { whatShipIsHere } from "../modules/ships.js";
+import { isShotAt } from "../modules/shooting.js";
 
 export default class Cell extends React.Component {
     constructor(props) {

@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import { allPlayersReady, errorsInConfigInput, whatShipIsHere, isShip, thisShipCanGoHere, isAdjacent, isInLine, isAdjacentColumn, isAdjacentRow, getOrientation, newShipsWithoutThisLoc, allShipsArePlaced, choosePlayerName, isShotAt, numberOfShotsYouGet, indexOf } from "./modules/functions"
+import { errorsInConfigInput, choosePlayerName } from "./modules/config.js";
+import { isShotAt, numberOfShotsYouGet, indexOfShot } from "./modules/shooting.js";
+import { allPlayersShipsPlaced, isShip, thisShipCanGoHere, newShipsWithoutThisLoc, allShipsArePlaced} from "./modules/ships.js"
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
 import Instructions from "./components/instructions";
@@ -117,7 +119,6 @@ class App extends Component {
         });
       })
     })
-
   }
 
   handleConfigSubmit(config) {
@@ -137,20 +138,20 @@ class App extends Component {
       }
 
       let self = this;
-      database.ref("/").once("value").then(function (snapshot) {
+      database.ref("/").once("value").then((snapshot) => {
         if (snapshot.hasChild(config.gameId)) {
           alert("Game ID already taken, choose a new game ID.");
 
         } else {
           database.ref(config.gameId).set(firebaseState);
-          database.ref(config.gameId).on('value', function(snapshot) {
+          database.ref(config.gameId).on('value', (snapshot) => {
             let newState = snapshot.val();
             newState.playerName = config.playerName;
             self.setState(newState);
           });
           database.ref(`${config.gameId}/players/${config.playerName}/connected`).onDisconnect().set(false);
         }
-      })
+      });
     }
   }
 
@@ -179,9 +180,8 @@ class App extends Component {
 
       this.setState({
         ships: newShips
-      })
+      });
     }
-
   }
 
   handleBoardSubmit(e) {
@@ -201,7 +201,7 @@ class App extends Component {
     let thisTurn = this.state.turn;
 
     if (isShotAt(c, r, thisPlayersShots)) {
-      thisPlayersShots[thisTurn].splice(indexOf(c, r, thisPlayersShots[thisTurn]), 1);
+      thisPlayersShots[thisTurn].splice(indexOfShot(c, r, thisPlayersShots[thisTurn]), 1);
 
     } else if (thisPlayersShots[thisTurn] === 0) {
       thisPlayersShots[thisTurn] = [[c, r]]
@@ -217,7 +217,14 @@ class App extends Component {
       shots: {
         [this.state.playerName]: thisPlayersShots
       }
-    })
+    });
+
+    database.ref(`${this.state.gameId}/shots/${this.state.playerName}/${thisTurn}`).set(
+      // keep the database from deleting entry if empty array
+      thisPlayersShots[thisTurn].length > 0 ? 
+      this.state.shots[this.state.playerName][thisTurn] :
+      [0]
+    );
   }
 
   handleShoot() {
@@ -229,12 +236,11 @@ class App extends Component {
     if (shots[turn].length < numOfShots || !shots[turn]) {
       let howManyShots = shots[turn].length;
       if (!howManyShots) howManyShots = 0;
-      let time = (shots[turn].length === 1 ? "time" : "times");
-      alert(`You get ${numOfShots} shots!\nYou've only shot ${howManyShots} ${time}.`)
+      alert(`You get ${numOfShots} shots!\nYou've only shot ${howManyShots} ${howManyShots === 1 ? "time" : "times"}.`);
       return;
     }
 
-    if (!allPlayersReady(this.state.players, this.state.numPlayers)) {
+    if (!allPlayersShipsPlaced(this.state.players, this.state.numPlayers)) {
       alert("Waiting on other players to join/add ships.");
       return;
     }
