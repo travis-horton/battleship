@@ -1,4 +1,8 @@
-export function errorsInConfigInput(config) {
+import { getLocalData } from "./connect.js";
+// Checks config for errors: Only alphanumeric values, less the 20 characters, and numbers 
+// fit the board size and number of player restrictions.
+// RETURNS: TRUE if there are errors, FALSE if no errors.
+const errorsInConfigInput = (config) => {
   config.playerName = config.playerName.trim();
   config.gameId = config.gameId.trim();
   let errorMsg = "";
@@ -13,13 +17,19 @@ export function errorsInConfigInput(config) {
   for (let entry in config) {
     if (config[entry].length === 0) {
       errorMsg += `You didn't choose a ${computerToHuman[entry]}.\n`;
-    } else if (config[entry].length > 20) {
-      errorMsg += `Your ${computerToHuman[entry]} is greater than 20 characters.\n`;
     }
 
-    if (regx.test(config[entry])) {
-      errorMsg += `You can only use letters or numbers in ${computerToHuman[entry]}.\n`;
+    if (config[entry].length > 20) {
+      errorMsg += `Your ${computerToHuman[entry]} is greater than 20 characters.\n`;
     }
+  }
+
+  if (regx.test(config.playerName)) {
+    errorMsg += `You can only use letters or numbers in player name.\n`;
+  }
+
+  if (regx.test(config.gameId)) {
+    errorMsg += `You can only use letters or numbers in game id.\n`;
   }
 
   if (config.boardSize.toString().indexOf(".") > -1 || config.boardSize < 10 || config.boardSize > 20) {
@@ -39,17 +49,37 @@ export function errorsInConfigInput(config) {
   };
 }
 
-export function choosePlayerName(extraPrompt) {
-  extraPrompt = extraPrompt ? (extraPrompt + "\n") : "";
-  let playerName = prompt(extraPrompt + "Choose a player name (or enter your player name to log back in): ");
-  let regx = /[^a-zA-Z0-9]/;
-  while (regx.test(playerName)) {
-    playerName = choosePlayerName("Name must contain only numbers and/or letters. ");
-  }
+export const submitConfig = (config, db, self) => {
+  if (errorsInConfigInput(config)) return;
 
-  while (playerName.length > 20 || playerName.length === 0) {
-    playerName = choosePlayerName("Name must be between 1 & 20 characters long. ");
-  }
+  db.ref("/").once("value").then((snapshot) => {
+    if (snapshot.hasChild(config.gameId)) {
+      alert("Game ID already taken, choose a new game ID.");
+    }
 
-  return playerName;
+    let players = {};
+    // Initialize new player.
+    players[config.playerName] = {
+      connected: true,
+      thisPlayerTurn: false,
+      shipsCommitted: false
+    };
+
+    // Initialize configurations for db.
+    let firebaseState = {
+      boardSize: config.boardSize,
+      gameId: config.gameId,
+      numPlayers: config.numPlayers,
+      players: {...players}
+    }
+
+    // Set db state.
+    db.ref(config.gameId).set(firebaseState);
+
+    // On change to db state, update client state.
+    db.ref(config.gameId).on('value', (snapshot) => {
+      self.setState(getLocalData(snapshot.val(), config.playerName));
+    });
+    db.ref(`${config.gameId}/players/${config.playerName}/connected`).onDisconnect().set(false);
+  });
 }

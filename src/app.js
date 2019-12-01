@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import { errorsInConfigInput, choosePlayerName } from "./modules/config.js";
+import { submitConfig } from "./modules/config.js";
+import { joinGame } from "./modules/connect.js";
 import { isShotAt, numberOfShotsYouGet, indexOfShot } from "./modules/shooting.js";
 import { allPlayersShipsPlaced, isShip, thisShipCanGoHere, newShipsWithoutThisLoc, allShipsArePlaced} from "./modules/ships.js"
 import Setup from "./components/setup.js";
@@ -46,113 +47,24 @@ class App extends Component {
 
   handleNewGame() {
     this.setState({numPlayers: 1});
+
   }
 
   handleJoinGame() {
     let self = this;
 
     let gameId = prompt("Enter game id: ");
-    while (!gameId) gameId = prompt("Enter game id: ");
+    if (gameId === null || gameId.length === 0) return;
 
-    database.ref(gameId).once('value', function(snapshot) {
-      if (!snapshot.exists()) {
-        alert("No such game in database.");
-        return;
-      }
-
-      let maxNumPlayers = snapshot.val().numPlayers;
-      let curNumPlayers = Object.keys(snapshot.val().players).length
-
-      let playerName = choosePlayerName();
-
-      database.ref(`${gameId}/players`).once("value").then(function(players) {
-        let areShipsCommitted = false;
-
-        if (players.hasChild(playerName)) {
-          if (!players.val()[playerName].connected) {
-            database.ref(`${gameId}/players/${playerName}/connected`).set(true);
-            database.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
-            areShipsCommitted = players.val()[playerName].shipsCommitted;
-          } else {
-            alert("That player is already connected.")
-            return;
-          }
-        } else if (curNumPlayers >= maxNumPlayers) {
-          alert("Game is full.");
-          return;
-        }
-
-        while (players.hasChild(playerName) && players.val()[playerName].connected) {
-          playerName = choosePlayerName("That name is already taken.");
-        }
-
-        let thisPlayerInfo = {
-          connected: true,
-          thisPlayerTurn: false,
-          shipsCommitted: areShipsCommitted
-        };
-
-        database.ref(`${gameId}/players/${playerName}`).set(thisPlayerInfo);
-        database.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
-
-        database.ref(gameId).on('value', function(snapshot) {
-          let fBState = snapshot.val();
-
-          let newState = {
-            boardSize: fBState.boardSize,
-            gameId: gameId,
-            numPlayers: fBState.numPlayers,
-            playerName: playerName,
-            players: fBState.players,
-            turn: fBState.turn
-          }
-
-          if (snapshot.val()[(playerName + "Ships")] !== undefined) {
-            newState.ships = snapshot.val()[(playerName + "Ships")];
-          }
-
-          if (snapshot.val().shots !== undefined) {
-            newState.shots = snapshot.val().shots;
-          }
-
-          self.setState(newState);
-        });
-      })
-    })
+    // This joins the game if the gameId exists in the database.
+    // SIDE EFFECTS: sets state to database data and adds player if player is new.
+    joinGame(gameId, database, self);
   }
 
   handleConfigSubmit(config) {
-    if (!errorsInConfigInput(config)) {
-      let players = {};
-      players[config.playerName] = {
-        connected: true,
-        thisPlayerTurn: false,
-        shipsCommitted: false
-      };
-
-      let firebaseState = {
-        boardSize: config.boardSize,
-        gameId: config.gameId,
-        numPlayers: config.numPlayers,
-        players: {...players}
-      }
-
-      let self = this;
-      database.ref("/").once("value").then((snapshot) => {
-        if (snapshot.hasChild(config.gameId)) {
-          alert("Game ID already taken, choose a new game ID.");
-
-        } else {
-          database.ref(config.gameId).set(firebaseState);
-          database.ref(config.gameId).on('value', (snapshot) => {
-            let newState = snapshot.val();
-            newState.playerName = config.playerName;
-            self.setState(newState);
-          });
-          database.ref(`${config.gameId}/players/${config.playerName}/connected`).onDisconnect().set(false);
-        }
-      });
-    }
+    let self = this;
+    
+    submitConfig(config, database, self);
   }
 
   handleBoardInput(c, r, val) {
@@ -285,12 +197,12 @@ class App extends Component {
         <div className="flex_box">
         <Instructions />
         <BoardArea
-          handleInput={this.handleBoardInput}
-          boardSize={this.state.boardSize}
-          thisPlayer={thisPlayer}
-          ships={this.state.ships}
-          shots={this.state.shots}
-          handleSubmit={this.handleBoardSubmit}
+        handleInput={this.handleBoardInput}
+        boardSize={this.state.boardSize}
+        thisPlayer={thisPlayer}
+        ships={this.state.ships}
+        shots={this.state.shots}
+        handleSubmit={this.handleBoardSubmit}
         />
         </div>
       )
@@ -305,15 +217,15 @@ class App extends Component {
     return (
       <div>
       <BoardArea
-        handleInput={this.handleBoardInput}
-        handleSubmit={this.handleBoardSubmit}
-        handleClick={this.handleClick}
-        handleShoot={this.handleShoot}
-        boardSize={this.state.boardSize}
-        thisPlayer={thisPlayer}
-        ships={this.state.ships}
-        shots={this.state.shots}
-        players={allOtherPlayers}
+      handleInput={this.handleBoardInput}
+      handleSubmit={this.handleBoardSubmit}
+      handleClick={this.handleClick}
+      handleShoot={this.handleShoot}
+      boardSize={this.state.boardSize}
+      thisPlayer={thisPlayer}
+      ships={this.state.ships}
+      shots={this.state.shots}
+      players={allOtherPlayers}
       />
       </div>
     )
