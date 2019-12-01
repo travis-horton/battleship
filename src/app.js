@@ -47,7 +47,6 @@ class App extends Component {
 
   handleNewGame() {
     this.setState({numPlayers: 1});
-
   }
 
   handleJoinGame() {
@@ -64,6 +63,9 @@ class App extends Component {
   handleConfigSubmit(config) {
     let self = this;
     
+    // First, checks config for errors.
+    // Then sets db state to those config params.
+    // Lastly tells database to notify and update local state on changes.
     submitConfig(config, database, self);
   }
 

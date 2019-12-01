@@ -1,4 +1,5 @@
 import { getLocalData } from "./connect.js";
+
 // Checks config for errors: Only alphanumeric values, less the 20 characters, and numbers 
 // fit the board size and number of player restrictions.
 // RETURNS: TRUE if there are errors, FALSE if no errors.
@@ -55,26 +56,26 @@ export const submitConfig = (config, db, self) => {
   db.ref("/").once("value").then((snapshot) => {
     if (snapshot.hasChild(config.gameId)) {
       alert("Game ID already taken, choose a new game ID.");
+      return;
     }
 
-    let players = {};
-    // Initialize new player.
-    players[config.playerName] = {
-      connected: true,
-      thisPlayerTurn: false,
-      shipsCommitted: false
-    };
-
     // Initialize configurations for db.
-    let firebaseState = {
+    let fBState = {
       boardSize: config.boardSize,
       gameId: config.gameId,
       numPlayers: config.numPlayers,
-      players: {...players}
+      // Initialize this player in players.
+      players: {
+        [config.playerName]: {
+          connected: true,
+          thisPlayerTurn: false,
+          shipsCommitted: false
+        }
+      }
     }
 
     // Set db state.
-    db.ref(config.gameId).set(firebaseState);
+    db.ref(config.gameId).set(fBState);
 
     // On change to db state, update client state.
     db.ref(config.gameId).on('value', (snapshot) => {
