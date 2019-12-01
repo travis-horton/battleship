@@ -64,7 +64,7 @@ const getOrientation = (twoCells) => {
   if (firstCToNumber - secondCToNumber === -(firstCellR - secondCellR)) return "fd";
 }
 
-const whatShipIsHere = (c, r, ships) => {
+export const whatShipIsHere = (c, r, ships) => {
   for (let ship in ships) {
     if (ships[ship].locs[0] === null) continue;
     for (let loc in ships[ship].locs) {
@@ -131,7 +131,7 @@ export const allPlayersShipsPlaced = (players, maxPlayers) => {
   return true;
 }
 
-export const handleShipPlacement = (c, r, val, self) => {
+export const inputShip = (c, r, val, self) => {
     if (val.length === 0) {
       let newShips = newShipsWithoutThisLoc(c, r, self.state.ships);
       self.setState({

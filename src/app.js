@@ -2,8 +2,8 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { submitConfig } from "./modules/config.js";
 import { joinGame } from "./modules/connect.js";
-import { isShotAt, numberOfShotsYouGet, indexOfShot } from "./modules/shooting.js";
-import { handleShipPlacement, allShipsArePlaced, allPlayersShipsPlaced } from "./modules/ships.js"
+import { inputShot, shoot } from "./modules/shooting.js";
+import { inputShip, whatShipIsHere, allShipsArePlaced, allPlayersShipsPlaced } from "./modules/ships.js"
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
 import Instructions from "./components/instructions";
@@ -72,7 +72,10 @@ class App extends Component {
   handleBoardInput(c, r, val) {
     let self = this;
 
-    handleShipPlacement(c, r, val, self);
+    // Checks each entry of ship for valid placement and
+    // sets state to reflect valid placement.
+    // SIDE EFFECTS: Sets local ship state.
+    inputShip(c, r, val, self);
  }
 
   handleBoardSubmit(e) {
@@ -88,67 +91,17 @@ class App extends Component {
   }
 
   handleClick(c, r) {
-    let thisPlayersShots = [...this.state.shots[this.state.playerName]];
-    let thisTurn = this.state.turn;
+    let self = this;
 
-    if (isShotAt(c, r, thisPlayersShots)) {
-      thisPlayersShots[thisTurn].splice(indexOfShot(c, r, thisPlayersShots[thisTurn]), 1);
-
-    } else if (thisPlayersShots[thisTurn] === 0) {
-      thisPlayersShots[thisTurn] = [[c, r]]
-
-    } else if (thisPlayersShots[thisTurn].length >= numberOfShotsYouGet(this.state.ships)) {
-      alert(`You only get ${numberOfShotsYouGet(this.state.ships)} shots.`);
-
-    } else {
-      thisPlayersShots[this.state.turn].push([c, r]);
-    }
-
-    this.setState({
-      shots: {
-        [this.state.playerName]: thisPlayersShots
-      }
-    });
-
-    database.ref(`${this.state.gameId}/shots/${this.state.playerName}/${thisTurn}`).set(
-      // keep the database from deleting entry if empty array
-      thisPlayersShots[thisTurn].length > 0 ? 
-      this.state.shots[this.state.playerName][thisTurn] :
-      [0]
-    );
+    // On click on a cell in the board:
+    // updates shots chosen and highlights cell.
+    // SIDE EFFECTS: Sets db state.
+    inputShot(c, r, database, self);
   }
 
   handleShoot() {
-    let playerName = this.state.playerName;
-    let shots = this.state.shots[playerName];
-    let turn = this.state.turn;
-    let numOfShots = numberOfShotsYouGet(this.state.ships);
-
-    if (shots[turn].length < numOfShots || !shots[turn]) {
-      let howManyShots = shots[turn].length;
-      if (!howManyShots) howManyShots = 0;
-      alert(`You get ${numOfShots} shots!\nYou've only shot ${howManyShots} ${howManyShots === 1 ? "time" : "times"}.`);
-      return;
-    }
-
-    if (!allPlayersShipsPlaced(this.state.players, this.state.numPlayers)) {
-      alert("Waiting on other players to join/add ships.");
-      return;
-    }
-
-    if (!playerName.turn) {
-      // should probably say whose turn it is
-      alert("It's not your turn!");
-      return;
-    }
-
-    if (!confirm("Are you happy with your shots?")) {
-      return;
-    }
-
-    //do some stuff with firebase to update shots and boards...
-    console.log("fire ze missiles!");
-
+    let self = this;
+    shoot(self, database);
   }
 
   render() {
