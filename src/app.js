@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { submitConfig } from "./modules/config.js";
 import { joinGame } from "./modules/connect.js";
 import { isShotAt, numberOfShotsYouGet, indexOfShot } from "./modules/shooting.js";
-import { allPlayersShipsPlaced, isShip, thisShipCanGoHere, newShipsWithoutThisLoc, allShipsArePlaced} from "./modules/ships.js"
+import { handleShipPlacement, allShipsArePlaced, allPlayersShipsPlaced } from "./modules/ships.js"
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
 import Instructions from "./components/instructions";
@@ -70,33 +70,10 @@ class App extends Component {
   }
 
   handleBoardInput(c, r, val) {
-    if (val.length === 0) {
-      let newShips = newShipsWithoutThisLoc(c, r, this.state.ships);
-      this.setState({
-        ships: newShips
-      })
-      return;
-    }
+    let self = this;
 
-    if (!isShip(val)) {
-      alert(`"${val}" is not a ship letter (a, b, c, s, or d).`);
-      return false;
-    }
-
-    if (thisShipCanGoHere(val, c, r, this.state.ships[val])) {
-      let newShips = this.state.ships;
-      if (newShips[val].locs[0] === 0) {
-        newShips[val].locs[0] = [c, r];
-
-      } else {
-        newShips[val].locs.push([c, r]);
-      }
-
-      this.setState({
-        ships: newShips
-      });
-    }
-  }
+    handleShipPlacement(c, r, val, self);
+ }
 
   handleBoardSubmit(e) {
     if (!allShipsArePlaced(this.state.ships)) {

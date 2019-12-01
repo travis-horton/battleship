@@ -1,4 +1,4 @@
-function crossingShip(thisShip, allLocsOfShips) {
+const crossingShip = (thisShip, allLocsOfShips) => {
   if (thisShip === "s") return true;
   //check bottom left box
   //allLocsOfShips = [["","",""],["a",etc...
@@ -10,7 +10,7 @@ function crossingShip(thisShip, allLocsOfShips) {
   if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
 }
 
-function isAdjacent(thisShipLoc, otherShips) {
+const isAdjacent = (thisShipLoc, otherShips) => {
   for (let i = 0; i < otherShips.length; i++) {
     let testShipColumn = otherShips[i][0];
     let testShipRow = otherShips[i][1];
@@ -23,7 +23,7 @@ function isAdjacent(thisShipLoc, otherShips) {
   return false;
 }
 
-function isInLine(thisShipsLoc, otherShips) {
+const isInLine = (thisShipsLoc, otherShips) => {
   let otherShipsOrientation = getOrientation([otherShips[0], otherShips[1]]);
   let thisShipsOrientation = getOrientation([otherShips[0], thisShipsLoc])
   if (otherShipsOrientation === thisShipsOrientation) return true;
@@ -31,7 +31,7 @@ function isInLine(thisShipsLoc, otherShips) {
   return false;
 }
 
-function isAdjacentColumn(c1, c2) {
+const isAdjacentColumn = (c1, c2) => {
   if (
     String.fromCharCode(c1.charCodeAt(0) - 1) === c2 ||
     String.fromCharCode(c1.charCodeAt(0) + 1) === c2 ||
@@ -43,13 +43,13 @@ function isAdjacentColumn(c1, c2) {
   return false;
 }
 
-function isAdjacentRow(r1, r2) {
+const isAdjacentRow = (r1, r2) => {
   if (r1 - 1 === r2 || r1 + 1 === r2 || r1 === r2) return true;
 
   return false;
 }
 
-function getOrientation(twoCells) {
+const getOrientation = (twoCells) => {
   let firstCellC = twoCells[0][0];
   let firstCellR = twoCells[0][1];
   let secondCellC = twoCells[1][0];
@@ -64,7 +64,7 @@ function getOrientation(twoCells) {
   if (firstCToNumber - secondCToNumber === -(firstCellR - secondCellR)) return "fd";
 }
 
-export function whatShipIsHere(c, r, ships) {
+const whatShipIsHere = (c, r, ships) => {
   for (let ship in ships) {
     if (ships[ship].locs[0] === null) continue;
     for (let loc in ships[ship].locs) {
@@ -76,13 +76,13 @@ export function whatShipIsHere(c, r, ships) {
   return "";
 }
 
-export function isShip(value) {
+const isShip = (value) => {
   let regex = /^[ABCDSabcds]$/
   if (regex.test(value)) return true;
   return false;
 }
 
-export function thisShipCanGoHere(thisShip, c, r, allShipsOfType) {
+const thisShipCanGoHere = (thisShip, c, r, allShipsOfType) => {
   let thisShipLoc = [c, r]
   //check if there are no ships of type (can go anywhere) or max ships of type (can't go anywhere)
   let countOfThisShip = allShipsOfType.locs[0] === 0 ? 0 : allShipsOfType.locs.length;
@@ -98,7 +98,7 @@ export function thisShipCanGoHere(thisShip, c, r, allShipsOfType) {
   return (isAdjacent(thisShipLoc, allShipsOfType.locs) && isInLine(thisShipLoc, allShipsOfType.locs))
 }
 
-export function newShipsWithoutThisLoc(c, r, ships) {
+const newShipsWithoutThisLoc = (c, r, ships) => {
   let newShips = ships;
   for (let ship in ships) {
     for (let i = 0; i < ships[ship].locs.length; i++) {
@@ -111,7 +111,7 @@ export function newShipsWithoutThisLoc(c, r, ships) {
   }
 }
 
-export function allShipsArePlaced(ships) {
+export const allShipsArePlaced = (ships) => {
   for (let e in ships) {
     if (!(ships[e].locs.length === ships[e].max)) {
       return false;
@@ -120,7 +120,7 @@ export function allShipsArePlaced(ships) {
   return true;
 }
 
-export function allPlayersShipsPlaced(players, maxPlayers) {
+export const allPlayersShipsPlaced = (players, maxPlayers) => {
   let numPlayers = Object.keys(players).length;
   if (numPlayers < maxPlayers) return false;
   for (let p in players) {
@@ -129,4 +129,33 @@ export function allPlayersShipsPlaced(players, maxPlayers) {
     }
   }
   return true;
+}
+
+export const handleShipPlacement = (c, r, val, self) => {
+    if (val.length === 0) {
+      let newShips = newShipsWithoutThisLoc(c, r, self.state.ships);
+      self.setState({
+        ships: newShips
+      })
+      return;
+    }
+
+    if (!isShip(val)) {
+      alert(`"${val}" is not a ship letter (a, b, c, s, or d).`);
+      return false;
+    }
+
+    if (thisShipCanGoHere(val, c, r, self.state.ships[val])) {
+      let newShips = self.state.ships;
+      if (newShips[val].locs[0] === 0) {
+        newShips[val].locs[0] = [c, r];
+
+      } else {
+        newShips[val].locs.push([c, r]);
+      }
+
+      self.setState({
+        ships: newShips
+      });
+    }
 }
