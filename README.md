@@ -3,7 +3,10 @@ npm install
 
 npm run serve
 
-##Notes
+# Next thing to do:
+write unit tests (and refactor anything that doesn't allow for unit tests)
+
+## Notes
 check out:
 window.location
 history.pushState
