@@ -1,4 +1,4 @@
-const isShotAt = (c, r, shots) => {
+export const isShotAt = (c, r, shots) => {
   for (let turn = 0; turn < shots.length; turn++) {
     for (let i = 0; i < shots[turn].length; i++) {
       if (shots[turn][i][0] === c && shots[turn][i][1] === r) {
