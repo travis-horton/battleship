@@ -1,6 +1,15 @@
 import React, {Component} from 'react';
 import Row from "./row";
 
+const objectWithoutKey = (object, key) => {
+  const {[key]: deletedKey, ...otherKeys} = object;
+  let newObject = []
+  for (let person in otherKeys) {
+    newObject.push(...otherKeys[person])
+  }
+  return newObject;
+}
+
 export default class Board extends React.Component {
   constructor(props) {
     super(props);
@@ -29,7 +38,6 @@ export default class Board extends React.Component {
       playerLabel = "your ships";
     }
 
-    if (this.props.boardStyle === "input") playerLabel = "place your ships";
     let ships = (
       this.props.boardOwner === this.props.thisPlayer ?
       this.props.ships :
@@ -43,15 +51,12 @@ export default class Board extends React.Component {
       }
     }
 
-    const objectWithoutKey = (object, key) => {
-      const {[key]: deletedKey, ...otherKeys} = object;
-      let newShots = []
-      for (let person in otherKeys) {
-        newShots.push(...otherKeys[person])
-      }
-      return newShots;
+    if (this.props.boardStyle === "input") {
+      playerLabel = "place your ships";
+      shots = [];
     }
 
+ 
     for (let i = 0; i < this.props.boardSize; i++) {
       rows.push(i);
     }
@@ -76,9 +81,7 @@ export default class Board extends React.Component {
               row={row + 1}
               cols={cols}
               ships={ships}
-              shots={
-                objectWithoutKey(this.props.shots, this.props.boardOwner)
-              }
+              shots={shots}
               handleInput={this.handleInput}
               handleClick={this.handleClick}
               playerName={playerLabel}

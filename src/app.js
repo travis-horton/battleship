@@ -6,7 +6,7 @@ import { inputShot, shoot } from "./modules/shooting.js";
 import { inputShip, whatShipIsHere, allShipsArePlaced, allPlayersShipsPlaced } from "./modules/ships.js"
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
-import Instructions from "./components/instructions";
+import { Instructions } from "./components/instructions";
 
 let database = firebase.database();
 
@@ -24,6 +24,7 @@ class App extends Component {
     this.state = {
       boardSize: 0,
       gameId: "",
+      // numPlayers also determines in part what renders
       numPlayers: 0,
       playerName: "",
       ships: {
@@ -127,15 +128,15 @@ class App extends Component {
     if (!thisPlayer.shipsCommitted) {
       return (
         <div className="flex_box">
-        <Instructions />
-        <BoardArea
-        handleInput={this.handleBoardInput}
-        boardSize={this.state.boardSize}
-        thisPlayer={thisPlayer}
-        ships={this.state.ships}
-        shots={this.state.shots}
-        handleSubmit={this.handleBoardSubmit}
-        />
+          <Instructions shipsCommitted={false}/>
+          <BoardArea
+            handleInput={this.handleBoardInput}
+            boardSize={this.state.boardSize}
+            thisPlayer={thisPlayer}
+            ships={this.state.ships}
+            shots={this.state.shots}
+            handleSubmit={this.handleBoardSubmit}
+          />
         </div>
       )
 
@@ -148,17 +149,24 @@ class App extends Component {
 
     return (
       <div>
-      <BoardArea
-      handleInput={this.handleBoardInput}
-      handleSubmit={this.handleBoardSubmit}
-      handleClick={this.handleClick}
-      handleShoot={this.handleShoot}
-      boardSize={this.state.boardSize}
-      thisPlayer={thisPlayer}
-      ships={this.state.ships}
-      shots={this.state.shots}
-      players={allOtherPlayers}
-      />
+        <Instructions 
+          shipsCommitted={true}
+          curPlayers={allOtherPlayers}
+          thisPlayer={thisPlayer.name}
+          maxPlayers={this.state.numPlayers}
+          turn={this.state.turn}
+        />
+        <BoardArea
+          handleInput={this.handleBoardInput}
+          handleSubmit={this.handleBoardSubmit}
+          handleClick={this.handleClick}
+          handleShoot={this.handleShoot}
+          boardSize={this.state.boardSize}
+          thisPlayer={thisPlayer}
+          ships={this.state.ships}
+          shots={this.state.shots}
+          players={allOtherPlayers}
+        />
       </div>
     )
   }

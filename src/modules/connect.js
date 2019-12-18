@@ -1,3 +1,6 @@
+import { randomizeTurnOrder } from "./ships.js";
+import { allPlayersShipsPlaced } from "./ships.js";
+
 const choosePlayerName = (extraPrompt) => {
   extraPrompt = extraPrompt ? (extraPrompt + "\n") : "";
   let playerName = prompt(extraPrompt + "Choose a player name (or enter your player name to log back in): ");
@@ -21,7 +24,8 @@ export const getLocalData = (dbData, thisPlayerName) => {
     numPlayers: dbData.numPlayers,
     playerName: thisPlayerName,
     players: dbData.players,
-    turn: dbData.turn
+    turn: dbData.turn,
+    turnOrder: dbData.playerTurnOrder ? dbData.playerTurnOrder : null
   };
 
   // Gets this player's ship data.
@@ -77,7 +81,7 @@ export const joinGame = (gameId, db, self) => {
         shipsCommitted: areShipsCommitted
       };
 
-      // Sets db state and tells db on disconnect to set connected to false.
+      // Sets db state and tells db on disconnect to set connected to false. This should be its own function.
       db.ref(`${gameId}/players/${playerName}`).set(thisPlayerInfo);
       db.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
 
@@ -85,6 +89,10 @@ export const joinGame = (gameId, db, self) => {
       db.ref(gameId).on('value', (snapshot) => {
         let fBState = snapshot.val();
         self.setState(getLocalData(fBState, playerName));
+        const players = fBState.players;
+        if (allPlayersShipsPlaced(players) && !"playerTurnOrder" in fBState) {
+          db.ref(`${gameId}/playerTurnOrder`).set(randomizeTurnOrder(players));
+        }
       });
     });
   });

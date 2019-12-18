@@ -1,3 +1,5 @@
+import { allPlayersShipsPlaced } from "./ships.js";
+
 export const isShotAt = (c, r, shots) => {
   for (let turn = 0; turn < shots.length; turn++) {
     for (let i = 0; i < shots[turn].length; i++) {
@@ -48,7 +50,7 @@ export const inputShot = (c, r, db, self) => {
     // keep the database from deleting entry if empty array
     thisPlayersShots[thisTurn].length > 0 ? 
     thisPlayersShots[thisTurn] :
-    [0]
+    0
   );
 
 }
