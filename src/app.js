@@ -2,8 +2,17 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { submitConfig } from "./modules/config.js";
 import { joinGame } from "./modules/connect.js";
-import { inputShot, shoot } from "./modules/shooting.js";
-import { inputShip, whatShipIsHere, allShipsArePlaced, allPlayersShipsPlaced } from "./modules/ships.js"
+import { 
+  generateNewShots, 
+  shoot,
+  numberOfShotsYouGet 
+} from "./modules/shooting.js";
+import { 
+  inputShip, 
+  whatShipIsHere, 
+  allShipsArePlaced, 
+  allPlayersShipsPlaced, 
+} from "./modules/ships.js"
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
 import { Instructions } from "./components/instructions";
@@ -18,8 +27,8 @@ class App extends Component {
     this.handleConfigSubmit = this.handleConfigSubmit.bind(this);
     this.handleBoardInput = this.handleBoardInput.bind(this);
     this.handleBoardSubmit = this.handleBoardSubmit.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-    this.handleShoot = this.handleShoot.bind(this);
+    this.makeShot = this.makeShot.bind(this);
+    this.commitShots = this.commitShots.bind(this);
 
     this.state = {
       boardSize: 0,
@@ -51,14 +60,12 @@ class App extends Component {
   }
 
   handleJoinGame() {
-    let self = this;
-
     let gameId = prompt("Enter game id: ");
     if (gameId === null || gameId.length === 0) return;
 
     // This joins the game if the gameId exists in the database.
     // SIDE EFFECTS: sets state to database data and adds player if player is new.
-    joinGame(gameId, database, self);
+    joinGame(gameId, database, this);
   }
 
   handleConfigSubmit(config) {
@@ -86,23 +93,38 @@ class App extends Component {
     } else if (confirm("Are you happy with your ship placement?")) {
       database.ref(`${this.state.gameId}/players/${this.state.playerName}/shipsCommitted`).set(true);
       database.ref(`${this.state.gameId}/${this.state.playerName + "Ships"}`).set(this.state.ships);
-      database.ref(`${this.state.gameId}/shots/${this.state.playerName}`).set([0]);
       database.ref(`${this.state.gameId}/turn`).set(0);
     }
   }
 
-  handleClick(c, r) {
-    let self = this;
+  makeShot(c, r) {
+    const potentialShots = this.state.potentialShots ? this.state.potentialShots : [];
+    const numShots = numberOfShotsYouGet(this.state.ships);
 
-    // On click on a cell in the board:
-    // updates shots chosen and highlights cell.
-    // SIDE EFFECTS: Sets db state.
-    inputShot(c, r, database, self);
+    this.setState({
+      potentialShots: generateNewShots(c, r, potentialShots, numShots),
+    });
   }
+ 
+  commitShots() {
+    const { shots, playerName, potentialShots, players, numPlayers } = this.state;
+    const isThisPlayersTurn = players[playerName].thisPlayerTurn;
 
-  handleShoot() {
-    let self = this;
-    shoot(self, database);
+    if (!allPlayersShipsPlaced(players, numPlayers)) {
+      alert("Waiting on other players to join/place ships");
+      return;
+    }
+
+    if (!isThisPlayersTurn) {
+      alert("It's not your turn!");
+      return;
+    }
+
+    database.ref(`${this.state.gameId}/shots/${this.state.playerName}/${this.state.turn}`).set(potentialShots);;
+
+    this.setState({
+      potentialShots: [],
+    });
   }
 
   render() {
@@ -134,12 +156,10 @@ class App extends Component {
             boardSize={this.state.boardSize}
             thisPlayer={thisPlayer}
             ships={this.state.ships}
-            shots={this.state.shots}
             handleSubmit={this.handleBoardSubmit}
           />
         </div>
       )
-
     } 
 
     let allOtherPlayers = [];
@@ -159,12 +179,13 @@ class App extends Component {
         <BoardArea
           handleInput={this.handleBoardInput}
           handleSubmit={this.handleBoardSubmit}
-          handleClick={this.handleClick}
-          handleShoot={this.handleShoot}
+          handleClick={this.makeShot}
+          handleShoot={this.commitShots}
           boardSize={this.state.boardSize}
           thisPlayer={thisPlayer}
           ships={this.state.ships}
           shots={this.state.shots}
+          potentialShots={this.state.potentialShots}
           players={allOtherPlayers}
         />
       </div>

@@ -4,7 +4,7 @@ import { allPlayersShipsPlaced } from "./ships.js";
 const choosePlayerName = (extraPrompt) => {
   extraPrompt = extraPrompt ? (extraPrompt + "\n") : "";
   let playerName = prompt(extraPrompt + "Choose a player name (or enter your player name to log back in): ");
-  let regx = /[^a-zA-Z0-9]/;
+  let regx = /[^a-zA-Z0-9 ]/;
   while (regx.test(playerName)) {
     playerName = choosePlayerName("Name must contain only numbers and/or letters. ");
   }
@@ -41,7 +41,7 @@ export const getLocalData = (dbData, thisPlayerName) => {
   return newState;
 }
 
-export const joinGame = (gameId, db, self) => {
+export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
   db.ref(gameId).once('value', (snapshot) => {
     if (!snapshot.exists()) {
       alert("No such game in database.");
@@ -50,9 +50,6 @@ export const joinGame = (gameId, db, self) => {
 
     let maxNumPlayers = snapshot.val().numPlayers;
     let curNumPlayers = Object.keys(snapshot.val().players).length;
-
-    // Gets player name from user that is alphanumeric and under 20 characters.
-    let playerName = choosePlayerName();
 
     // Gets database data about players.
     db.ref(`${gameId}/players`).once("value").then((players) => {
@@ -89,8 +86,10 @@ export const joinGame = (gameId, db, self) => {
       db.ref(gameId).on('value', (snapshot) => {
         let fBState = snapshot.val();
         self.setState(getLocalData(fBState, playerName));
-        const players = fBState.players;
-        if (allPlayersShipsPlaced(players) && !"playerTurnOrder" in fBState) {
+        const { players, numPlayers } = fBState;
+        console.log( players );
+        if (allPlayersShipsPlaced(players, numPlayers) && !("playerTurnOrder" in fBState)) {
+          console.log("Should set playerTurnOrder on FB!");
           db.ref(`${gameId}/playerTurnOrder`).set(randomizeTurnOrder(players));
         }
       });

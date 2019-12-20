@@ -1,4 +1,5 @@
 import { getLocalData } from "./connect.js";
+import { joinGame } from "./connect.js";
 
 // Checks config for errors: Only alphanumeric values, less the 20 characters, and numbers 
 // fit the board size and number of player restrictions.
@@ -13,7 +14,7 @@ const errorsInConfigInput = (config) => {
     boardSize: "board size",
     numPlayers: "number of players"
   }
-  let regx = /[^a-zA-Z0-9]/;
+  let regx = /[^a-zA-Z0-9 ]/;
 
   for (let entry in config) {
     if (config[entry].length === 0) {
@@ -67,7 +68,7 @@ export const submitConfig = (config, db, self) => {
       // Initialize this player in players.
       players: {
         [config.playerName]: {
-          connected: true,
+          connected: false,
           thisPlayerTurn: false,
           shipsCommitted: false
         }
@@ -75,12 +76,5 @@ export const submitConfig = (config, db, self) => {
     }
 
     // Set db state.
-    db.ref(config.gameId).set(fBState);
-
-    // On change to db state, update client state.
-    db.ref(config.gameId).on('value', (snapshot) => {
-      self.setState(getLocalData(snapshot.val(), config.playerName));
-    });
-    db.ref(`${config.gameId}/players/${config.playerName}/connected`).onDisconnect().set(false);
-  });
+    db.ref(config.gameId).set(fBState).then(joinGame(config.gameId, db, self, config.playerName))});
 }

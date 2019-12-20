@@ -2,83 +2,93 @@ import React, { Component } from "react";
 import Board from "./board";
 
 export default class BoardArea extends React.Component {
-    constructor(props) {
-        super(props);
-        this.handleBoardInput = this.handleBoardInput.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleClick = this.handleClick.bind(this);
-        this.handleShoot = this.handleShoot.bind(this);
-    }
+  constructor(props) {
+    super(props);
+    this.handleBoardInput = this.handleBoardInput.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.handleShoot = this.handleShoot.bind(this);
+  }
 
-    handleBoardInput(c, r, val) {
-        this.props.handleInput(c, r, val);
-    }
+  handleBoardInput(c, r, val) {
+    this.props.handleInput(c, r, val);
+  }
 
-    handleSubmit(e) {
-        this.props.handleSubmit(e);
-    }
+  handleSubmit(e) {
+    this.props.handleSubmit(e);
+  }
 
-    handleClick(c, r) {
-        this.props.handleClick(c, r);
-    }
+  handleClick(c, r) {
+    this.props.handleClick(c, r);
+  }
 
-    handleShoot(e) {
-        e.preventDefault();
-        this.props.handleShoot();
-    }
+  handleShoot(e) {
+    e.preventDefault();
+    this.props.handleShoot();
+  }
 
-    render() {
-        if (!this.props.thisPlayer.shipsCommitted) {
-            return (
-                <div className="right_column">
-                    <Board
-                        boardSize={this.props.boardSize}
-                        boardStyle="input"
-                        handleInput={this.handleBoardInput}
-                        boardOwner={this.props.thisPlayer.name}
-                        shots={this.props.shots}
-                        ships={this.props.ships}
-                        thisPlayer={this.props.thisPlayer.name}
-                    />
-                    <br/>
-                    <button onClick={this.handleSubmit}>Submit ship placement</button>
-                </div>
-            )
-        } else {
-            let players = this.props.players;
-            let shots = this.props.shots;
+  render() {
+    const _p = this.props;
+    if (!_p.thisPlayer.shipsCommitted) {
+      return (
+        <div className="right_column">
+          <Board
+            boardSize={_p.boardSize}
+            boardStyle="input"
+            handleInput={this.handleBoardInput}
+            boardOwner={_p.thisPlayer.name}
+            ships={_p.ships}
+            thisPlayer={_p.thisPlayer.name}
+          />
+          <br/>
+          <button onClick={this.handleSubmit}>Submit ship placement</button>
+        </div>
+      )
+    } else {
+      let players = _p.players;
 
-            return (
-                <div className="board_area">
-                    <Board
-                        boardSize={this.props.boardSize}
-                        boardOwner={"shooting"}
-                        shots={this.props.shots}
-                        thisPlayer={this.props.thisPlayer.name}
-                        handleClick={this.handleClick}
-                    />
-                    <button onClick={this.handleShoot}>Fire ze missiles!</button>
-                    {
-                        players.map((boardOwner) =>
-                            <Board
-                                key={boardOwner}
-                                boardSize={this.props.boardSize}
-                                boardOwner={boardOwner}
-                                ships={this.props.ships}
-                                shots={this.props.shots}
-                                thisPlayer={this.props.thisPlayer.name}
-                            />
-                        )
-                    }
-                    <Board
-                        boardSize={this.props.boardSize}
-                        boardOwner={this.props.thisPlayer.name}
-                        ships={this.props.ships}
-                        shots={this.props.shots}
-                        thisPlayer={this.props.thisPlayer.name}
-                    />
-                </div>
-            )
+      const getBoardShots = (shots, boardOwner) => {
+        let thisBoardShots = [];
+        for (let e in shots) {
+          if (e !== boardOwner) {
+            thisBoardShots.push(...shots[e]);
+          }
         }
+      }
+
+      return (
+        <div className="board_area">
+          <Board
+            boardSize={_p.boardSize}
+            boardOwner={"shooting"}
+            potentialShots={_p.potentialShots}
+            thisPlayer={_p.thisPlayer.name}
+            handleClick={this.handleClick}
+          />
+          <button onClick={this.handleShoot}>Fire ze missiles!</button>
+          {
+            players.map((boardOwner) =>
+              <Board
+                key={boardOwner}
+                boardSize={_p.boardSize}
+                boardOwner={boardOwner}
+                ships={_p.ships}
+                shots={getBoardShots(_p.shots, boardOwner)}
+                potentialShots={_p.potentialShots}
+                thisPlayer={_p.thisPlayer.name}
+              />
+            )
+          }
+          <Board
+            boardSize={_p.boardSize}
+            boardOwner={_p.thisPlayer.name}
+            ships={_p.ships}
+            shots={_p.shots}
+            potentialShots={_p.potentialShots}
+            thisPlayer={_p.thisPlayer.name}
+          />
+        </div>
+      )
     }
+  }
 }

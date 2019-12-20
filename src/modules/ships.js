@@ -132,32 +132,32 @@ export const allPlayersShipsPlaced = (players, maxPlayers) => {
 }
 
 export const inputShip = (c, r, val, self) => {
-    if (val.length === 0) {
-      let newShips = newShipsWithoutThisLoc(c, r, self.state.ships);
-      self.setState({
-        ships: newShips
-      })
-      return;
+  if (val.length === 0) {
+    let newShips = newShipsWithoutThisLoc(c, r, self.state.ships);
+    self.setState({
+      ships: newShips
+    })
+    return;
+  }
+
+  if (!isShip(val)) {
+    alert(`"${val}" is not a ship letter (a, b, c, s, or d).`);
+    return false;
+  }
+
+  if (thisShipCanGoHere(val, c, r, self.state.ships[val])) {
+    let newShips = self.state.ships;
+    if (newShips[val].locs[0] === 0) {
+      newShips[val].locs[0] = [c, r];
+
+    } else {
+      newShips[val].locs.push([c, r]);
     }
 
-    if (!isShip(val)) {
-      alert(`"${val}" is not a ship letter (a, b, c, s, or d).`);
-      return false;
-    }
-
-    if (thisShipCanGoHere(val, c, r, self.state.ships[val])) {
-      let newShips = self.state.ships;
-      if (newShips[val].locs[0] === 0) {
-        newShips[val].locs[0] = [c, r];
-
-      } else {
-        newShips[val].locs.push([c, r]);
-      }
-
-      self.setState({
-        ships: newShips
-      });
-    }
+    self.setState({
+      ships: newShips
+    });
+  }
 }
 
 export const randomizeTurnOrder = (players) => {

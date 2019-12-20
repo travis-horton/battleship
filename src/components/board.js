@@ -28,39 +28,29 @@ export default class Board extends React.Component {
   render() {
     let rows = [];
     let cols = [];
+    let _p = this.props;
     let playerLabel = (
-      this.props.boardOwner === "shooting" ?
+      _p.boardOwner === "shooting" ?
       "your shooting board" :
-      this.props.boardOwner + "'s board"
+      _p.boardOwner + "'s board"
     )
 
-    if (this.props.boardOwner === this.props.thisPlayer && this.props.boardStyle !== "input") {
+    if (_p.boardOwner === _p.thisPlayer && _p.boardStyle !== "input") {
       playerLabel = "your ships";
     }
 
     let ships = (
-      this.props.boardOwner === this.props.thisPlayer ?
-      this.props.ships :
+      _p.boardOwner === _p.thisPlayer ?
+      _p.ships :
       []
     );
 
-    let shots = [];
-    for (let e in this.props.shots) {
-      if (e !== this.props.boardOwner) {
-        shots.push(...this.props.shots[e])
-      }
-    }
+    let shots = _p.shots;
 
-    if (this.props.boardStyle === "input") {
-      playerLabel = "place your ships";
-      shots = [];
-    }
-
- 
-    for (let i = 0; i < this.props.boardSize; i++) {
+    for (let i = 0; i < _p.boardSize; i++) {
       rows.push(i);
     }
-    for (let i = 0; i < this.props.boardSize; i++) {
+    for (let i = 0; i < _p.boardSize; i++) {
       cols.push(String.fromCharCode(i + 65))
     }
 
@@ -68,20 +58,21 @@ export default class Board extends React.Component {
       <span className="board">
         <span>{playerLabel}</span>
         <Row
-          rowLength={this.props.boardSize}
+          rowLength={_p.boardSize}
           cols={cols}
           row="header"
         />
         {
           rows.map((row) =>
             <Row
-              rowLength={this.props.boardSize}
-              boardStyle={this.props.boardStyle}
+              rowLength={_p.boardSize}
+              boardStyle={_p.boardStyle}
               key={row}
               row={row + 1}
               cols={cols}
               ships={ships}
               shots={shots}
+              potentialShots={this.props.potentialShots}
               handleInput={this.handleInput}
               handleClick={this.handleClick}
               playerName={playerLabel}
@@ -89,7 +80,7 @@ export default class Board extends React.Component {
           )
         }
         <Row
-          rowLength={this.props.boardSize}
+          rowLength={_p.boardSize}
           cols={cols}
           row="header"
         />

@@ -7,7 +7,7 @@
   "description": "my battleship game",
   "scripts": {
     "serve": "./node_modules/.bin/parcel ./src/index.html",
-    "build": "./node_modules/.bin/parcel build ./battleship/index.html"
+    "build": "./node_modules/.bin/parcel build ./src/index.html"
   },
   "repository": {
     "type": "git",

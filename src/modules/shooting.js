@@ -1,18 +1,16 @@
 import { allPlayersShipsPlaced } from "./ships.js";
 
 export const isShotAt = (c, r, shots) => {
-  for (let turn = 0; turn < shots.length; turn++) {
-    for (let i = 0; i < shots[turn].length; i++) {
-      if (shots[turn][i][0] === c && shots[turn][i][1] === r) {
-        return true;
-      }
+  for (let i = 0; i < shots.length; i++) {
+    if (shots[i][0] === c && shots[i][1] === r) {
+      return true;
     }
   }
 
-  return false;
+return false;
 }
 
-const numberOfShotsYouGet = (ships) => {
+export const numberOfShotsYouGet = (ships) => {
   let shots = 6;
   for (let ships in ships) {
     if (ships[ship].locs[0] === 0) shots --;
@@ -29,30 +27,22 @@ const indexOfShot = (c, r, shots) => {
   return -1;
 }
 
-export const inputShot = (c, r, db, self) => {
-  let thisPlayersShots = [...self.state.shots[self.state.playerName]];
-  let thisTurn = self.state.turn;
+// you're working here -- trying to iterate over non-iterable?
+export const generateNewShots = (c, r, shots, numShots) => {
+  if (isShotAt(c, r, shots)) {
+    shots.splice(indexOfShot(c, r, shots), 1);
 
-  if (isShotAt(c, r, thisPlayersShots)) {
-    thisPlayersShots[thisTurn].splice(indexOfShot(c, r, thisPlayersShots[thisTurn]), 1);
+  } else if (shots.length === 0) {
+    shots = [[c, r]]
 
-  } else if (thisPlayersShots[thisTurn] === 0) {
-    thisPlayersShots[thisTurn] = [[c, r]]
-
-  } else if (thisPlayersShots[thisTurn].length >= numberOfShotsYouGet(self.state.ships)) {
-    alert(`You only get ${numberOfShotsYouGet(self.state.ships)} shots.`);
+  } else if (shots.length >= numShots) {
+    alert(`You only get ${numShots} shots.`);
 
   } else {
-    thisPlayersShots[self.state.turn].push([c, r]);
+    shots.push([c, r]);
   }
 
-  db.ref(`${self.state.gameId}/shots/${self.state.playerName}/${thisTurn}`).set(
-    // keep the database from deleting entry if empty array
-    thisPlayersShots[thisTurn].length > 0 ? 
-    thisPlayersShots[thisTurn] :
-    0
-  );
-
+  return shots;
 }
 
 export const shoot = (self, db) => {
@@ -60,6 +50,7 @@ export const shoot = (self, db) => {
   let shots = self.state.shots[playerName];
   let turn = self.state.turn;
   let numOfShots = numberOfShotsYouGet(self.state.ships);
+  let thisPlayersShots = [...self.state.shots[self.state.playerName]];
 
   if (shots[turn].length < numOfShots || !shots[turn]) {
     let howManyShots = shots[turn].length;
@@ -82,6 +73,11 @@ export const shoot = (self, db) => {
   if (!confirm("Are you happy with your shots?")) {
     return;
   }
+
+  db.ref(`${self.state.gameId}/shots/${self.state.playerName}/${thisTurn}`).set(
+    thisPlayersShots[thisTurn]
+  );
+
 
   //do some stuff with firebase to update shots and boards...
   console.log("fire ze missiles!");
