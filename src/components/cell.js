@@ -2,7 +2,70 @@ import React, { Component } from "react";
 import { whatShipIsHere } from "../modules/ships.js";
 import { isShotAt } from "../modules/shooting.js";
 
-export default class Cell extends React.Component {
+const getClassNames = (col, row, shots, potentialShots, label) => {
+  const classNames = ["cell"];
+
+  if (potentialShots && isShotAt(col, row, potentialShots)) {
+    classNames.push("potentialshot");
+  }
+
+  if (shots && isShotAt(col, row, shots)) {
+    classNames.push("shotAt");
+  }
+
+  if (row === 1) {
+    classNames.push("toprow");
+  }
+
+  if (col === "A") {
+    classNames.push("leftcol");
+  }
+
+  if (label) {
+    classNames.push("header");
+  }
+
+  return classNames.join(" ");
+}
+
+const Cell = ({
+  row,
+  col,
+  shots,
+  label,
+  boardStyle,
+  ships,
+  handleInput,
+  handleClick
+}) => {
+  const handleInputChange = e => {
+    e.preventDefault();
+    handleInput(col, row, e.target.value.toLowerCase());
+  }
+  const handleSpanClick = () => handleClick(col, row);
+
+  if (label) {
+    return (
+      <span className={classNames}>{label}</span>
+    )
+  } else if (boardStyle === "input") {
+    return (
+      <input
+        onChange={handleInputChange}
+        className={classNames}
+        value={shipType}
+      />
+    )
+  } else {
+    return (
+      <span className={classNames} onClick={handleSpanClick}>
+        {val}
+      </span>
+    )
+  }
+}
+
+export default class Cel2l extends React.Component {
   constructor(props) {
     super(props);
     this.handleInput = this.handleInput.bind(this);
@@ -22,16 +85,9 @@ export default class Cell extends React.Component {
     let col = this.props.col;
     let row = this.props.row;
     let val = whatShipIsHere(col, row, this.props.ships);
-    let className = "cell";
-
-    if (this.props.potentialShots && isShotAt(col, row, this.props.potentialShots)) {
-      className += " potentialshot"
-    }
-    if (row === 1) className += " toprow";
-    if (col === "A") className += " leftcol";
+    let className = getClassNames(col, row, this.props.shots, this.props.potentialShots, this.props.label);;
 
     if (this.props.label) {
-      className += " header";
       return (
         <span className={className}>{this.props.label}</span>
       )
