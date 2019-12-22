@@ -86,11 +86,12 @@ export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
       db.ref(gameId).on('value', (snapshot) => {
         let fBState = snapshot.val();
         self.setState(getLocalData(fBState, playerName));
+        
         const { players, numPlayers } = fBState;
-        console.log( players );
+        const turnOrder = randomizeTurnOrder(players);
         if (allPlayersShipsPlaced(players, numPlayers) && !("playerTurnOrder" in fBState)) {
-          console.log("Should set playerTurnOrder on FB!");
-          db.ref(`${gameId}/playerTurnOrder`).set(randomizeTurnOrder(players));
+          db.ref(`${gameId}/playerTurnOrder`).set(turnOrder);
+          db.ref(`${gameId}/players/${turnOrder[0]}/thisPlayerTurn`).set(true);
         }
       });
     });
