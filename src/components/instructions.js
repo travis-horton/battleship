@@ -1,11 +1,12 @@
 import React, {Component} from 'react';
 
-export const Instructions = ({ shipsCommitted, curPlayers, thisPlayer, maxPlayers, turn}) => {
+export const Instructions = ({ shipsCommitted, curPlayers, thisPlayer, maxPlayers, turn, whosTurn}) => {
   return shipsCommitted ? 
     (
       <div>
         <p>Players connected: {curPlayers.length + 1}/{maxPlayers}. Player names: {thisPlayer}, {curPlayers.join(", ")}</p>
         <p>Turn number: {turn}</p>
+        <p>It is {whosTurn}'s turn.</p>
       </div>
     ) : (
       <div className="left_column">

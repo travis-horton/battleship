@@ -49,11 +49,14 @@ export default class BoardArea extends React.Component {
 
       const getBoardShots = (shots, boardOwner) => {
         let thisBoardShots = [];
-        for (let e in shots) {
-          if (e !== boardOwner) {
-            thisBoardShots.push(...shots[e]);
+        for (let p in shots) {
+          if (p !== boardOwner) {
+            shots[p].forEach((turn) => {
+              thisBoardShots.push(...turn);
+            })
           }
         }
+        return thisBoardShots;
       }
 
       return (
@@ -83,11 +86,11 @@ export default class BoardArea extends React.Component {
             boardSize={_p.boardSize}
             boardOwner={_p.thisPlayer.name}
             ships={_p.ships}
-            shots={_p.shots}
+            shots={getBoardShots(_p.shots, _p.thisPlayer.name)}
             potentialShots={_p.potentialShots}
             thisPlayer={_p.thisPlayer.name}
           />
-        </div>
+       </div>
       )
     }
   }

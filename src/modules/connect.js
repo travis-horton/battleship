@@ -54,6 +54,7 @@ export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
     // Gets database data about players.
     db.ref(`${gameId}/players`).once("value").then((players) => {
       let areShipsCommitted = false;
+      let isThisPlayerTurn = false;
 
       if (players.hasChild(playerName)) {
         // If playername is connected, refuses additional connection.
@@ -66,6 +67,7 @@ export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
 
         // Sets player's ship's committed status to db state.
         areShipsCommitted = players.val()[playerName].shipsCommitted;
+        isThisPlayerTurn = players.val()[playerName].thisPlayerTurn;
 
       } else if (curNumPlayers >= maxNumPlayers) {
         alert("Game is full.");
@@ -74,7 +76,7 @@ export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
 
       let thisPlayerInfo = {
         connected: true,
-        thisPlayerTurn: false,
+        thisPlayerTurn: isThisPlayerTurn,
         shipsCommitted: areShipsCommitted
       };
 

@@ -82,3 +82,14 @@ export const shoot = (self, db) => {
   //do some stuff with firebase to update shots and boards...
   console.log("fire ze missiles!");
 }
+
+export const getAllShotsByTurn = (shots) => {
+  const shotsByTurn = [];
+  for (let player in shots) {
+    for (let turn in shots[player]) {
+      if (!shotsByTurn[turn]) shotsByTurn[turn] = {};
+      shotsByTurn[turn][player] = shots[player][turn];
+    }
+  }
+  return shotsByTurn;
+}

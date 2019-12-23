@@ -73,3 +73,7 @@
 .potentialshot {
     background-color: orange !important;
 }
+
+.shot {
+  background-color: red !important;
+}

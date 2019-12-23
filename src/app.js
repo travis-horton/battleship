@@ -5,7 +5,8 @@ import { joinGame } from "./modules/connect.js";
 import { 
   generateNewShots, 
   shoot,
-  numberOfShotsYouGet 
+  numberOfShotsYouGet,
+  getAllShotsByTurn
 } from "./modules/shooting.js";
 import { 
   inputShip, 
@@ -16,6 +17,7 @@ import {
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
 import { Instructions } from "./components/instructions";
+import { Shots } from "./components/shots";
 
 let database = firebase.database();
 
@@ -107,7 +109,7 @@ class App extends Component {
   }
  
   commitShots() {
-    const { shots, playerName, potentialShots, players, numPlayers } = this.state;
+    const { shots, playerName, potentialShots, players, numPlayers, turnOrder } = this.state;
     const isThisPlayersTurn = players[playerName].thisPlayerTurn;
 
     if (!allPlayersShipsPlaced(players, numPlayers)) {
@@ -120,7 +122,12 @@ class App extends Component {
       return;
     }
 
+    // set shots on db to potentials shots, reset local potential shots, and change turn
     database.ref(`${this.state.gameId}/shots/${this.state.playerName}/${this.state.turn}`).set(potentialShots);;
+    database.ref(`${this.state.gameId}/players/${this.state.playerName}/thisPlayerTurn`).set(false);
+    // determine next player and turn their thisPlayerTurn to true
+    const nextPlayer = turnOrder.indexOf(playerName) + 1 == turnOrder.length ? turnOrder[0] : turnOrder[turnOrder.indexOf(playerName) + 1];
+    database.ref(`${this.state.gameId}/players/${nextPlayer}/thisPlayerTurn`).set(true);
 
     this.setState({
       potentialShots: [],
@@ -163,9 +170,13 @@ class App extends Component {
     } 
 
     let allOtherPlayers = [];
+    let whosTurn;
     for (let key in this.state.players) {
       if (this.state.playerName !== key) allOtherPlayers.push(key);
+      if (this.state.players[key].thisPlayerTurn) whosTurn = key;
     }
+
+    const allShotsByTurn = getAllShotsByTurn(this.state.shots);
 
     return (
       <div>
@@ -175,6 +186,7 @@ class App extends Component {
           thisPlayer={thisPlayer.name}
           maxPlayers={this.state.numPlayers}
           turn={this.state.turn}
+          whosTurn={whosTurn}
         />
         <BoardArea
           handleInput={this.handleBoardInput}
@@ -187,6 +199,9 @@ class App extends Component {
           shots={this.state.shots}
           potentialShots={this.state.potentialShots}
           players={allOtherPlayers}
+        />
+        <Shots
+          shots={allShotsByTurn}
         />
       </div>
     )

@@ -10,7 +10,7 @@ const getClassNames = (col, row, shots, potentialShots, label) => {
   }
 
   if (shots && isShotAt(col, row, shots)) {
-    classNames.push("shotAt");
+    classNames.push("shot");
   }
 
   if (row === 1) {
