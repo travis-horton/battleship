@@ -109,7 +109,7 @@ class App extends Component {
   }
  
   commitShots() {
-    const { shots, playerName, potentialShots, players, numPlayers, turnOrder } = this.state;
+    const { gameId, shots, playerName, potentialShots, players, numPlayers, turnOrder, turn } = this.state;
     const isThisPlayersTurn = players[playerName].thisPlayerTurn;
 
     if (!allPlayersShipsPlaced(players, numPlayers)) {
@@ -123,11 +123,15 @@ class App extends Component {
     }
 
     // set shots on db to potentials shots, reset local potential shots, and change turn
-    database.ref(`${this.state.gameId}/shots/${this.state.playerName}/${this.state.turn}`).set(potentialShots);;
-    database.ref(`${this.state.gameId}/players/${this.state.playerName}/thisPlayerTurn`).set(false);
-    // determine next player and turn their thisPlayerTurn to true
-    const nextPlayer = turnOrder.indexOf(playerName) + 1 == turnOrder.length ? turnOrder[0] : turnOrder[turnOrder.indexOf(playerName) + 1];
-    database.ref(`${this.state.gameId}/players/${nextPlayer}/thisPlayerTurn`).set(true);
+    database.ref(`${gameId}/shots/${playerName}/${turn}`).set(potentialShots);;
+    database.ref(`${gameId}/players/${playerName}/thisPlayerTurn`).set(false);
+    // determine next player and set their thisPlayerTurn to true. if last player, increase turn number
+    let nextPlayer = turnOrder[turnOrder.indexOf(playerName) + 1];
+    if (turnOrder.indexOf(playerName) + 1 == turnOrder.length) {
+      nextPlayer = turnOrder[0];
+      database.ref(`${gameId}/turn`).set(turn + 1);
+    }
+    database.ref(`${gameId}/players/${nextPlayer}/thisPlayerTurn`).set(true);
 
     this.setState({
       potentialShots: [],
@@ -179,7 +183,7 @@ class App extends Component {
     const allShotsByTurn = getAllShotsByTurn(this.state.shots);
 
     return (
-      <div>
+      <div className="flex_box">
         <Instructions 
           shipsCommitted={true}
           curPlayers={allOtherPlayers}

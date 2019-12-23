@@ -60,37 +60,43 @@ export default class BoardArea extends React.Component {
       }
 
       return (
-        <div className="board_area">
-          <Board
-            boardSize={_p.boardSize}
-            boardOwner={"shooting"}
-            potentialShots={_p.potentialShots}
-            thisPlayer={_p.thisPlayer.name}
-            handleClick={this.handleClick}
-          />
-          <button onClick={this.handleShoot}>Fire ze missiles!</button>
-          {
-            players.map((boardOwner) =>
-              <Board
-                key={boardOwner}
-                boardSize={_p.boardSize}
-                boardOwner={boardOwner}
-                ships={_p.ships}
-                shots={getBoardShots(_p.shots, boardOwner)}
-                potentialShots={_p.potentialShots}
-                thisPlayer={_p.thisPlayer.name}
-              />
-            )
-          }
-          <Board
-            boardSize={_p.boardSize}
-            boardOwner={_p.thisPlayer.name}
-            ships={_p.ships}
-            shots={getBoardShots(_p.shots, _p.thisPlayer.name)}
-            potentialShots={_p.potentialShots}
-            thisPlayer={_p.thisPlayer.name}
-          />
-       </div>
+        <div>
+          <div className="board_area">
+            <Board
+              boardSize={_p.boardSize}
+              boardOwner={"shooting"}
+              potentialShots={_p.potentialShots}
+              thisPlayer={_p.thisPlayer.name}
+              handleClick={this.handleClick}
+            />
+            <Board
+              boardSize={_p.boardSize}
+              boardOwner={_p.thisPlayer.name}
+              ships={_p.ships}
+              shots={getBoardShots(_p.shots, _p.thisPlayer.name)}
+              potentialShots={_p.potentialShots}
+              thisPlayer={_p.thisPlayer.name}
+            />
+          </div>
+          <div>
+            <button onClick={this.handleShoot}>Fire ze missiles!</button>
+          </div>
+          <div className="board_area">
+            {
+              players.map((boardOwner) =>
+                <Board
+                  key={boardOwner}
+                  boardSize={_p.boardSize}
+                  boardOwner={boardOwner}
+                  ships={_p.ships}
+                  shots={getBoardShots(_p.shots, boardOwner)}
+                  potentialShots={_p.potentialShots}
+                  thisPlayer={_p.thisPlayer.name}
+                />
+              )
+            }
+          </div>
+        </div>
       )
     }
   }
