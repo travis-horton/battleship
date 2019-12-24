@@ -11,7 +11,7 @@ export const Instructions = ({ shipsCommitted, curPlayers, thisPlayer, maxPlayer
         <Shots
           shots={ shots }
           hits={ hits }
-          players={ [curPlayers, thisPlayer] }
+          players={ [...curPlayers, thisPlayer] }
         />
       </div>
     ) : (
