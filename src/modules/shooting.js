@@ -1,4 +1,4 @@
-import { allPlayersShipsPlaced } from "./ships.js";
+import { allPlayersShipsPlaced, whatShipIsHere } from "./ships.js";
 
 export const isShotAt = (c, r, shots) => {
   for (let i = 0; i < shots.length; i++) {
@@ -6,8 +6,7 @@ export const isShotAt = (c, r, shots) => {
       return true;
     }
   }
-
-return false;
+  return false;
 }
 
 export const numberOfShotsYouGet = (ships) => {
@@ -15,7 +14,6 @@ export const numberOfShotsYouGet = (ships) => {
   for (let ships in ships) {
     if (ships[ship].locs[0] === 0) shots --;
   }
-
   return shots;
 }
 
@@ -27,7 +25,6 @@ const indexOfShot = (c, r, shots) => {
   return -1;
 }
 
-// you're working here -- trying to iterate over non-iterable?
 export const generateNewShots = (c, r, shots, numShots) => {
   if (isShotAt(c, r, shots)) {
     shots.splice(indexOfShot(c, r, shots), 1);
@@ -45,44 +42,6 @@ export const generateNewShots = (c, r, shots, numShots) => {
   return shots;
 }
 
-export const shoot = (self, db) => {
-  let playerName = self.state.playerName;
-  let shots = self.state.shots[playerName];
-  let turn = self.state.turn;
-  let numOfShots = numberOfShotsYouGet(self.state.ships);
-  let thisPlayersShots = [...self.state.shots[self.state.playerName]];
-
-  if (shots[turn].length < numOfShots || !shots[turn]) {
-    let howManyShots = shots[turn].length;
-    if (!howManyShots) howManyShots = 0;
-    alert(`You get ${numOfShots} shots!\nYou've only shot ${howManyShots} ${howManyShots === 1 ? "time" : "times"}.`);
-    return;
-  }
-
-  if (!allPlayersShipsPlaced(self.state.players, self.state.numPlayers)) {
-    alert("Waiting on other players to join/add ships.");
-    return;
-  }
-
-  if (!playerName.turn) {
-    // should probably say whose turn it is
-    alert("It's not your turn!");
-    return;
-  }
-
-  if (!confirm("Are you happy with your shots?")) {
-    return;
-  }
-
-  db.ref(`${self.state.gameId}/shots/${self.state.playerName}/${thisTurn}`).set(
-    thisPlayersShots[thisTurn]
-  );
-
-
-  //do some stuff with firebase to update shots and boards...
-  console.log("fire ze missiles!");
-}
-
 export const getAllShotsByTurn = (shots) => {
   const shotsByTurn = [];
   for (let player in shots) {
@@ -92,4 +51,23 @@ export const getAllShotsByTurn = (shots) => {
     }
   }
   return shotsByTurn;
+}
+
+export const getHits = (shots, ships, shooter) => {
+  let hits = {};
+  for (let player in ships) {
+    if (player !== shooter) {
+      hits[player] = [];
+      for (let shot in shots) {
+        hits[player].push(whatShipIsHere(shots[shot][0], shots[shot][1], ships[player]) || null);
+      }
+      hits[player] = hits[player].filter( el => (el != null));
+      if (hits[player].length === 0) {
+        hits[player].push("NONE");
+      }
+    } else {
+      hits[player] = ["n/a"];
+    }
+  }
+  return hits
 }

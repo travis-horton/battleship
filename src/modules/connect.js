@@ -1,5 +1,6 @@
 import { randomizeTurnOrder } from "./ships.js";
 import { allPlayersShipsPlaced } from "./ships.js";
+import { getHits } from "./shooting.js";
 
 const choosePlayerName = (extraPrompt) => {
   extraPrompt = extraPrompt ? (extraPrompt + "\n") : "";
@@ -16,7 +17,7 @@ const choosePlayerName = (extraPrompt) => {
   return playerName;
 }
 
-export const getLocalData = (dbData, thisPlayerName) => {
+const getFirebaseData = (dbData, thisPlayerName) => {
   // Gets config data.
   let newState = {
     boardSize: dbData.boardSize,
@@ -25,18 +26,20 @@ export const getLocalData = (dbData, thisPlayerName) => {
     playerName: thisPlayerName,
     players: dbData.players,
     turn: dbData.turn,
-    turnOrder: dbData.playerTurnOrder ? dbData.playerTurnOrder : null
+    turnOrder: (dbData.playerTurnOrder || null),
   };
 
   // Gets this player's ship data.
-  if (dbData[(thisPlayerName + "Ships")] !== undefined) {
-    newState.ships = dbData[(thisPlayerName + "Ships")];
+  if (dbData.ships && dbData.ships[thisPlayerName]) {
+    newState.ships = dbData.ships[thisPlayerName];
+  }
+
+  if (dbData.hits) {
+    newState.hits = dbData.hits;
   }
 
   // Gets shots data.
-  if (dbData.shots !== undefined) {
-    newState.shots = dbData.shots;
-  }
+  newState.shots = dbData.shots;
 
   return newState;
 }
@@ -87,8 +90,8 @@ export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
       // Tells db to alert client on changes to db and subsequently updates client state.
       db.ref(gameId).on('value', (snapshot) => {
         let fBState = snapshot.val();
-        self.setState(getLocalData(fBState, playerName));
-        
+        self.setState(getFirebaseData(fBState, playerName));
+
         const { players, numPlayers } = fBState;
         const turnOrder = randomizeTurnOrder(players);
         if (allPlayersShipsPlaced(players, numPlayers) && !("playerTurnOrder" in fBState)) {

@@ -50,7 +50,7 @@ export default class BoardArea extends React.Component {
       const getBoardShots = (shots, boardOwner) => {
         let thisBoardShots = [];
         for (let p in shots) {
-          if (p !== boardOwner) {
+          if (p !== boardOwner && shots[p]) {
             shots[p].forEach((turn) => {
               thisBoardShots.push(...turn);
             })

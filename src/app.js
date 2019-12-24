@@ -4,9 +4,8 @@ import { submitConfig } from "./modules/config.js";
 import { joinGame } from "./modules/connect.js";
 import { 
   generateNewShots, 
-  shoot,
   numberOfShotsYouGet,
-  getAllShotsByTurn
+  getHits,
 } from "./modules/shooting.js";
 import { 
   inputShip, 
@@ -17,7 +16,6 @@ import {
 import Setup from "./components/setup.js";
 import BoardArea from "./components/boardArea";
 import { Instructions } from "./components/instructions";
-import { Shots } from "./components/shots";
 
 let database = firebase.database();
 
@@ -94,7 +92,7 @@ class App extends Component {
 
     } else if (confirm("Are you happy with your ship placement?")) {
       database.ref(`${this.state.gameId}/players/${this.state.playerName}/shipsCommitted`).set(true);
-      database.ref(`${this.state.gameId}/${this.state.playerName + "Ships"}`).set(this.state.ships);
+      database.ref(`${this.state.gameId}/ships/${this.state.playerName}`).set(this.state.ships);
       database.ref(`${this.state.gameId}/turn`).set(0);
     }
   }
@@ -123,7 +121,6 @@ class App extends Component {
     }
 
     // set shots on db to potentials shots, reset local potential shots, and change turn
-    database.ref(`${gameId}/shots/${playerName}/${turn}`).set(potentialShots);;
     database.ref(`${gameId}/players/${playerName}/thisPlayerTurn`).set(false);
     // determine next player and set their thisPlayerTurn to true. if last player, increase turn number
     let nextPlayer = turnOrder[turnOrder.indexOf(playerName) + 1];
@@ -132,6 +129,12 @@ class App extends Component {
       database.ref(`${gameId}/turn`).set(turn + 1);
     }
     database.ref(`${gameId}/players/${nextPlayer}/thisPlayerTurn`).set(true);
+
+    database.ref(`${gameId}/ships`).once('value', (snapshot) => {
+      let hits = getHits(potentialShots, snapshot.val(), playerName);
+      database.ref(`${gameId}/shots/${playerName}/${turn}`).set(potentialShots);;
+      database.ref(`${gameId}/hits/${playerName}/${turn}`).set(hits);
+    });
 
     this.setState({
       potentialShots: [],
@@ -180,8 +183,6 @@ class App extends Component {
       if (this.state.players[key].thisPlayerTurn) whosTurn = key;
     }
 
-    const allShotsByTurn = getAllShotsByTurn(this.state.shots);
-
     return (
       <div className="flex_box">
         <Instructions 
@@ -191,6 +192,8 @@ class App extends Component {
           maxPlayers={this.state.numPlayers}
           turn={this.state.turn}
           whosTurn={whosTurn}
+          shots={this.state.shots}
+          hits={this.state.hits}
         />
         <BoardArea
           handleInput={this.handleBoardInput}
@@ -203,9 +206,6 @@ class App extends Component {
           shots={this.state.shots}
           potentialShots={this.state.potentialShots}
           players={allOtherPlayers}
-        />
-        <Shots
-          shots={allShotsByTurn}
         />
       </div>
     )

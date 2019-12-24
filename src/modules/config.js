@@ -72,7 +72,7 @@ export const submitConfig = (config, db, self) => {
           thisPlayerTurn: false,
           shipsCommitted: false
         }
-      }
+      },
     }
 
     // Set db state.
