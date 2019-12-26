@@ -131,7 +131,7 @@ export const allPlayersShipsPlaced = (players, maxPlayers) => {
   return true;
 }
 
-export const inputShip = (c, r, val, self) => {
+export const validateShip = (c, r, val, self) => {
   if (val.length === 0) {
     let newShips = newShipsWithoutThisLoc(c, r, self.state.ships);
     self.setState({
