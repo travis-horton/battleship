@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import Row from "./row";
+import { Row } from "./row";
 
 const objectWithoutKey = (object, key) => {
   const {[key]: deletedKey, ...otherKeys} = object;
@@ -73,8 +73,8 @@ export default class Board extends React.Component {
               ships={ships}
               shots={shots}
               potentialShots={this.props.potentialShots}
-              handleInput={this.handleInput}
-              handleClick={this.handleClick}
+              handleRowShipInput={this.handleInput}
+              handleRowShoot={this.handleClick}
               playerName={playerLabel}
             />
           )
