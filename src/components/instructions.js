@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import { Shots } from "./shots";
 
-export const Instructions = ({ shipsCommitted, curPlayers, thisPlayer, maxPlayers, turn, whosTurn, shots, hits }) => {
+export const Instructions = ({ shipsCommitted, curPlayers, thisPlayer, maxPlayers, turn, whosTurn, shots, hits, turnOrder }) => {
   return shipsCommitted ? 
     (
       <div className="left_column">
@@ -12,6 +12,7 @@ export const Instructions = ({ shipsCommitted, curPlayers, thisPlayer, maxPlayer
           shots={ shots }
           hits={ hits }
           players={ [...curPlayers, thisPlayer] }
+          turnOrder={ turnOrder }
         />
       </div>
     ) : (

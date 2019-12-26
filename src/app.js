@@ -99,8 +99,8 @@ class App extends Component {
 
   makeShot(c, r) {
     const potentialShots = this.state.potentialShots ? this.state.potentialShots : [];
-    const numShots = numberOfShotsYouGet(this.state.ships);
-
+    const numShots = numberOfShotsYouGet(this.state.ships, this.state.hits, this.state.playerName);
+   
     this.setState({
       potentialShots: generateNewShots(c, r, potentialShots, numShots),
     });
@@ -109,6 +109,7 @@ class App extends Component {
   commitShots() {
     const { gameId, shots, playerName, potentialShots, players, numPlayers, turnOrder, turn } = this.state;
     const isThisPlayersTurn = players[playerName].thisPlayerTurn;
+    const numShots = numberOfShotsYouGet(this.state.ships, this.state.hits, this.state.playerName);
 
     if (!allPlayersShipsPlaced(players, numPlayers)) {
       alert("Waiting on other players to join/place ships");
@@ -117,6 +118,11 @@ class App extends Component {
 
     if (!isThisPlayersTurn) {
       alert("It's not your turn!");
+      return;
+    }
+
+    if (numShots > potentialShots.length) {
+      alert(`You get ${numShots} shots and you've only shot ${potentialShots.length} times.`);
       return;
     }
 
@@ -142,6 +148,17 @@ class App extends Component {
   }
 
   render() {
+    if (numberOfShotsYouGet(this.state.ships, this.state.hits, this.state.playerName) === 0) {
+      database.ref(`${this.state.gameId}/players/${this.state.playerName}/lost`).set(true);
+      return (<p>You lost.</p>);
+    }
+
+    for (let player in this.state.players) {
+      if (this.state.players[player].lost) {
+        return (<p>{player} lost!</p>);
+      }
+    }
+
     if (this.state.numPlayers === 0) {
       return (
         <div>
@@ -194,6 +211,7 @@ class App extends Component {
           whosTurn={whosTurn}
           shots={this.state.shots}
           hits={this.state.hits}
+          turnOrder={this.state.turnOrder}
         />
         <BoardArea
           handleInput={this.handleBoardInput}

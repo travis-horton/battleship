@@ -9,10 +9,16 @@ export const isShotAt = (c, r, shots) => {
   return false;
 }
 
-export const numberOfShotsYouGet = (ships) => {
+export const numberOfShotsYouGet = (ships, hits, thisPlayer) => {
   let shots = 6;
-  for (let ships in ships) {
-    if (ships[ship].locs[0] === 0) shots --;
+  for (let ship in ships) {
+    if (ships[ship].max === hitsOnThisShip(hits, ship, thisPlayer)) {
+      if (ship === "b") {
+        shots -= 2;
+      } else {
+        shots --;
+      }
+    }
   }
   return shots;
 }
@@ -70,4 +76,14 @@ export const getHits = (shots, ships, shooter) => {
     }
   }
   return hits
+}
+
+const hitsOnThisShip = (hits, ship, player) => {
+  let numHits = 0;
+  for (let shooter in hits) {
+    for (let shot in hits[shooter]) {
+      numHits += hits[shooter][shot][player].filter(el => el === ship).length
+    }
+  }
+  return numHits;
 }
