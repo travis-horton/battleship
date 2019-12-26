@@ -69,6 +69,4 @@ export const Board = ({
       />
     </span>
   )
-
 }
-
