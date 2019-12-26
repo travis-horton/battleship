@@ -1,59 +1,57 @@
 import React, { Component } from "react";
-import Cell from "./cell";
+import { Cell } from "./cell";
 
-export default class Row extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleInput = this.handleInput.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-  }
+export const Row = ({
+  rowLength,
+  boardStyle,
+  row,
+  cols,
+  ships,
+  shots,
+  potentialShots,
+  handleRowShipInput,
+  handleRowShoot,
+  playerName,
 
-  handleInput(c, r, val) {
-    this.props.handleInput(c, r, val);
-  }
+}) => {
+  const handleCellShipInput = (c, r, val) => handleRowShipInput(c, r, val);
+  const handleCellShoot = (c, r) => handleRowShoot(c, r);
+  const className = "row";
 
-  handleClick(c, r) {
-    this.props.handleClick(c, r);
-  }
-
-  render() {
-    let className = "row";
-
-    if (this.props.row === "header") {
-      return (
-        <div className={className}>
-          <Cell label=" "/>
-          {
-            this.props.cols.map((col) =>
-              <Cell label={col} key={col}/>
-            )
-          }
-          <Cell label=" "/>
-        </div>
-
-      )
-    } else {
-      return (
-        <div className={className}>
-          <Cell label={this.props.row}/>
-          {
-            this.props.cols.map((col) =>
-              <Cell
-                boardStyle={this.props.boardStyle}
-                key={col}
-                col={col}
-                row={this.props.row}
-                ships={this.props.ships}
-                shots={this.props.shots}
-                potentialShots={this.props.potentialShots}
-                handleInput={this.handleInput}
-                handleClick={this.handleClick}
-              />
-            )
-          }
-          <Cell label={this.props.row}/>
-        </div>
-      )
-    }
+  if (row === "header") {
+    //make this a function 'return header column'
+    return (
+      <div className={className}>
+        <Cell headerCellLabel=" "/>
+        {
+          cols.map((col) =>
+            <Cell headerCellLabel={col} key={col}/>
+          )
+        }
+        <Cell headerCellLabel=" "/>
+      </div>
+    );
+  } else {
+    return (
+      <div className={className}>
+        <Cell headerCellLabel={row}/>
+        {
+          cols.map((col) =>
+            <Cell
+              key={col}
+              boardStyle={boardStyle}
+              row={row}
+              col={col}
+              ships={ships}
+              shots={shots}
+              potentialShots={potentialShots}
+              inputShip={handleCellShipInput}
+              potentialShot={handleCellShoot}
+            />
+          )
+        }
+        <Cell headerCellLabel={row}/>
+      </div>
+    );
   }
 }

@@ -14,7 +14,7 @@ import {
   allPlayersShipsPlaced, 
 } from "./modules/ships.js"
 import Setup from "./components/setup.js";
-import BoardArea from "./components/boardArea";
+import { BoardArea } from "./components/boardArea";
 import { Instructions } from "./components/instructions";
 
 let database = firebase.database();
