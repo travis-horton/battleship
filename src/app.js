@@ -8,7 +8,7 @@ import {
   getHits,
 } from "./modules/shooting.js";
 import { 
-  inputShip, 
+  validateShip, 
   whatShipIsHere, 
   allShipsArePlaced, 
   allPlayersShipsPlaced, 
@@ -24,9 +24,9 @@ class App extends Component {
     super(props);
     this.handleNewGame = this.handleNewGame.bind(this);
     this.handleJoinGame = this.handleJoinGame.bind(this);
-    this.handleConfigSubmit = this.handleConfigSubmit.bind(this);
-    this.handleBoardInput = this.handleBoardInput.bind(this);
-    this.handleBoardSubmit = this.handleBoardSubmit.bind(this);
+    this.configSubmit = this.configSubmit.bind(this);
+    this.inputShip = this.inputShip.bind(this);
+    this.commitShips = this.commitShips.bind(this);
     this.makeShot = this.makeShot.bind(this);
     this.commitShots = this.commitShots.bind(this);
 
@@ -68,25 +68,21 @@ class App extends Component {
     joinGame(gameId, database, this);
   }
 
-  handleConfigSubmit(config) {
-    let self = this;
-    
+  configSubmit(config) {
     // First, checks config for errors.
     // Then sets db state to those config params.
     // Lastly tells database to notify and update local state on changes.
-    submitConfig(config, database, self);
+    submitConfig(config, database, this);
   }
 
-  handleBoardInput(c, r, val) {
-    let self = this;
-
+  inputShip(c, r, val) {
     // Checks each entry of ship for valid placement and
     // sets state to reflect valid placement.
     // SIDE EFFECTS: Sets local ship state.
-    inputShip(c, r, val, self);
- }
+    validateShip(c, r, val, this);
+  }
 
-  handleBoardSubmit(e) {
+  commitShips(e) {
     if (!allShipsArePlaced(this.state.ships)) {
       alert("You have more ships to place!");
 
@@ -100,12 +96,12 @@ class App extends Component {
   makeShot(c, r) {
     const potentialShots = this.state.potentialShots ? this.state.potentialShots : [];
     const numShots = numberOfShotsYouGet(this.state.ships, this.state.hits, this.state.playerName);
-   
+
     this.setState({
       potentialShots: generateNewShots(c, r, potentialShots, numShots),
     });
   }
- 
+
   commitShots() {
     const { gameId, shots, playerName, potentialShots, players, numPlayers, turnOrder, turn } = this.state;
     const isThisPlayersTurn = players[playerName].thisPlayerTurn;
@@ -162,8 +158,8 @@ class App extends Component {
     if (this.state.numPlayers === 0) {
       return (
         <div>
-        <button onClick={this.handleNewGame}>New game</button>
-        <button onClick={this.handleJoinGame}>Join game</button>
+          <button onClick={this.handleNewGame}>New game</button>
+          <button onClick={this.handleJoinGame}>Join game</button>
         </div>
       )
 
@@ -171,7 +167,7 @@ class App extends Component {
 
     if (this.state.numPlayers === 1) {
       return (
-        <Setup handleSubmit={this.handleConfigSubmit}/>
+        <Setup configSubmit={this.configSubmit}/>
       )
     } 
 
@@ -183,11 +179,11 @@ class App extends Component {
         <div className="flex_box">
           <Instructions shipsCommitted={false}/>
           <BoardArea
-            handleInput={this.handleBoardInput}
+            inputShip={this.inputShip}
             boardSize={this.state.boardSize}
             thisPlayer={thisPlayer}
             ships={this.state.ships}
-            handleSubmit={this.handleBoardSubmit}
+            commitShips={this.commitShips}
           />
         </div>
       )
@@ -214,8 +210,8 @@ class App extends Component {
           turnOrder={this.state.turnOrder}
         />
         <BoardArea
-          handleInput={this.handleBoardInput}
-          handleSubmit={this.handleBoardSubmit}
+          inputShip={this.inputShip}
+          commitShips={this.commitShips}
           handleClick={this.makeShot}
           handleShoot={this.commitShots}
           boardSize={this.state.boardSize}

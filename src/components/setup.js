@@ -20,7 +20,7 @@ export default class Setup extends Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    this.props.handleSubmit({
+    this.props.configSubmit({
       playerName: this.state.playerName,
       gameId: this.state.gameId,
       boardSize: Number(this.state.boardSize),
@@ -32,7 +32,7 @@ export default class Setup extends Component {
     return (
       <div>
         <p>Limit length to 20 characters, which must be letters or numbers!</p>
-        <form onSubmit={this.props.onSubmit}>
+        <form onSubmit={this.props.configSubmit}>
           <ConfigSelector
             id="playerName"
             type="text"
