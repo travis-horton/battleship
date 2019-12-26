@@ -19,6 +19,60 @@ import { Instructions } from "./components/instructions";
 
 let database = firebase.database();
 
+class App2 extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      config: {
+        boardSize: 0,
+        gameId: "",
+        maxPlayers: 0,
+      },
+      info: {
+        thisPlayerName: "",
+        players: {
+          "": {
+            connected: true,
+            turn: false,
+            shipsCommitted: false,
+            lost: false,
+          },
+        },
+        maxShips: {
+          a: 5,
+          b: 4,
+          c: 3,
+          s: 3,
+          d: 2,
+        },
+      },
+      gameState: {
+        turn: 0,
+        boards: {
+          shootingBoard: [],
+          thisPlayerBoard: [],
+        },
+      },
+    }
+
+    this.config = {
+      handleNewGame: this.config.handleNewGame.bind(this),
+      handleJoinGame: this.config.handleJoinGame.bind(this),
+      configSubmit: this.config.configSubmit.bind(this),
+    }
+
+    this.shipFunctions = {
+      inputShips = this.shipFunctions.inputShips.bind(this),
+      commitShips = this.shipFunctions.commitShips.bind(this),
+    }
+
+    this.shootingFunctions = {
+      makeShot: this.shootingFunctions.makeShote.bind(this),
+      commitShots: this.shootingFunctions.commitShots.bind(this),
+    }
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
