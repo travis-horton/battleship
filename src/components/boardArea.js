@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Board from "./board";
+import { Board } from "./board";
 
 export default class BoardArea extends React.Component {
   constructor(props) {
@@ -35,10 +35,11 @@ export default class BoardArea extends React.Component {
           <Board
             boardSize={_p.boardSize}
             boardStyle="input"
-            handleInput={this.handleBoardInput}
+            handleBoardInput={this.handleBoardInput}
             boardOwner={_p.thisPlayer.name}
             ships={_p.ships}
             thisPlayer={_p.thisPlayer.name}
+            handleBoardShoot={() => {}}
           />
           <br/>
           <button onClick={this.handleSubmit}>Submit ship placement</button>
@@ -67,7 +68,7 @@ export default class BoardArea extends React.Component {
               boardOwner={"shooting"}
               potentialShots={_p.potentialShots}
               thisPlayer={_p.thisPlayer.name}
-              handleClick={this.handleClick}
+              handleBoardShoot={this.handleClick}
             />
             <Board
               boardSize={_p.boardSize}
@@ -76,6 +77,7 @@ export default class BoardArea extends React.Component {
               shots={getBoardShots(_p.shots, _p.thisPlayer.name)}
               potentialShots={_p.potentialShots}
               thisPlayer={_p.thisPlayer.name}
+              handleBoardShoot={() => {}}
             />
           </div>
           <div>
@@ -88,10 +90,10 @@ export default class BoardArea extends React.Component {
                   key={boardOwner}
                   boardSize={_p.boardSize}
                   boardOwner={boardOwner}
-                  ships={_p.ships}
                   shots={getBoardShots(_p.shots, boardOwner)}
                   potentialShots={_p.potentialShots}
                   thisPlayer={_p.thisPlayer.name}
+                  handleBoardShoot={() => {}}
                 />
               )
             }

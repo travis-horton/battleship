@@ -10,81 +10,65 @@ const objectWithoutKey = (object, key) => {
   return newObject;
 }
 
-export default class Board extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleInput = this.handleInput.bind(this);
-    this.handleClick = this.handleClick.bind(this);
+export const Board = ({
+  boardSize,
+  boardStyle,
+  boardOwner,
+  shots,
+  ships,
+  thisPlayer,
+  potentialShots,
+  handleBoardShipInput,
+  handleBoardShoot,
+}) => {
+  const handleRowShipInput = (c, r, val) => handleBoardShipInput(c, r, val);
+  const handleRowShoot = (c, r) => handleBoardShoot(c, r);
+
+  const rows = [...Array(boardSize).keys()];
+  const cols = [...Array(boardSize).keys()].map(el => String.fromCharCode(el + 65)); //generates an array of letters from "A" board size in length
+  
+  let playerLabel = (
+    boardOwner === "shooting" ?
+    "your shooting board" :
+    boardOwner + "'s board"
+  )
+
+  if (boardOwner === thisPlayer && boardStyle !== "input") {
+    playerLabel = "your ships";
   }
 
-  handleInput(c, r, val) {
-    this.props.handleInput(c, r, val);
-  }
+  return (
+    <span className="board">
+      <span>{playerLabel}</span>
+      <Row
+        rowLength={boardSize}
+        cols={cols}
+        row="header"
+      />
+      {
+        rows.map((row) =>
+          <Row
+            rowLength={boardSize}
+            boardStyle={boardStyle}
+            key={row}
+            row={row + 1}
+            cols={cols}
+            ships={ships}
+            shots={shots}
+            potentialShots={potentialShots}
+            handleRowShipInput={handleRowShipInput}
+            handleRowShoot={handleRowShoot}
+            playerName={playerLabel}
+          />
+        )
+      }
+      <Row
+        rowLength={boardSize}
+        cols={cols}
+        row="header"
+      />
+    </span>
+  )
 
-  handleClick(c, r) {
-    this.props.handleClick(c, r);
-  }
-
-  render() {
-    let rows = [];
-    let cols = [];
-    let _p = this.props;
-    let playerLabel = (
-      _p.boardOwner === "shooting" ?
-      "your shooting board" :
-      _p.boardOwner + "'s board"
-    )
-
-    if (_p.boardOwner === _p.thisPlayer && _p.boardStyle !== "input") {
-      playerLabel = "your ships";
-    }
-
-    let ships = (
-      _p.boardOwner === _p.thisPlayer ?
-      _p.ships :
-      []
-    );
-
-    let shots = _p.shots;
-
-    for (let i = 0; i < _p.boardSize; i++) {
-      rows.push(i);
-    }
-    for (let i = 0; i < _p.boardSize; i++) {
-      cols.push(String.fromCharCode(i + 65))
-    }
-
-    return (
-      <span className="board">
-        <span>{playerLabel}</span>
-        <Row
-          rowLength={_p.boardSize}
-          cols={cols}
-          row="header"
-        />
-        {
-          rows.map((row) =>
-            <Row
-              rowLength={_p.boardSize}
-              boardStyle={_p.boardStyle}
-              key={row}
-              row={row + 1}
-              cols={cols}
-              ships={ships}
-              shots={shots}
-              potentialShots={this.props.potentialShots}
-              handleRowShipInput={this.handleInput}
-              handleRowShoot={this.handleClick}
-              playerName={playerLabel}
-            />
-          )
-        }
-        <Row
-          rowLength={_p.boardSize}
-          cols={cols}
-          row="header"
-        />
-      </span>
-    )
-  }
 }
+
