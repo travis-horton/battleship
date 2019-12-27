@@ -28,7 +28,7 @@ const getClassNames = (col, row, shots, potentialShots, headerCellLabel) => {
   return classNames.join(" ");
 }
 
-export const Cell = ({
+export default function Cell({
   boardStyle,
   row,
   col,
@@ -38,7 +38,7 @@ export const Cell = ({
   headerCellLabel,
   inputShip,
   potentialShot
-}) => {
+}) {
   const classNames = getClassNames(col, row, shots, potentialShots, headerCellLabel);
   const shipType = whatShipIsHere(col, row, ships);
   const handleInput = e => {

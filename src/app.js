@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import { submitConfig } from "./modules/config.js";
-import { joinGame } from "./modules/connect.js";
+import submitConfig from "./modules/config.js";
+import joinGame from "./modules/connect.js";
 import { 
   generateNewShots, 
   numberOfShotsYouGet,
@@ -9,7 +9,6 @@ import {
 } from "./modules/shooting.js";
 import { 
   validateShip, 
-  whatShipIsHere, 
   allShipsArePlaced, 
   allPlayersShipsPlaced, 
 } from "./modules/ships.js"
@@ -19,25 +18,15 @@ import { Instructions } from "./components/instructions";
 
 let database = firebase.database();
 
-class App2 extends Component {
+class App extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
       config: {
         boardSize: 0,
         gameId: "",
         maxPlayers: 0,
-      },
-      info: {
-        thisPlayerName: "",
-        players: {
-          "": {
-            connected: true,
-            turn: false,
-            shipsCommitted: false,
-            lost: false,
-          },
-        },
         maxShips: {
           a: 5,
           b: 4,
@@ -46,89 +35,125 @@ class App2 extends Component {
           d: 2,
         },
       },
-      gameState: {
-        turn: 0,
-        boards: {
-          shootingBoard: [],
-          thisPlayerBoard: [],
+
+      localInfo: {
+        name: "",
+        // one of: [initial, setup, shipInput, shooting, gameEnd]
+        status: "initial",
+        shootingBoard: [],
+        ships: {
+          a: [],
+          b: [],
+          c: [],
+          s: [],
+          d: [],
         },
       },
-    }
 
-    this.config = {
-      handleNewGame: this.config.handleNewGame.bind(this),
-      handleJoinGame: this.config.handleJoinGame.bind(this),
-      configSubmit: this.config.configSubmit.bind(this),
-    }
+      gameState: {
+        turn: 0,
+        turnOrder: [0],
+        boards: {
+        },
 
-    this.shipFunctions = {
-      inputShips = this.shipFunctions.inputShips.bind(this),
-      commitShips = this.shipFunctions.commitShips.bind(this),
-    }
+        players: {
+          "": {
+            connected: true,
+            turn: false,
+            shipsCommitted: false,
+            lost: false,
+            hits: {
+              a: 0,
+              b: 0,
+              c: 0,
+              s: 0,
+              d: 0,
+            },
+          },
+        },
+      },
+    };
 
-    this.shootingFunctions = {
-      makeShot: this.shootingFunctions.makeShote.bind(this),
-      commitShots: this.shootingFunctions.commitShots.bind(this),
+    this.configure = this.configure.bind(this);
+    this.ships = this.ships.bind(this);
+    // this.shootingFunctions = this.shootingFunctions.bind(this);
+
+    /*
+        inputShips: this.shipFunctions.inputShips.bind(this),
+        commitShips: this.shipFunctions.commitShips.bind(this),
+        makeShot: this.shootingFunctions.makeShote.bind(this),
+        commitShots: this.shootingFunctions.commitShots.bind(this),
+        */
+  }
+
+  configure(e, config) {
+    const id = e.target.id;
+    switch (id) {
+      case "make_new_game": {
+        this.setState(prevState => ({ localInfo: { ...prevState.localInfo, status: "setup" } }));
+        break;
+      }
+
+      case "config_submit": {
+        // First, checks config for errors.
+        // Then sets db state to those config params.
+        // Then fires joinGame.
+        submitConfig(config, database, this);
+        break;
+      }
+
+      case "join_game": {
+        joinGame(database, this);
+        break;
+      }
+    }
+  }
+
+  ships() {
+  }
+
+  render() {
+    const { config, localInfo, gameState } = this.state;
+    switch (localInfo.status) {
+      case "initial": {
+        return (
+          <div>
+            <button id="make_new_game" onClick={this.configure}>New game</button>
+            <button id="join_game" onClick={this.configure}>Join game</button>
+          </div>
+        );
+      }
+
+      case "setup": {
+        return (
+          <Setup id="config_submit" submitConfig={this.configure}/>
+        );
+      }
+
+      case "inputShips": {
+        const name = this.state.localInfo.name;
+        return (
+          <div className="flex_box">
+            <Instructions shipsCommitted={ false }/>
+            <BoardArea
+              inputShip={ this.ships }
+              boardSize={ config.boardSize }
+              player={ gameState.players[name] }
+              ships={ localInfo.ships }
+              commitShips={ this.ships }
+            />
+          </div>
+        );
+      }
+
+      case "shooting": {
+        return (<div>shoot mf!</div>);
+      }
     }
   }
 }
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.handleNewGame = this.handleNewGame.bind(this);
-    this.handleJoinGame = this.handleJoinGame.bind(this);
-    this.configSubmit = this.configSubmit.bind(this);
-    this.inputShip = this.inputShip.bind(this);
-    this.commitShips = this.commitShips.bind(this);
-    this.makeShot = this.makeShot.bind(this);
-    this.commitShots = this.commitShots.bind(this);
-
-    this.state = {
-      boardSize: 0,
-      gameId: "",
-      // numPlayers also determines in part what renders
-      numPlayers: 0,
-      playerName: "",
-      ships: {
-        a: {locs: [0], max: 5},
-        b: {locs: [0], max: 4},
-        c: {locs: [0], max: 3},
-        s: {locs: [0], max: 3},
-        d: {locs: [0], max: 2}
-      },
-      shots: [],
-      players: {
-        "": {
-          connected: true,
-          thisPlayerTurn: false,
-          shipsCommitted: false
-        }
-      },
-      turn: 0
-    }
-  }
-
-  handleNewGame() {
-    this.setState({numPlayers: 1});
-  }
-
-  handleJoinGame() {
-    let gameId = prompt("Enter game id: ");
-    if (gameId === null || gameId.length === 0) return;
-
-    // This joins the game if the gameId exists in the database.
-    // SIDE EFFECTS: sets state to database data and adds player if player is new.
-    joinGame(gameId, database, this);
-  }
-
-  configSubmit(config) {
-    // First, checks config for errors.
-    // Then sets db state to those config params.
-    // Lastly tells database to notify and update local state on changes.
-    submitConfig(config, database, this);
-  }
-
+class App2 extends Component {
   inputShip(c, r, val) {
     // Checks each entry of ship for valid placement and
     // sets state to reflect valid placement.
@@ -212,7 +237,7 @@ class App extends Component {
     if (this.state.numPlayers === 0) {
       return (
         <div>
-          <button onClick={this.handleNewGame}>New game</button>
+          <button id="new_game" onClick={this.config}>New game</button>
           <button onClick={this.handleJoinGame}>Join game</button>
         </div>
       )

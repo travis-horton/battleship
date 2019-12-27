@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Cell } from "./cell";
+import Cell from "./cell";
 
 export const Row = ({
   rowLength,

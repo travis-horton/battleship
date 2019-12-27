@@ -2,103 +2,96 @@ import { randomizeTurnOrder } from "./ships.js";
 import { allPlayersShipsPlaced } from "./ships.js";
 import { getHits } from "./shooting.js";
 
-const choosePlayerName = (extraPrompt) => {
-  extraPrompt = extraPrompt ? (extraPrompt + "\n") : "";
-  let playerName = prompt(extraPrompt + "Choose a player name (or enter your player name to log back in): ");
+// returns a user-chosen name that is under 20 alphanumeric characters
+const choosePlayerName = (extraPrompt = "") => {
+  let name = prompt(extraPrompt + "Choose a player name (or enter your player name to log back in): ");
   let regx = /[^a-zA-Z0-9 ]/;
-  while (regx.test(playerName)) {
-    playerName = choosePlayerName("Name must contain only numbers and/or letters. ");
+
+  while (regx.test(name)) {
+    name = choosePlayerName("Name must contain only numbers and/or letters. \n");
+    while (name.length > 20 || name.length === 0) {
+      name = choosePlayerName("Name must be between 1 & 20 characters long. \n");
+    }
   }
 
-  while (playerName.length > 20 || playerName.length === 0) {
-    playerName = choosePlayerName("Name must be between 1 & 20 characters long. ");
-  }
+  return name;
+};
 
-  return playerName;
-}
-
-const getFirebaseData = (dbData, thisPlayerName) => {
-  // Gets config data.
-  let newState = {
-    boardSize: dbData.boardSize,
-    gameId: dbData.gameId,
-    numPlayers: dbData.numPlayers,
-    playerName: thisPlayerName,
-    players: dbData.players,
-    turn: dbData.turn,
-    turnOrder: (dbData.playerTurnOrder || null),
+const getLocalInfo = (ships, name) => {
+  return {
+    name,
+    ships,
+    status: (ships.a[0] === 0 ? "inputShips" : "shooting"),
+    shootingBoard: [],
   };
+};
 
-  // Gets this player's ship data.
-  if (dbData.ships && dbData.ships[thisPlayerName]) {
-    newState.ships = dbData.ships[thisPlayerName];
-  }
+const getLocalState = (dbData, name) => {
+  return {
+    config: dbData.config,
+    gameState: dbData.gameState,
+    localInfo: { ...getLocalInfo(dbData.ships[name], name) },
+  };
+};
 
-  if (dbData.hits) {
-    newState.hits = dbData.hits;
-  }
+// connects player to gameId in db
+// tells db to update client on changes to db
+const connect = (db, gameId, name, info, self) => {
+  info.connected = true;
+  db.ref(`${gameId}/gameState/players/${name}`).set(info);
+  db.ref(`${gameId}/gameState/players/${name}/connected`).onDisconnect().set(false);
 
-  // Gets shots data.
-  newState.shots = dbData.shots;
+  // Tells db to update client on changes to db
+  db.ref(gameId).on('value', (snapshot) => {
+    self.setState(getLocalState(snapshot.val(), name));
+  });
+};
 
-  return newState;
-}
+export default function joinGame(
+  db,
+  self,
+  gameId = prompt("Enter game id: "),
+  name = choosePlayerName(),
+) {
+  if (gameId === null || gameId.length === 0) return;
 
-export const joinGame = (gameId, db, self, playerName = choosePlayerName()) => {
   db.ref(gameId).once('value', (snapshot) => {
     if (!snapshot.exists()) {
       alert("No such game in database.");
       return;
     }
 
-    let maxNumPlayers = snapshot.val().numPlayers;
-    let curNumPlayers = Object.keys(snapshot.val().players).length;
-
-    // Gets database data about players.
-    db.ref(`${gameId}/players`).once("value").then((players) => {
-      let areShipsCommitted = false;
-      let isThisPlayerTurn = false;
-
-      if (players.hasChild(playerName)) {
-        // If playername is connected, refuses additional connection.
-        if (players.val()[playerName].connected) {
-          alert("That player is already connected.");
-          return;
-        }
-
-        // TODO: Get a password from player to allow reconnection?
-
-        // Sets player's ship's committed status to db state.
-        areShipsCommitted = players.val()[playerName].shipsCommitted;
-        isThisPlayerTurn = players.val()[playerName].thisPlayerTurn;
-
-      } else if (curNumPlayers >= maxNumPlayers) {
-        alert("Game is full.");
+    const { config, gameState } = snapshot.val();
+    const numPlayers = Object.keys(gameState.players).length
+    let playerInfo;
+    
+    // determines playerInfo based on if player is reconnecting or connecting for the first time
+    // while also rejecting if player is already connected or if there's no room for a new player
+    if (name in gameState.players) {
+      if (gameState.players[name].connected) {
+        alert("That player is already connected.");
         return;
       }
 
-      let thisPlayerInfo = {
+      playerInfo = gameState.players[name];
+    } else if (numPlayers >= config.maxPlayers) {
+      alert("Game is full.");
+      return;
+    } else {
+      playerInfo = {
         connected: true,
-        thisPlayerTurn: isThisPlayerTurn,
-        shipsCommitted: areShipsCommitted
+        thisPlayerTurn: false,
+        shipsCommitted: false,
+        lost: false,
       };
+    };
 
-      // Sets db state and tells db on disconnect to set connected to false. This should be its own function.
-      db.ref(`${gameId}/players/${playerName}`).set(thisPlayerInfo);
-      db.ref(`${gameId}/players/${playerName}/connected`).onDisconnect().set(false);
+    connect(db, gameId, name, playerInfo, self);
 
-      // Tells db to alert client on changes to db and subsequently updates client state.
-      db.ref(gameId).on('value', (snapshot) => {
-        let fBState = snapshot.val();
-        self.setState(getFirebaseData(fBState, playerName));
-
-        const { players, numPlayers } = fBState;
-        const turnOrder = randomizeTurnOrder(players);
-        if (allPlayersShipsPlaced(players, numPlayers) && !("playerTurnOrder" in fBState)) {
-          db.ref(`${gameId}/playerTurnOrder`).set(turnOrder);
-          db.ref(`${gameId}/players/${turnOrder[0]}/thisPlayerTurn`).set(true);
-        }
-      });
-    });
+    if (allPlayersShipsPlaced(gameState.players, numPlayers) && gameState.turnOrder === 0) {
+      const turnOrder = randomizeTurnOrder(players);
+      db.ref(`${gameId}/gameState/turnOrder`).set(turnOrder);
+      db.ref(`${gameId}/gameState/players/${turnOrder[0]}/thisPlayerTurn`).set(true);
+    }
   });
-}
+};

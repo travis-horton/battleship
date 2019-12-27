@@ -3,7 +3,7 @@ import { Board } from "./board";
 
 export const BoardArea = ({
   boardSize,
-  thisPlayer,
+  player,
   ships,
   shots,
   potentialShots,
@@ -18,16 +18,16 @@ export const BoardArea = ({
   const handleBoardAreaShoot = (c, r) => handleClick(c, r);
   const handleBoardAreaCommitShots = (e) => handleShoot(e);
 
-  if (!thisPlayer.shipsCommitted) {
+  if (!player.shipsCommitted) {
     return (
         <div className="right_column">
           <Board
             boardSize={boardSize}
             boardStyle="input"
             handleBoardShipInput={handleBoardAreaShipInput}
-            boardOwner={thisPlayer.name}
+            boardOwner={player.name}
             ships={ships}
-            thisPlayer={thisPlayer.name}
+            thisPlayer={player.name}
             handleBoardShoot={() => {}}
           />
           <br/>
@@ -55,16 +55,16 @@ export const BoardArea = ({
           boardSize={boardSize}
           boardOwner={"shooting"}
           potentialShots={potentialShots}
-          thisPlayer={thisPlayer.name}
+          thisPlayer={player.name}
           handleBoardShoot={handleBoardAreaShoot}
         />
         <Board
           boardSize={boardSize}
-          boardOwner={thisPlayer.name}
+          boardOwner={player.name}
           ships={ships}
-          shots={getBoardShots(shots, thisPlayer.name)}
+          shots={getBoardShots(shots, player.name)}
           potentialShots={potentialShots}
-          thisPlayer={thisPlayer.name}
+          thisPlayer={player.name}
           handleBoardShoot={() => {}}
         />
       </div>
@@ -80,7 +80,7 @@ export const BoardArea = ({
               boardOwner={boardOwner}
               shots={getBoardShots(shots, boardOwner)}
               potentialShots={potentialShots}
-              thisPlayer={thisPlayer.name}
+              thisPlayer={player.name}
               handleBoardShoot={() => {}}
             />
           )
