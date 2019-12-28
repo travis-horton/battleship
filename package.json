@@ -7,8 +7,7 @@
   "description": "my battleship game",
   "scripts": {
     "serve": "rm -r dist; ./node_modules/.bin/parcel ./src/index.html",
-    "build": "./node_modules/.bin/parcel build ./src/index.html"
-  },
+    "build": "rm -r dist; ./node_modules/.bin/parcel build ./src/index.html" },
   "repository": {
     "type": "git",
     "url": "https://github.com/kiddspazz/battleship"
