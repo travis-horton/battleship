@@ -74,6 +74,7 @@ export default function joinGame(
       }
 
       playerInfo = gameState.players[name];
+
     } else if (numPlayers >= config.maxPlayers) {
       alert("Game is full.");
       return;
