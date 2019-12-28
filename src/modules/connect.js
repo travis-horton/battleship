@@ -17,10 +17,10 @@ const choosePlayerName = (extraPrompt = "") => {
   return name;
 };
 
-const getLocalInfo = (ships, name) => {
+const getLocalInfo = (ships, shots, name) => {
   return {
-    name,
-    ships,
+    name: name,
+    ships: ships,
     status: (ships.a[0] === 0 ? "inputShips" : "shooting"),
     shootingBoard: [],
   };

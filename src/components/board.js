@@ -10,7 +10,34 @@ const objectWithoutKey = (object, key) => {
   return newObject;
 }
 
-export const Board = ({
+export class Board extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      config: {
+        size: this.props.size,
+        style: this.props.style,
+        owner: this.props.owner,
+      },
+
+      data: {
+        ships: this.props.ships,
+        shots: this.props.shots,
+        colors: this.props.color,
+      },
+    }
+  }
+
+  render() {
+    const config = this.state.config;
+    console.log(`Size: ${config.size}, style: ${config.style}, owner: ${config.owner}`);
+    console.log("Data:");
+    console.log(this.state.data);
+    return (<p>This is a board, bitches.</p>);
+  }
+};
+
+export function board({
   boardSize,
   boardStyle,
   boardOwner,
@@ -20,7 +47,7 @@ export const Board = ({
   potentialShots,
   handleBoardShipInput,
   handleBoardShoot,
-}) => {
+}) {
   const handleRowShipInput = (c, r, val) => handleBoardShipInput(c, r, val);
   const handleRowShoot = (c, r) => handleBoardShoot(c, r);
 

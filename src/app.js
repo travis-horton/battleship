@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
+import { Board } from "./components/board.js";
 import submitConfig from "./modules/config.js";
 import joinGame from "./modules/connect.js";
 import { 
@@ -13,7 +14,7 @@ import {
   allPlayersShipsPlaced, 
 } from "./modules/ships.js"
 import Setup from "./components/setup.js";
-import { BoardArea } from "./components/boardArea";
+import BoardArea from "./components/boardArea";
 import { Instructions } from "./components/instructions";
 
 let database = firebase.database();
@@ -40,7 +41,9 @@ class App extends Component {
         name: "",
         // one of: [initial, setup, shipInput, shooting, gameEnd]
         status: "initial",
-        shootingBoard: [],
+        boards: {
+          // one for shooting, one for this players ships, one each for every other player
+        },
         ships: {
           a: [],
           b: [],
@@ -53,9 +56,6 @@ class App extends Component {
       gameState: {
         turn: 0,
         turnOrder: [0],
-        boards: {
-        },
-
         players: {
           "": {
             connected: true,
@@ -87,8 +87,7 @@ class App extends Component {
   }
 
   configure(e, config) {
-    const id = e.target.id;
-    switch (id) {
+    switch (e.target.id) {
       case "make_new_game": {
         this.setState(prevState => ({ localInfo: { ...prevState.localInfo, status: "setup" } }));
         break;
@@ -109,7 +108,10 @@ class App extends Component {
     }
   }
 
-  ships() {
+  ships(id, data) {
+    console.log(id);
+    console.log(data);
+    console.log("doing some shit with ships");
   }
 
   render() {
@@ -136,10 +138,10 @@ class App extends Component {
           <div className="flex_box">
             <Instructions shipsCommitted={ false }/>
             <BoardArea
-              inputShip={ this.ships }
               boardSize={ config.boardSize }
               player={ gameState.players[name] }
               ships={ localInfo.ships }
+              inputShip={ this.ships }
               commitShips={ this.ships }
             />
           </div>

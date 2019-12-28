@@ -26,12 +26,6 @@ export default function submitConfig(config, db, self) {
 
       gameState: {
         turn: 0,
-        boards: {
-          [config.playerName]: new Array(config.boardSize).fill(new Array(config.boardSize).fill({
-            shot: false,
-            ship: false,
-          })),
-        },
 
         // Initialize current user in players.
         players: {
@@ -53,6 +47,8 @@ export default function submitConfig(config, db, self) {
           d: [0,1],
         },
       },
+
+      shots: [{ [config.playerName]: 0 }],
     };
 
     // Set db state.
