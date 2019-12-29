@@ -15,7 +15,7 @@ const getBoardShots = (shots, boardOwner) => {
 
 export default function BoardArea({
   boardSize,
-  player,
+  name,
   ships = {},
   shots = {},
   potentialShots = {},
@@ -23,23 +23,21 @@ export default function BoardArea({
   commitShips,
   handleClick,
   handleShoot,
-  players = {},
 }) {
   const handleBoardAreaShipInput = (c, r, val) => inputShip("input", { loc, val });
   const handleBoardAreaCommitShips = (e) => commitShips("commit", { e });
   const handleBoardAreaShoot = (c, r) => handleClick(c, r);
   const handleBoardAreaCommitShots = (e) => handleShoot(e);
 
-  if (!player.shipsCommitted) {
+  if (!shipsCommitted) {
     return (
         <div className="right_column">
           <Board
-            boardSize={ boardSize }
-            boardStyle="input"
+            size={ boardSize }
+            style="input"
             handleBoardShipInput={ handleBoardAreaShipInput }
-            boardOwner={ player.name }
-            ships={ ships }
-            thisPlayer={ player.name }
+            owner={ name }
+            thisPlayer={ name }
             handleBoardShoot={ () => {} }
           />
           <br/>
@@ -49,44 +47,7 @@ export default function BoardArea({
   }
 
   return (
-    <div>
-      <div className="board_area">
-        <Board
-          boardSize={ boardSize }
-          boardOwner={"shooting"}
-          potentialShots={ potentialShots }
-          thisPlayer={ player.name }
-          handleBoardShoot={ handleBoardAreaShoot }
-        />
-        <Board
-          boardSize={ boardSize }
-          boardOwner={ player.name }
-          ships={ ships }
-          shots={ getBoardShots(shots, player.name)}
-          potentialShots={ potentialShots }
-          thisPlayer={ player.name }
-          handleBoardShoot={ () => {} }
-        />
-      </div>
-      <div>
-        <button onClick={ handleBoardAreaCommitShots }>Fire ze missiles!</button>
-      </div>
-      <div className="board_area">
-        {
-          players.map((boardOwner) =>
-            <Board
-              key={ boardOwner }
-              boardSize={ boardSize }
-              boardOwner={ boardOwner }
-              shots={ getBoardShots(shots, boardOwner)}
-              potentialShots={ potentialShots }
-              thisPlayer={ player.name }
-              handleBoardShoot={ () => {} }
-            />
-          )
-        }
-      </div>
-    </div>
+    <p>Ready for shooting.</p>
   )
 }
 

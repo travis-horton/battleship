@@ -39,11 +39,11 @@ class App extends Component {
 
       localInfo: {
         name: "",
-        // one of: [initial, setup, shipInput, shooting, gameEnd]
+        // one of: [initial, setup, gameOn, gameEnd]
         status: "initial",
-        boards: {
+        boards: [
           // one for shooting, one for this players ships, one each for every other player
-        },
+        ],
         ships: {
           a: [],
           b: [],
@@ -115,35 +115,28 @@ class App extends Component {
   }
 
   render() {
-    const { config, localInfo, gameState } = this.state;
+    const { config, localInfo, gameState, } = this.state;
     switch (localInfo.status) {
       case "initial": {
         return (
           <div>
-            <button id="make_new_game" onClick={this.configure}>New game</button>
-            <button id="join_game" onClick={this.configure}>Join game</button>
+            <button id="make_new_game" onClick={ this.configure }>New game</button>
+            <button id="join_game" onClick={ this.configure }>Join game</button>
           </div>
         );
       }
 
       case "setup": {
         return (
-          <Setup id="config_submit" submitConfig={this.configure}/>
+          <Setup id="config_submit" submitConfig={ this.configure }/>
         );
       }
 
-      case "inputShips": {
-        const name = this.state.localInfo.name;
+      case "gameOn": {
         return (
           <div className="flex_box">
             <Instructions shipsCommitted={ false }/>
-            <BoardArea
-              boardSize={ config.boardSize }
-              player={ gameState.players[name] }
-              ships={ localInfo.ships }
-              inputShip={ this.ships }
-              commitShips={ this.ships }
-            />
+            { localInfo.boards.map(board => board.render() )}
           </div>
         );
       }

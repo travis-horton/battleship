@@ -1,23 +1,17 @@
 import React, { Component } from "react";
-import { whatShipIsHere } from "../modules/ships.js";
-import { isShotAt } from "../modules/shooting.js";
 
-const getClassNames = (col, row, shots, potentialShots, headerCellLabel) => {
+const getClassNames = (col, row, shot, headerCellLabel, style) => {
   const classNames = ["cell"];
-
-  if (potentialShots && isShotAt(col, row, potentialShots)) {
-    classNames.push("potentialshot");
+  
+  if (shot) {
+    classNames.push(style = shooting ? "potentialshot" : "shot");
   }
 
-  if (shots && isShotAt(col, row, shots)) {
-    classNames.push("shot");
-  }
-
-  if (row === 1) {
+  if (row === 0) {
     classNames.push("toprow");
   }
 
-  if (col === "A") {
+  if (col === 0) {
     classNames.push("leftcol");
   }
 
@@ -29,42 +23,42 @@ const getClassNames = (col, row, shots, potentialShots, headerCellLabel) => {
 }
 
 export default function Cell({
-  boardStyle,
+  style,
   row,
   col,
-  ships,
-  shots,
-  potentialShots,
+  data,
   headerCellLabel,
-  inputShip,
-  potentialShot
+  handleCellInput,
+  handleCellClick
 }) {
-  const classNames = getClassNames(col, row, shots, potentialShots, headerCellLabel);
-  const shipType = whatShipIsHere(col, row, ships);
   const handleInput = e => {
     e.preventDefault();
-    inputShip(col, row, e.target.value.toLowerCase());
+    handleCellInput(col, row, e.target.value.toLowerCase());
   }
 
-  if (headerCellLabel) {
+  if (headerCellLabel || headerCellLabel === 0) {
     return (
-      <span className={classNames}>{headerCellLabel}</span>
+      <span className={ "cell header" }>{ headerCellLabel }</span>
     )
+  }
 
-  } else if (boardStyle === "input") {
+  if (data === undefined) console.log(style, row, col, headerCellLabel);
+  const classNames = getClassNames(col, row, data.shot, headerCellLabel, style);
+
+  if (style === "input") {
     return (
       <input
-        onChange={handleInput}
-        className={classNames}
-        value={shipType}
+        onChange={ handleInput }
+        className={ classNames }
+        value={ data.ship }
       />
     )
 
   } else {
-    const handleClick = () => potentialShot(col, row);
+    const handleClick = () => handleClick(col, row);
     return (
-      <span className={classNames} onClick={handleClick}>
-        {shipType}
+      <span className={ classNames } onClick={ handleClick }>
+        { data.ship }
       </span>
     )
   }

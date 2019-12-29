@@ -1,56 +1,55 @@
 import React, { Component } from "react";
 import Cell from "./cell";
 
-export const Row = ({
-  rowLength,
-  boardStyle,
-  row,
-  cols,
-  ships,
-  shots,
-  potentialShots,
-  handleRowShipInput,
-  handleRowShoot,
-  playerName,
+const headerRow = (className, length) => {
+  return (
+    <div className={ className }>
+      <Cell headerCellLabel=" "/>
+      {
+        new Array(length).fill("").map((col, i) =>
+          <Cell
+            headerCellLabel={ String.fromCharCode(i + 65) }
+            key={ i }
+          />
+        )
+      }
+      <Cell headerCellLabel=" "/>
+    </div>
+  );
+}
 
+export const Row = ({
+  row,
+  style,
+  data,
+  length,
+  handleRowInput,
+  handleRowClick,
 }) => {
-  const handleCellShipInput = (c, r, val) => handleRowShipInput(c, r, val);
-  const handleCellShoot = (c, r) => handleRowShoot(c, r);
+  const handleCellInput = (c, r, val) => handleRowInput(c, r, val);
+  const handleCellClick = (c, r) => handleRowClick(c, r);
   const className = "row";
 
   if (row === "header") {
-    //make this a function 'return header column'
-    return (
-      <div className={className}>
-        <Cell headerCellLabel=" "/>
-        {
-          cols.map((col) =>
-            <Cell headerCellLabel={col} key={col}/>
-          )
-        }
-        <Cell headerCellLabel=" "/>
-      </div>
-    );
+    return headerRow(className, length);
   } else {
     return (
-      <div className={className}>
-        <Cell headerCellLabel={row}/>
+      <div className={ className }>
+        <Cell headerCellLabel={ row + 1 } key={ -1 }/>
         {
-          cols.map((col) =>
+          data.map((col, i) =>
             <Cell
-              key={col}
-              boardStyle={boardStyle}
-              row={row}
-              col={col}
-              ships={ships}
-              shots={shots}
-              potentialShots={potentialShots}
-              inputShip={handleCellShipInput}
-              potentialShot={handleCellShoot}
+              key={ i }
+              style={ style }
+              row={ row }
+              col={ i }
+              data={ col }
+              handleCellInput={ handleCellInput }
+              handleCellClick={ handleCellClick }
             />
           )
         }
-        <Cell headerCellLabel={row}/>
+        <Cell headerCellLabel={ row + 1 } key={ data.length }/>
       </div>
     );
   }

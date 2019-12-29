@@ -1,6 +1,7 @@
 import { randomizeTurnOrder } from "./ships.js";
 import { allPlayersShipsPlaced } from "./ships.js";
 import { getHits } from "./shooting.js";
+import { Board } from "../components/board.js";
 
 // returns a user-chosen name that is under 20 alphanumeric characters
 const choosePlayerName = (extraPrompt = "") => {
@@ -21,16 +22,28 @@ const getLocalInfo = (ships, shots, name) => {
   return {
     name: name,
     ships: ships,
-    status: (ships.a[0] === 0 ? "inputShips" : "shooting"),
-    shootingBoard: [],
+    status: "gameOn",
   };
 };
 
 const getLocalState = (dbData, name) => {
+  const boardSize = dbData.config.boardSize;
   return {
     config: dbData.config,
     gameState: dbData.gameState,
-    localInfo: { ...getLocalInfo(dbData.ships[name], name) },
+    localInfo: {
+      ...getLocalInfo(dbData.ships[name], dbData.shots[name], name),
+      boards: [
+        new Board({
+          config: {
+            size: boardSize,
+            style: "input",
+            owner: name,
+          },
+          data: new Array(boardSize).fill(new Array(boardSize).fill({ shot: false, ship: "", color: "white" }))
+        }),
+      ]
+    },
   };
 };
 
