@@ -23,8 +23,14 @@ export default class Board extends Component {
   }
 
   handleRowInput(r, c, ship) {
-    console.log('You put something in.');
-    this.state.data[r][c].ship = ship;
+    console.log(`You put something in at ${r}-${c}.`);
+    let newData = [...this.state.data];
+    let newRow = [...newData[r]];
+    let location = { ...newData[r][c] };
+    location.ship = ship;
+    newRow[c] = location;
+    newData[r] = newRow;
+    this.setState({ data: newData });
   }
 
   handleRowClick() {

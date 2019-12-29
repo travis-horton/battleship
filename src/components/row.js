@@ -28,8 +28,8 @@ export default function Row({
   handleRowInput,
   handleRowClick,
 }) {
-  const handleCellInput = (c, r, val) => handleRowInput(c, r, val);
-  const handleCellClick = (c, r) => handleRowClick(c, r);
+  const handleCellInput = (r, c, val) => handleRowInput(r, c,  val);
+  const handleCellClick = (r, c) => handleRowClick(r, c);
   const className = 'row';
 
   if (row === 'header') {

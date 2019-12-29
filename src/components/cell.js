@@ -33,7 +33,7 @@ export default function Cell({
 }) {
   const handleInput = e => {
     e.preventDefault();
-    handleCellInput(col, row, e.target.value.toLowerCase());
+    handleCellInput(row, col, e.target.value.toLowerCase());
   }
 
   if (headerCellLabel || headerCellLabel === 0) {
