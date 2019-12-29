@@ -1,42 +1,44 @@
 import React, { Component } from 'react';
-import { Row } from "./row";
+import Row from './row';
 
 const objectWithoutKey = (object, key) => {
-  const {[key]: deletedKey, ...otherKeys } = object;
+  const { [key]: deletedKey, ...otherKeys } = object;
   let newObject = []
   for (let person in otherKeys) {
     newObject.push(...otherKeys[person])
   }
   return newObject;
-}
+};
 
-export class Board extends Component {
+export default class Board extends Component {
   constructor(props) {
     super(props);
     this.state = {
       config: this.props.config,  // { size, style, owner }
       data: this.props.data,  // 2d array of board size containing { ship, shot, color }
-      key: this.props.config.owner,
     }
 
     this.handleRowInput = this.handleRowInput.bind(this);
     this.handleRowClick = this.handleRowClick.bind(this);
   }
 
-  handleRowInput() {
+  handleRowInput(r, c, ship) {
+    console.log('You put something in.');
+    this.state.data[r][c].ship = ship;
   }
 
   handleRowClick() {
+    console.log('You clicked on something.');
   }
 
-  render() {
+  render(i) {
     const config = this.state.config;
     const data = this.state.data;
     return (
-      <span className="board" key="config.owner">
+      <span className='board'>
         <span>{ config.owner }</span>
         <Row
-          row="header"
+          row='header'
           length={ config.size }
         />
         {
@@ -55,7 +57,7 @@ export class Board extends Component {
           )
         }
         <Row
-          row="header"
+          row='header'
           length={ config.size }
         />
       </span>

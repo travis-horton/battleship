@@ -39,16 +39,10 @@ export default function submitConfig(config, db, self) {
       },
 
       ships: {
-        [config.playerName]: {
-          a: [0,1,2,3,4],
-          b: [0,1,2,3],
-          c: [0,1,2],
-          s: [0,1,2],
-          d: [0,1],
-        },
+        [config.playerName]: false,
       },
 
-      shots: [{ [config.playerName]: 0 }],
+      shots: [{ [config.playerName]: false }],
     };
 
     // Set db state.
