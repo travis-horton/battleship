@@ -1,114 +1,68 @@
-const crossingShip = (thisShip, allLocsOfShips) => {
-  if (thisShip === "s") return true;
-  //check bottom left box
-  //allLocsOfShips = [["","",""],["a",etc...
-
-  //change these numbers for different directions
-  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
-  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
-  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
-  if (allLocsOfShips[2,0] === thisShip && allLocsOfShips[1,0] == allLocsOfShips[2,1]) return false;
+const isShip = (value) => {
+  let regex = /^[ABCDSabcds]$/
+  if (regex.test(value) || value === "") return true;
+  return false;
 }
 
-const isAdjacent = (thisShipLoc, otherShips) => {
-  for (let i = 0; i < otherShips.length; i++) {
-    let testShipColumn = otherShips[i][0];
-    let testShipRow = otherShips[i][1];
+export default function isValidShipPlacement(r, c, thisShip, data, config) {
+  if (!isShip(thisShip)) {
+    alert("Must be a ship letter (a, b, c, d, or s).");
+    return;
+  }
 
-    if (isAdjacentColumn(testShipColumn, thisShipLoc[0]) && isAdjacentRow(testShipRow, thisShipLoc[1])) {
+  if (thisShip === "") return true;
+  
+  // get total of this ship on board
+  let shipsOfThisType = [];
+  for (let i = 0; i < config.size; i++) {
+    for (let j = 0; j < config.size; j++) {
+      if (data[i][j].ship === thisShip) shipsOfThisType.push([i, j]);;
+    }
+  }
+  
+  //check if already max ships of type
+  if (shipsOfThisType.length >= config.maxShips[thisShip]) {
+    alert(
+      `You can only place ${config.maxShips[thisShip]} "${thisShip}"${shipsOfThisType.length === 1 ? "" : "s"} and you've already placed ${shipsOfThisType.length}.`
+    )
+    return false;
+  }
+
+  // if no other ships of this type, can go anywhere
+  if (shipsOfThisType.length === 0) return true;
+
+  // if one other ship of this type, has to go next to that ship
+  if (shipsOfThisType.length === 1) return isAdjacent([r, c], shipsOfThisType);
+  return (isAdjacent([r, c], shipsOfThisType) && isInLine([r, c], shipsOfThisType))
+}
+
+const isAdjacent = (thisShipLoc, shipsOfThisType) => {
+  for (let i = 0; i < shipsOfThisType.length; i++) {
+    if (
+      Math.abs(thisShipLoc[0] - shipsOfThisType[i][0]) < 2
+      && Math.abs(thisShipLoc[1] - shipsOfThisType[i][1]) < 2
+    ) {
       return true;
     }
   }
-  alert("That placement is not adjacent to others of its kind.")
+
+  alert('That placement is not adjacent to others of its kind.')
   return false;
 }
 
 const isInLine = (thisShipsLoc, otherShips) => {
-  let otherShipsOrientation = getOrientation([otherShips[0], otherShips[1]]);
-  let thisShipsOrientation = getOrientation([otherShips[0], thisShipsLoc])
+  const thisShipsOrientation = getOrientation(thisShipsLoc, otherShips[0]);
+  const otherShipsOrientation = getOrientation(otherShips[0], otherShips[1]);
   if (otherShipsOrientation === thisShipsOrientation) return true;
   alert("That placement is not in line with others of its kind.")
   return false;
 }
 
-const isAdjacentColumn = (c1, c2) => {
-  if (
-    String.fromCharCode(c1.charCodeAt(0) - 1) === c2 ||
-    String.fromCharCode(c1.charCodeAt(0) + 1) === c2 ||
-    c1 === c2
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
-const isAdjacentRow = (r1, r2) => {
-  if (r1 - 1 === r2 || r1 + 1 === r2 || r1 === r2) return true;
-
-  return false;
-}
-
-const getOrientation = (twoCells) => {
-  let firstCellC = twoCells[0][0];
-  let firstCellR = twoCells[0][1];
-  let secondCellC = twoCells[1][0];
-  let secondCellR = twoCells[1][1];
-  if (firstCellC === secondCellC) return "v";
-  if (firstCellR === secondCellR) return "h";
-
-  let firstCToNumber = firstCellC.charCodeAt(0);
-  let secondCToNumber = secondCellC.charCodeAt(0);
-
-  if (firstCToNumber - secondCToNumber === firstCellR - secondCellR) return "bd";
-  if (firstCToNumber - secondCToNumber === -(firstCellR - secondCellR)) return "fd";
-}
-
-export const whatShipIsHere = (c, r, ships) => {
-  for (let ship in ships) {
-    if (ships[ship].locs[0] === null) continue;
-    for (let loc in ships[ship].locs) {
-      if (ships[ship].locs[loc][0] === c && ships[ship].locs[loc][1] === r) {
-        return (ship);
-      }
-    }
-  }
-  return "";
-}
-
-const isShip = (value) => {
-  let regex = /^[ABCDSabcds]$/
-  if (regex.test(value)) return true;
-  return false;
-}
-
-const thisShipCanGoHere = (thisShip, c, r, allShipsOfType) => {
-  let thisShipLoc = [c, r]
-  //check if there are no ships of type (can go anywhere) or max ships of type (can't go anywhere)
-  let countOfThisShip = allShipsOfType.locs[0] === 0 ? 0 : allShipsOfType.locs.length;
-  if (countOfThisShip >= allShipsOfType.max) {
-    alert(
-      `You can only place ${allShipsOfType.max} "${thisShip}"s and you've already placed ${allShipsOfType.max}.`
-    )
-    return false;
-  }
-
-  if (countOfThisShip === 0) return true;
-  if (countOfThisShip === 1) return isAdjacent(thisShipLoc, allShipsOfType.locs)
-  return (isAdjacent(thisShipLoc, allShipsOfType.locs) && isInLine(thisShipLoc, allShipsOfType.locs))
-}
-
-const newShipsWithoutThisLoc = (c, r, ships) => {
-  let newShips = ships;
-  for (let ship in ships) {
-    for (let i = 0; i < ships[ship].locs.length; i++) {
-      if (!ships[ship].locs[i]) continue;
-      if (c === ships[ship].locs[i][0] && r === ships[ship].locs[i][1]) {
-        newShips[ship].locs = [0];
-        return newShips;
-      }
-    }
-  }
+const getOrientation = (shipOne, shipTwo) => {
+  if (shipOne[0] === shipTwo[0]) return "h";
+  if (shipOne[1] === shipTwo[1]) return "v";
+  if (shipOne[0] - shipTwo[0] === shipOne[1] - shipTwo[1]) return "bd";
+  if (shipOne[0] - shipTwo[0] === -(shipOne[1] - shipTwo[1])) return "fd";
 }
 
 export const allShipsArePlaced = (ships) => {
@@ -129,35 +83,6 @@ export const allPlayersShipsPlaced = (players, maxPlayers) => {
     }
   }
   return true;
-}
-
-export const validateShip = (c, r, val, self) => {
-  if (val.length === 0) {
-    let newShips = newShipsWithoutThisLoc(c, r, self.state.ships);
-    self.setState({
-      ships: newShips
-    })
-    return;
-  }
-
-  if (!isShip(val)) {
-    alert(`"${val}" is not a ship letter (a, b, c, s, or d).`);
-    return false;
-  }
-
-  if (thisShipCanGoHere(val, c, r, self.state.ships[val])) {
-    let newShips = self.state.ships;
-    if (newShips[val].locs[0] === 0) {
-      newShips[val].locs[0] = [c, r];
-
-    } else {
-      newShips[val].locs.push([c, r]);
-    }
-
-    self.setState({
-      ships: newShips
-    });
-  }
 }
 
 export const randomizeTurnOrder = (players) => {

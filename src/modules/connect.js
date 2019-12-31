@@ -30,6 +30,13 @@ const getBoards = (dbData, name) => {
           size,
           style: 'input',
           owner: name,
+          maxShips: {
+            a: 5,
+            b: 4,
+            c: 3,
+            s: 3,
+            d: 2,
+          },
         },
         data: (new Array(size).fill(new Array(size).fill({ shot: false, ship: '', color: 'white' }))),
       },
