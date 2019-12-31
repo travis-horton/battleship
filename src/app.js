@@ -158,22 +158,36 @@ class App extends Component {
               name={ localInfo.name }
               maxPlayers={ config.maxPlayers }
               turn={ gameState.turn }
-              whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].turn === true) }
+              whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn=== true) }
               shots={ gameState.shots }
               hits={ gameState.hits }
               turnOrder={ gameState.turnOrder }
               commitShips={ this.ships }
             />
-            {
-              boards.map((board, i) =>
+            <span>
+              {
+                boards.filter(board => board.config.style === "destination").map(board =>
                   <Board
-                    key = { i }
+                    key={ board.config.owner }
                     config={ board.config }
                     data={ board.data }
                     allShipsPlaced={ this.ships }
                   />
-              )
-            }
+                )
+              }
+            </span>
+            <span>
+              {
+                boards.filter(board => board.config.style !== "destination").map(board =>
+                  <Board
+                    key={ board.config.style }
+                    config={ board.config }
+                    data={ board.data }
+                    allShipsPlaced={ this.ships }
+                  />
+                )
+              }
+            </span>
           </div>
         );
       }

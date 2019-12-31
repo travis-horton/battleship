@@ -2,15 +2,6 @@ import React, { Component } from 'react';
 import Row from './row';
 import isValidShipPlacement from '../modules/ships.js';
 
-const objectWithoutKey = (object, key) => {
-  const { [key]: deletedKey, ...otherKeys } = object;
-  let newObject = []
-  for (let person in otherKeys) {
-    newObject.push(...otherKeys[person])
-  }
-  return newObject;
-};
-
 const getLabel = (owner, style) => {
   if (style === 'input') return 'Input your ships here:';
   if (style === 'shooting') return 'This is your shooting board:';

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-const getClassNames = (col, row, shot, headerCellLabel, style) => {
+const getClassNames = (col, row, shot, color, headerCellLabel, style) => {
   const classNames = ["cell"];
   
   if (shot) {
@@ -36,14 +36,15 @@ export default function Cell({
     handleCellInput(row, col, e.target.value.toLowerCase());
   }
 
+  const handleClick = (r, c) => handleCellClick(r, c);
+
   if (headerCellLabel || headerCellLabel === 0) {
     return (
       <span className={ "cell header" }>{ headerCellLabel }</span>
     )
   }
 
-  if (data === undefined) console.log(style, row, col, headerCellLabel);
-  const classNames = getClassNames(col, row, data.shot, headerCellLabel, style);
+  const classNames = getClassNames(col, row, data.shot, data.color, headerCellLabel, style);
 
   if (style === "input") {
     return (
@@ -52,14 +53,28 @@ export default function Cell({
         className={ classNames }
         value={ data.ship }
       />
-    )
+    );
+
+  } else if (style === "destination") {
+    let val;
+    if (data.shot) val = data.shot;
+    if (data.ship) val = data.ship;
+
+    return (
+      <input
+        onChange={ handleInput }
+        className={ classNames }
+        value={ val }
+        onClick={ handleClick }
+      />
+    );
 
   } else {
-    const handleClick = () => handleClick(col, row);
     return (
       <span className={ classNames } onClick={ handleClick }>
         { data.ship }
       </span>
-    )
+    );
+
   }
 }

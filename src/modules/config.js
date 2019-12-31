@@ -38,10 +38,7 @@ export default function submitConfig(config, db, self) {
         },
       },
 
-      ships: {
-        [config.playerName]: false,
-      },
-
+      ships: { [config.playerName]: false },
       shots: [{ [config.playerName]: false }],
     };
 

@@ -76,24 +76,15 @@ const getBoards = (dbData, name) => {
   const ships = dbData.ships[name];
   const shots = dbData.shots;
   const size = dbData.config.boardSize;
-  let players = dbData.gameState.players;
+  const players = dbData.gameState.players;
 
   if (!ships) {
     return [getBoardInfo(size, 'input', name, ships, false)];
   }
 
   const boardInfo = [];
-  boardInfo.push(getBoardInfo(size, 'shooting', name, false, false));
-  boardInfo.push(getBoardInfo(
-    size,
-    'ships',
-    name,
-    ships,
-    dbData.gameState.turn ? getShotsOnThisPlayer(name, shots) : false
-  ));
-
   for (let player in players) {
-    if (!player === name) {
+    if (player !== name) {
       boardInfo.push(getBoardInfo(
         size,
         'destination',
@@ -104,6 +95,14 @@ const getBoards = (dbData, name) => {
     }
   }
 
+  boardInfo.push(getBoardInfo(size, 'shooting', name, false, false));
+  boardInfo.push(getBoardInfo(
+    size,
+    'ships',
+    name,
+    ships,
+    dbData.gameState.turn ? getShotsOnThisPlayer(name, shots) : false
+  ));
 
   return boardInfo;
 };
@@ -127,16 +126,56 @@ const getLocalState = (dbData, name) => {
   };
 };
 
+function shuffle(array) {
+  let currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 // connects player to gameId in db
 // tells db to update client on changes to db
-const connect = (db, gameId, name, info, self) => {
+const connect = (db, gameId, name, info, self, dbData) => {
   info.connected = true;
   db.ref(`${ gameId }/gameState/players/${ name }`).set(info);
   db.ref(`${ gameId }/gameState/players/${ name }/connected`).onDisconnect().set(false);
+  if (!dbData.ships[name]) {
+    db.ref(`${ gameId }/ships/${ name }`).set(false);
+  }
+
+  if (!dbData.shots[0][name]) {
+    db.ref(`${ gameId }/shots/0/${ name }`).set(false);
+  }
 
   // Tells db to update client on changes to db
-  db.ref(gameId).on('value', (snapshot) => {
+  db.ref(gameId).on('value', snapshot => {
+    const dbPlayers = snapshot.val().gameState.players;
+    const playersArray = [];
+    for (let player in dbPlayers) {
+      playersArray.push(player);
+    }
+
+    // if all players have committed ships
+    if (playersArray.filter(player => !dbPlayers[player].shipsCommitted).length === 0 && !snapshot.val().gameState.turnOrder) {
+      const turnOrder = shuffle(playersArray);
+      db.ref(`${ gameId }/gameState/turnOrder`).set(turnOrder);
+      db.ref(`${ gameId }/gameState/players/${ turnOrder[0] }/thisPlayerTurn`).set(true);
+    }
+
     self.setState(getLocalState(snapshot.val(), name));
+    self.forceUpdate();
   });
 };
 
@@ -181,7 +220,7 @@ export default function joinGame(
       };
     };
 
-    connect(db, gameId, name, playerInfo, self);
+    connect(db, gameId, name, playerInfo, self, snapshot.val());
 
     if (allPlayersShipsPlaced(gameState.players, numPlayers) && gameState.turnOrder === 0) {
       const turnOrder = randomizeTurnOrder(players);

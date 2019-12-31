@@ -36,7 +36,6 @@ export default function Instructions({
     );
   }
 
-  console.log(curPlayers);
   return (
     <div className='left_column'>
       <p>Welcome { name }!</p>
