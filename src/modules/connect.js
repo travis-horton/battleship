@@ -18,30 +18,92 @@ const choosePlayerName = (extraPrompt = '') => {
   return name;
 };
 
+const getBoardInfo = (size, style, owner, ships, shots) => {
+  const boardInfo = {
+      config: {
+        size,
+        style,
+        owner,
+        maxShips: {
+          a: 5,
+          b: 4,
+          c: 3,
+          s: 3,
+          d: 2,
+        },
+      },
+    // fill sets all elements to the same reference, so needed a special map thingy here...
+    data: (new Array(size).fill(null).map(() => new Array(size).fill(null).map(() => ({ ship: "", shot: false, color: "white" })))),
+    };
+
+  if (ships) {
+    for (let ship in ships) {
+      for (let i = 0; i < ships[ship].length; i++) {
+        const coord = ships[ship][i];
+        boardInfo.data[coord[0]][coord[1]].ship = ship;
+      }
+    }
+  }
+
+  if (shots) {
+    for (let turn in shots) {
+      for (let shot in shots[turn]) {
+        const coord = shots[turn][shot];
+        boardInfo.data[coord[0]][coord[1]].shot = turn;
+      }
+    }
+  }
+
+  return boardInfo;
+};
+
+const getShotsOnThisPlayer = (player, shots) => {
+  let newShots = [];
+  for (let turn in shots) {
+    newShots[turn] = [];
+    for (let name in shots[turn]) {
+      if (!player === name) {
+        for (let shot in shots[turn][name]) {
+          newShots[turn].push(shot);
+        }
+      }
+    }
+  }
+  return shots;
+}
+
 const getBoards = (dbData, name) => {
   const ships = dbData.ships[name];
-  const shots = dbData.shots; const size = dbData.config.boardSize;
-  let boardInfo;
+  const shots = dbData.shots;
+  const size = dbData.config.boardSize;
+  let players = dbData.gameState.players;
 
   if (!ships) {
-    boardInfo = [
-      {
-        config: {
-          size,
-          style: 'input',
-          owner: name,
-          maxShips: {
-            a: 5,
-            b: 4,
-            c: 3,
-            s: 3,
-            d: 2,
-          },
-        },
-        data: (new Array(size).fill(new Array(size).fill({ shot: false, ship: '', color: 'white' }))),
-      },
-    ];
+    return [getBoardInfo(size, 'input', name, ships, false)];
   }
+
+  const boardInfo = [];
+  boardInfo.push(getBoardInfo(size, 'shooting', name, false, false));
+  boardInfo.push(getBoardInfo(
+    size,
+    'ships',
+    name,
+    ships,
+    dbData.gameState.turn ? getShotsOnThisPlayer(name, shots) : false
+  ));
+
+  for (let player in players) {
+    if (!player === name) {
+      boardInfo.push(getBoardInfo(
+        size,
+        'destination',
+        player,
+        [],
+        dbData.gameState.turn ? getShotsOnThisPlayer(player, shots) : []
+      ))
+    }
+  }
+
 
   return boardInfo;
 };
@@ -82,9 +144,10 @@ export default function joinGame(
   db,
   self,
   gameId = prompt('Enter game id: '),
-  name = choosePlayerName(),
+  name,
 ) {
   if (gameId === null || gameId.length === 0) return;
+  if (!name) name = choosePlayerName();
 
   db.ref(gameId).once('value', (snapshot) => {
     if (!snapshot.exists()) {
@@ -93,9 +156,9 @@ export default function joinGame(
     }
 
     const { config, gameState } = snapshot.val();
-    const numPlayers = Object.keys(gameState.players).length
+    let numPlayers = Object.keys(gameState.players).length;
     let playerInfo;
-    
+
     // determines playerInfo based on if player is reconnecting or connecting for the first time
     // while also rejecting if player is already connected or if there's no room for a new player
     if (name in gameState.players) {

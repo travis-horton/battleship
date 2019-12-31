@@ -10,11 +10,7 @@ import {
   numberOfShotsYouGet,
   getHits,
 } from './modules/shooting.js';
-import { 
-  validateShip, 
-  allShipsArePlaced, 
-  allPlayersShipsPlaced, 
-} from './modules/ships.js'
+import { allPlayersShipsPlaced } from './modules/ships.js'
 
 let database = firebase.database();
 
@@ -41,6 +37,17 @@ class App extends Component {
         status: 'initial',
         boardInfo: [
           // one for shooting, one for this players ships, one each for every other player
+          // Example:
+          //{
+          //  data: 2d array of boardSize, each element { ship: str, shot: int, color: str },
+          //  config: {
+          //   size: int,
+          //   style: str,
+          //   owner: str,
+          //   maxShips: {
+          //     a: 5, b: 4, etc...
+          //   }
+          //
         ],
         ships: {
           a: [],
@@ -73,7 +80,7 @@ class App extends Component {
     };
 
     this.configure = this.configure.bind(this);
-    this.commitShips = this.commitShips.bind(this);
+    this.ships = this.ships.bind(this);
     // this.shootingFunctions = this.shootingFunctions.bind(this);
 
     /*
@@ -104,14 +111,26 @@ class App extends Component {
     }
   }
 
-  commitShips(id, data) {
-    console.log(id);
-    console.log(data);
-    console.log('doing some shit with ships');
+  ships(id, data) {
+    if (id === 'input') {
+      const { config, localInfo, gameState } = this.state;
+      const { name, status, boardInfo } = localInfo
+      this.setState({ config, localInfo: { name, status, boardInfo, ships: data }, gameState });
+    }
+
+    if (id === 'commit') {
+      const { config, localInfo } = this.state;
+      database.ref(`${ config.gameId }/gameState/players/${ localInfo.name }/shipsCommitted`).set(true);
+      database.ref(`${ config.gameId }/ships/${ localInfo.name }`).set(localInfo.ships);
+    }
   }
 
   render() {
     const { config, localInfo, gameState, } = this.state;
+    let curPlayers = [];
+    for (let player in gameState.players) {
+      curPlayers.push(player);
+    }
     switch (localInfo.status) {
       case 'initial': {
         return (
@@ -132,13 +151,26 @@ class App extends Component {
         const boards = localInfo.boardInfo;
         return (
           <div className='flex_box'>
-            <Instructions shipsCommitted={ false }/>
+            <Instructions 
+              shipsCommitted={ gameState.players[localInfo.name].shipsCommitted }
+              allShipsPlaced={ localInfo.ships.a ? true : false }
+              curPlayers={ curPlayers }
+              name={ localInfo.name }
+              maxPlayers={ config.maxPlayers }
+              turn={ gameState.turn }
+              whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].turn === true) }
+              shots={ gameState.shots }
+              hits={ gameState.hits }
+              turnOrder={ gameState.turnOrder }
+              commitShips={ this.ships }
+            />
             {
               boards.map((board, i) =>
                   <Board
                     key = { i }
                     config={ board.config }
                     data={ board.data }
+                    allShipsPlaced={ this.ships }
                   />
               )
             }

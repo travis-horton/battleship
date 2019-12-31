@@ -77,3 +77,7 @@
 .shot {
   background-color: red !important;
 }
+
+.not_ready {
+  background-color: grey;
+}
