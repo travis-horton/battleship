@@ -33,7 +33,7 @@ const getBoardInfo = (size, style, owner, ships, shots) => {
         },
       },
     // fill sets all elements to the same reference, so needed a special map thingy here...
-    data: (new Array(size).fill(null).map(() => new Array(size).fill(null).map(() => ({ ship: "", shot: false, color: "white" })))),
+    data: (new Array(size).fill(null).map(() => new Array(size).fill(null).map(() => ({ ship: "", shot: false, color: "" })))),
     };
 
   if (ships) {
@@ -49,7 +49,7 @@ const getBoardInfo = (size, style, owner, ships, shots) => {
     for (let turn in shots) {
       for (let shot in shots[turn]) {
         const coord = shots[turn][shot];
-        boardInfo.data[coord[0]][coord[1]].shot = turn;
+        if (coord.length > 1) boardInfo.data[coord[0]][coord[1]].shot = turn;
       }
     }
   }
@@ -90,7 +90,7 @@ const getBoards = (dbData, name) => {
         'destination',
         player,
         [],
-        dbData.gameState.turn ? getShotsOnThisPlayer(player, shots) : []
+        getShotsOnThisPlayer(player, shots)
       ))
     }
   }
@@ -101,7 +101,7 @@ const getBoards = (dbData, name) => {
     'ships',
     name,
     ships,
-    dbData.gameState.turn ? getShotsOnThisPlayer(name, shots) : false
+    getShotsOnThisPlayer(name, shots)
   ));
 
   return boardInfo;
@@ -111,6 +111,7 @@ const getLocalInfo = (ships, shots, name) => {
   return {
     name,
     ships,
+    shots,
     status: 'gameOn',
   };
 };
@@ -120,7 +121,7 @@ const getLocalState = (dbData, name) => {
     config: dbData.config,
     gameState: dbData.gameState,
     localInfo: {
-      ...getLocalInfo(dbData.ships[name], dbData.shots[name], name),
+      ...getLocalInfo(dbData.ships[name], dbData.shots, name),
       boardInfo: getBoards(dbData, name),
     },
   };
@@ -151,31 +152,33 @@ const connect = (db, gameId, name, info, self, dbData) => {
   info.connected = true;
   db.ref(`${ gameId }/gameState/players/${ name }`).set(info);
   db.ref(`${ gameId }/gameState/players/${ name }/connected`).onDisconnect().set(false);
+
   if (!dbData.ships[name]) {
     db.ref(`${ gameId }/ships/${ name }`).set(false);
   }
 
   if (!dbData.shots[0][name]) {
-    db.ref(`${ gameId }/shots/0/${ name }`).set(false);
+    db.ref(`${ gameId }/shots/0/${ name }`).set([0]);
+  }
+
+  const players = [name];
+  for (let player in dbData.gameState.players) {
+    if (players.indexOf(player) === -1) players.push(player);
+  }
+
+  if (players.length > dbData.gameState.turnOrder.length) {
+    const turnOrder = shuffle(players);
+    db.ref(`${ gameId }/gameState/turnOrder`).set(turnOrder);
+    if (players.length === dbData.config.maxPlayers) {
+      db.ref(`${ gameId }/gameState/players/${ turnOrder[0] }/thisPlayerTurn`).set(true);
+    }
   }
 
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', snapshot => {
-    const dbPlayers = snapshot.val().gameState.players;
-    const playersArray = [];
-    for (let player in dbPlayers) {
-      playersArray.push(player);
-    }
-
-    // if all players have committed ships
-    if (playersArray.filter(player => !dbPlayers[player].shipsCommitted).length === 0 && !snapshot.val().gameState.turnOrder) {
-      const turnOrder = shuffle(playersArray);
-      db.ref(`${ gameId }/gameState/turnOrder`).set(turnOrder);
-      db.ref(`${ gameId }/gameState/players/${ turnOrder[0] }/thisPlayerTurn`).set(true);
-    }
-
     self.setState(getLocalState(snapshot.val(), name));
     self.forceUpdate();
+
   });
 };
 

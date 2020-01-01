@@ -1,23 +1,12 @@
 import React, { Component } from "react";
 
 const getClassNames = (col, row, shot, color, headerCellLabel, style) => {
-  const classNames = ["cell"];
-  
-  if (shot) {
-    classNames.push(style = shooting ? "potentialshot" : "shot");
-  }
+  const classNames = ["cell", color];
 
-  if (row === 0) {
-    classNames.push("toprow");
-  }
-
-  if (col === 0) {
-    classNames.push("leftcol");
-  }
-
-  if (headerCellLabel) {
-    classNames.push("header");
-  }
+  if (shot) classNames.push("shot");
+  if (row === 0) classNames.push("toprow");
+  if (col === 0) classNames.push("leftcol");
+  if (headerCellLabel) classNames.push("header");
 
   return classNames.join(" ");
 }
@@ -29,14 +18,19 @@ export default function Cell({
   data,
   headerCellLabel,
   handleCellInput,
-  handleCellClick
+  handleCellClick,
+  handleCellRightClick
 }) {
   const handleInput = e => {
     e.preventDefault();
     handleCellInput(row, col, e.target.value.toLowerCase());
   }
 
-  const handleClick = (r, c) => handleCellClick(r, c);
+  const handleClick = (row, col) => handleCellClick(r, c);
+  const handleRightClick = (e) => {
+    e.preventDefault();
+    handleCellRightClick(row, col);
+  }
 
   if (headerCellLabel || headerCellLabel === 0) {
     return (
@@ -66,6 +60,7 @@ export default function Cell({
         className={ classNames }
         value={ val }
         onClick={ handleClick }
+        onContextMenu={ handleRightClick }
       />
     );
 

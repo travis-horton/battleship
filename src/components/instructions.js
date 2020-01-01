@@ -34,13 +34,23 @@ export default function Instructions({
         <button className={ allShipsPlaced ? "" : "not_ready" } onClick={ handleCommitShips }>Commit Ships</button>
       </div>
     );
+  } else if (whosTurn.length === 0) {
+    return (
+    <div className='left_column'>
+      <p>Welcome <b>{ name }</b>!</p>
+      <p>Players connected: { curPlayers.length }/{ maxPlayers }.</p>
+      <p>Players: { curPlayers.join(', ') }</p>
+      <p>Waiting on other players to connect and commit their ships.</p>
+    </div>
+    )
   }
 
   return (
     <div className='left_column'>
-      <p>Welcome { name }!</p>
-      <p>Players connected: { curPlayers.length }/{ maxPlayers }. Player names: { curPlayers.join(', ') }</p>
-      <p>Turn number: { turn }</p>
+      <p>Welcome <b>{ name }</b>!</p>
+      <p>Players connected: { curPlayers.length }/{ maxPlayers }.</p>
+      <p>Players: { curPlayers.join(', ') }</p>
+      <p>Turn number: { turn + 1 }</p>
       <p>It is { whosTurn }'s turn.</p>
     </div>
   );

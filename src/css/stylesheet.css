@@ -81,3 +81,28 @@
 .not_ready {
   background-color: grey;
 }
+
+.dropdown {
+  position: fixed;
+  background-color: white;
+}
+
+.blue {
+  background-color: blue !important;
+}
+
+.red {
+  background-color: red !important;
+}
+
+.black {
+  background-color: black !important;
+}
+
+.grey {
+  background-color: grey !important;
+}
+
+.green {
+  background-color: green !important;
+}

@@ -27,9 +27,11 @@ export default function Row({
   length,
   handleRowInput,
   handleRowClick,
+  handleRowRightClick
 }) {
   const handleCellInput = (r, c, val) => handleRowInput(r, c,  val);
   const handleCellClick = (r, c) => handleRowClick(r, c);
+  const handleCellRightClick = (r, c) => handleRowRightClick(r, c);
   const className = 'row';
 
   if (row === 'header') {
@@ -48,6 +50,7 @@ export default function Row({
               data={ col }
               handleCellInput={ handleCellInput }
               handleCellClick={ handleCellClick }
+              handleCellRightClick={ handleCellRightClick }
             />
           )
         }

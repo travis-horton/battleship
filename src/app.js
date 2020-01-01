@@ -56,6 +56,7 @@ class App extends Component {
           s: [],
           d: [],
         },
+        shots: [],
       },
 
       gameState: {
@@ -81,12 +82,12 @@ class App extends Component {
 
     this.configure = this.configure.bind(this);
     this.ships = this.ships.bind(this);
-    // this.shootingFunctions = this.shootingFunctions.bind(this);
+    this.shootingFunctions = this.shootingFunctions.bind(this);
 
     /*
-        makeShot: this.shootingFunctions.makeShote.bind(this),
-        commitShots: this.shootingFunctions.commitShots.bind(this),
-        */
+      makeShot: this.shootingFunctions.makeShote.bind(this),
+      commitShots: this.shootingFunctions.commitShots.bind(this),
+    */
   }
 
   configure(e, config) {
@@ -123,6 +124,12 @@ class App extends Component {
       database.ref(`${ config.gameId }/gameState/players/${ localInfo.name }/shipsCommitted`).set(true);
       database.ref(`${ config.gameId }/ships/${ localInfo.name }`).set(localInfo.ships);
     }
+  }
+
+  shootingFunctions(id, data) {
+    console.log(id);
+    console.log(data);
+    console.log("shoot mf");
   }
 
   render() {
@@ -172,6 +179,7 @@ class App extends Component {
                     config={ board.config }
                     data={ board.data }
                     allShipsPlaced={ this.ships }
+                    shootingFunctions={ this.shootingFunctions }
                   />
                 )
               }
@@ -184,6 +192,7 @@ class App extends Component {
                     config={ board.config }
                     data={ board.data }
                     allShipsPlaced={ this.ships }
+                    shootingFunctions={ this.shootingFunctions }
                   />
                 )
               }
@@ -192,9 +201,6 @@ class App extends Component {
         );
       }
 
-      case 'shooting': {
-        return (<div>shoot mf!</div>);
-      }
     }
   }
 }

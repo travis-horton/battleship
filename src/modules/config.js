@@ -26,6 +26,7 @@ export default function submitConfig(config, db, self) {
 
       gameState: {
         turn: 0,
+        turnOrder: [config.playerName],
 
         // Initialize current user in players.
         players: {

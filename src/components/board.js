@@ -44,6 +44,7 @@ export default class Board extends Component {
 
     this.handleRowInput = this.handleRowInput.bind(this);
     this.handleRowClick = this.handleRowClick.bind(this);
+    this.handleRowRightClick = this.handleRowRightClick.bind(this);
   }
 
   handleRowInput(r, c, ship) {
@@ -72,11 +73,11 @@ export default class Board extends Component {
       }
       location.shot = turn;;
     } else {
-      colors = ['white', 'blue', 'red', 'grey', 'black'];
+      let colors = ['white', 'blue', 'red', 'grey', 'black'];
       const nextColor = 
-        indexOf(location.color) === colors.length - 1 ?
+        colors.indexOf(location.color) === colors.length - 1 ?
         0 :
-        indexOf(location.color + 1);
+        colors.indexOf(location.color + 1);
       location.color = colors[nextColor];
     }
 
@@ -84,6 +85,19 @@ export default class Board extends Component {
     newData[r] = newRow;
     this.setState({ data: newData });
   }
+
+  handleRowRightClick(r, c) {
+    let newData = [...this.state.data];
+    let colors = ['', 'blue', 'red', 'grey', 'black', 'green'];
+    const nextColor = 
+      colors.indexOf(newData[r][c].color) === colors.length - 1 ?
+      0 :
+      colors.indexOf(newData[r][c].color) + 1;
+
+    newData[r][c].color = colors[nextColor];
+    this.setState({ data: newData });
+  }
+
 
   render(i) {
     const config = this.state.config;
@@ -106,6 +120,7 @@ export default class Board extends Component {
                 length={ config.size }
                 handleRowInput={ this.handleRowInput }
                 handleRowClick={ this.handleRowClick }
+                handleRowRightClick={ this.handleRowRightClick }
               />
             )}
           )
