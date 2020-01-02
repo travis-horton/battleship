@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import { getAllShotsByTurn } from '../modules/shooting.js';
 
 const getPlayersShotsString = (shots) => {
   if (!shots) return '';
   let turnString = '';
   for (let shot = 0; shot < shots.length; shot++) {
-    turnString += shots[shot].join('');
+    if (shots[shot] === 0) continue;
+    turnString += String.fromCharCode(shots[shot][1] + 65);
+    turnString += shots[shot][0] + 1;
     turnString += (shot < shots.length - 1) ? ', ' : '';
   }
   return turnString;
@@ -14,19 +15,18 @@ const getPlayersShotsString = (shots) => {
 const turnNumber = (turn, shotsByTurn) => {
 }
 
-export default function Shots ({ shots, hits, players, turnOrder }) {
-  if (!hits) return (<p>Waiting on firebase</p>);
-  let shotsByTurn = getAllShotsByTurn(shots);
+export default function Shots ({ shots, players, turnOrder }) {
+  const playersArray = Object.keys(players);
   return (
     <div>
-      { shotsByTurn.map((turn, i) => 
+      { shots.map((turn, i) => 
       <table key={ i }>
         <thead>
         <tr>
           <th>Turn</th>
           <th>Player</th>
           <th>Shots</th>
-          { players.map((player) => 
+          { playersArray.map(player => 
           <th key={ player }>Hits on { player }</th>
           )}
         </tr>
@@ -34,17 +34,19 @@ export default function Shots ({ shots, hits, players, turnOrder }) {
 
         <tbody>
           { turnOrder.map((player, j) => {
-            const turnNumber = shotsByTurn.indexOf(turn);
+            const turnNumber = shots.indexOf(turn);
             return (
               <tr key={ j }>
                 <td>{ turnNumber + 1 }</td>
                 <td>{ player }:</td>
                 <td>{ getPlayersShotsString(turn[player])}</td>
-                { players.map(hitPlayer => {
-                  let thisHits = '';
-                  if (hits[player] && hits[player][turnNumber] && hits[player][turnNumber][hitPlayer]) {
-                    thisHits = hits[player][turnNumber][hitPlayer].join(', ');
-                  }
+                { playersArray.map(hitPlayer => {
+                  let thisHits;
+                  for (let ship in players[hitPlayer].hitsOnThisPlayer) {
+                    players[hitPlayer].hitsOnThisPlayer[ship].map(hit => {
+                      if (hit === turnNumber) thisHits += `, ${ ship }`;
+                    });
+                  };
                   return <td key={ hitPlayer }>{ thisHits }</td>
                 })}
               </tr>

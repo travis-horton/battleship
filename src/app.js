@@ -5,11 +5,7 @@ import submitConfig from './modules/config.js';
 import joinGame from './modules/connect.js';
 import Instructions from './components/instructions';
 import Board from './components/board.js';
-import { 
-  generateNewShots, 
-  numberOfShotsYouGet,
-  getHits,
-} from './modules/shooting.js';
+import { shotsThisPlayerGets, shoot } from './modules/shooting.js';
 import { allPlayersShipsPlaced } from './modules/ships.js'
 
 let database = firebase.database();
@@ -18,7 +14,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      config: {
+      config: {  // boardSize, gameId, maxPlayers, maxShips
         boardSize: 0,
         gameId: '',
         maxPlayers: 0,
@@ -31,10 +27,9 @@ class App extends Component {
         },
       },
 
-      localInfo: {
+      localInfo: {  // name, status, boardInfo, ships, shots
         name: '',
-        // one of: [initial, setup, gameOn, gameEnd]
-        status: 'initial',
+        status: 'initial',  // one of: [initial, setup, gameOn, gameEnd]
         boardInfo: [
           // one for shooting, one for this players ships, one each for every other player
           // Example:
@@ -57,23 +52,24 @@ class App extends Component {
           d: [],
         },
         shots: [],
+        potentialShots: [],
       },
 
-      gameState: {
-        turn: 0,
+      gameState: {  // turnNumber, turnOrder, players
+        turnNumber: 0,
         turnOrder: [0],
-        players: {
+        players: {  // for each player: connected, thisPlayerTurn, shipsAreCommitted, lost, hitsOnThisPlayer
           '': {
             connected: true,
-            turn: false,
-            shipsCommitted: false,
+            thisPlayerTurn: false,
+            shipsAreCommitted: false,
             lost: false,
-            hits: {
-              a: 0,
-              b: 0,
-              c: 0,
-              s: 0,
-              d: 0,
+            hitsOnThisPlayer: {
+              a: [false],
+              b: [false],
+              c: [false],
+              s: [false],
+              d: [false],
             },
           },
         },
@@ -83,11 +79,6 @@ class App extends Component {
     this.configure = this.configure.bind(this);
     this.ships = this.ships.bind(this);
     this.shootingFunctions = this.shootingFunctions.bind(this);
-
-    /*
-      makeShot: this.shootingFunctions.makeShote.bind(this),
-      commitShots: this.shootingFunctions.commitShots.bind(this),
-    */
   }
 
   configure(e, config) {
@@ -109,35 +100,56 @@ class App extends Component {
         joinGame(database, this);
         break;
       }
+        
     }
   }
 
   ships(id, data) {
-    if (id === 'input') {
-      const { config, localInfo, gameState } = this.state;
+    const { config, localInfo, gameState } = this.state;
+    const allShipsArePlaced = (ships) => {
+      for (let ship in ships) {
+        if (ships[ship].length < this.state.config.maxShips[ship]) return false;
+      }
+      return true;
+    };
+
+    if (id === 'allShipsArePlaced') {
       const { name, status, boardInfo } = localInfo
       this.setState({ config, localInfo: { name, status, boardInfo, ships: data }, gameState });
     }
 
-    if (id === 'commit') {
-      const { config, localInfo } = this.state;
-      database.ref(`${ config.gameId }/gameState/players/${ localInfo.name }/shipsCommitted`).set(true);
+    if (id === 'commitShips') {
+      const ships = this.state.localInfo.ships;
+      if (!ships || !allShipsArePlaced(ships)) {
+        alert("You have more ships to place!");
+        return;
+      }
+
+      if (!confirm("Are you happy with your ship placement?")) return;
+
+      database.ref(`${ config.gameId }/gameState/players/${ localInfo.name }/shipsAreCommitted`).set(true);
       database.ref(`${ config.gameId }/ships/${ localInfo.name }`).set(localInfo.ships);
     }
   }
 
   shootingFunctions(id, data) {
-    console.log(id);
-    console.log(data);
-    console.log("shoot mf");
+    switch (id) {
+      case "shoot": {
+        shoot(data, this.state, this);
+        break;
+      }
+
+      case "commitShots": {
+        if (!confirm("Are you happy with your shots?")) return;
+        const { config, localInfo } = this.state;
+        database.ref(`${ config.gameId }/shots/`).set(localInfo.shots);
+      }
+    }
   }
 
   render() {
     const { config, localInfo, gameState, } = this.state;
-    let curPlayers = [];
-    for (let player in gameState.players) {
-      curPlayers.push(player);
-    }
+
     switch (localInfo.status) {
       case 'initial': {
         return (
@@ -159,17 +171,19 @@ class App extends Component {
         return (
           <div className='flex_box'>
             <Instructions 
-              shipsCommitted={ gameState.players[localInfo.name].shipsCommitted }
-              allShipsPlaced={ localInfo.ships.a ? true : false }
-              curPlayers={ curPlayers }
+              shipsAreCommitted={ gameState.players[localInfo.name].shipsAreCommitted }
+              allShipsArePlaced={ localInfo.ships.a ? true : false }
+              players={ gameState.players }
               name={ localInfo.name }
               maxPlayers={ config.maxPlayers }
-              turn={ gameState.turn }
-              whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn=== true) }
-              shots={ gameState.shots }
-              hits={ gameState.hits }
+              turnNumber={ gameState.turnNumber }
+              whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn=== true)[0] }
+              allShots={ localInfo.shots }
+              hitsOnThisPlayer={ gameState.hitsOnThisPlayer }
+              shipMaxes={ config.maxShips }
               turnOrder={ gameState.turnOrder }
               commitShips={ this.ships }
+              commitShots={ this.shootingFunctions }
             />
             <span>
               {
@@ -178,7 +192,8 @@ class App extends Component {
                     key={ board.config.owner }
                     config={ board.config }
                     data={ board.data }
-                    allShipsPlaced={ this.ships }
+                    potentialShots={ this.state.localInfo.potentialShots }
+                    allShipsArePlaced={ this.ships }
                     shootingFunctions={ this.shootingFunctions }
                   />
                 )
@@ -191,7 +206,8 @@ class App extends Component {
                     key={ board.config.style }
                     config={ board.config }
                     data={ board.data }
-                    allShipsPlaced={ this.ships }
+                    potentialShots={ this.state.localInfo.potentialShots }
+                    allShipsArePlaced={ this.ships }
                     shootingFunctions={ this.shootingFunctions }
                   />
                 )

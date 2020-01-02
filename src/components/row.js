@@ -24,13 +24,16 @@ export default function Row({
   row,
   style,
   data,
+  potentialShots,
   length,
   handleRowInput,
   handleRowClick,
   handleRowRightClick
 }) {
   const handleCellInput = (r, c, val) => handleRowInput(r, c,  val);
-  const handleCellClick = (r, c) => handleRowClick(r, c);
+  const handleCellClick = (r, c) => {
+    handleRowClick(r, c);
+  }
   const handleCellRightClick = (r, c) => handleRowRightClick(r, c);
   const className = 'row';
 
@@ -48,6 +51,7 @@ export default function Row({
               row={ row }
               col={ i }
               data={ col }
+              potentialShots={ potentialShots }
               handleCellInput={ handleCellInput }
               handleCellClick={ handleCellClick }
               handleCellRightClick={ handleCellRightClick }

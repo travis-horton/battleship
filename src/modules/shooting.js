@@ -1,89 +1,66 @@
 import { allPlayersShipsPlaced, whatShipIsHere } from "./ships.js";
 
-export const isShotAt = (c, r, shots) => {
-  for (let i = 0; i < shots.length; i++) {
-    if (shots[i][0] === c && shots[i][1] === r) {
-      return true;
-    }
+export const shotsThisPlayerGets = (hitsOnThisPlayer, maxShips) => {
+  let shots = 6;
+  for (let ship in hitsOnThisPlayer) {
+    if (hitsOnThisPlayer[ship] === maxShips[ship]) shots = ship === "b" ? shots - 2 : shots - 1;
   }
+  return shots;
+}
+
+const isSameShot = (coord, prevShot) => {
+  if (coord[0] === prevShot[0] && coord[1] === prevShot[1]) return true;
   return false;
 }
 
-export const numberOfShotsYouGet = (ships, hits, thisPlayer) => {
-  let shots = 6;
-  for (let ship in ships) {
-    if (ships[ship].max === hitsOnThisShip(hits, ship, thisPlayer)) {
-      if (ship === "b") {
-        shots -= 2;
-      } else {
-        shots --;
+const getNewState = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRemove = "remove") => {
+  oldState.localInfo.shots[turn][name] = newShotsThisTurn;
+  for (let board in oldState.localInfo.boardInfo) {
+    const thisBoard = oldState.localInfo.boardInfo[board];
+    if (thisBoard.config.style !== "ships") {
+      thisBoard.data[shotCoord[0]][shotCoord[1]].shot = addOrRemove === "add" ? turn : false;
+    }
+  }
+  return oldState;
+}
+
+export const shoot = (coord, state, self) => {
+  const { localInfo, config, gameState } = state;
+  const { name, shots, status, boardInfo, ships } = localInfo;
+  const thisTurnNumber = gameState.turnNumber;
+  const hits = gameState.players[name].hitsOnThisPlayer;
+  let newShotsThisTurn = localInfo.shots[thisTurnNumber][name];
+
+  for (let shot in newShotsThisTurn) {
+    if (isSameShot(coord, newShotsThisTurn[shot])) {
+      newShotsThisTurn.splice(shot, 1);
+      self.setState(prevState => getNewState(prevState, thisTurnNumber, name, newShotsThisTurn, coord));
+      return;
+    }
+  }
+
+  if (newShotsThisTurn.length >= shotsThisPlayerGets(hits, config.maxShips)) {
+    alert("You don't get any more shots!");
+    return;
+  }
+
+  for (let turnNumber in shots) {
+    for (let shot in shots[turnNumber][name]) {
+      const thisShot = shots[turnNumber][name][shot]
+      if (isSameShot(coord, thisShot)) {
+        alert("You've already shot there!");
+        return;
       }
     }
   }
-  return shots;
-}
 
-const indexOfShot = (c, r, shots) => {
-  for (let shot in shots)
-    if (shots[shot][0] === c && shots[shot][1] === r) {
-      return shot;
-    }
-  return -1;
-}
-
-export const generateNewShots = (c, r, shots, numShots) => {
-  if (isShotAt(c, r, shots)) {
-    shots.splice(indexOfShot(c, r, shots), 1);
-
-  } else if (shots.length === 0) {
-    shots = [[c, r]]
-
-  } else if (shots.length >= numShots) {
-    alert(`You only get ${numShots} shots.`);
-
+  if (newShotsThisTurn[0] === 0) {
+    newShotsThisTurn[0] = coord;
   } else {
-    shots.push([c, r]);
+    newShotsThisTurn.push(coord);
   }
 
-  return shots;
-}
-
-export const getAllShotsByTurn = (shots) => {
-  const shotsByTurn = [];
-  for (let player in shots) {
-    for (let turn in shots[player]) {
-      if (!shotsByTurn[turn]) shotsByTurn[turn] = {};
-      shotsByTurn[turn][player] = shots[player][turn];
-    }
-  }
-  return shotsByTurn;
-}
-
-export const getHits = (shots, ships, shooter) => {
-  let hits = {};
-  for (let player in ships) {
-    if (player !== shooter) {
-      hits[player] = [];
-      for (let shot in shots) {
-        hits[player].push(whatShipIsHere(shots[shot][0], shots[shot][1], ships[player]) || null);
-      }
-      hits[player] = hits[player].filter( el => (el != null));
-      if (hits[player].length === 0) {
-        hits[player].push("NONE");
-      }
-    } else {
-      hits[player] = ["n/a"];
-    }
-  }
-  return hits
-}
-
-const hitsOnThisShip = (hits, ship, player) => {
-  let numHits = 0;
-  for (let shooter in hits) {
-    for (let shot in hits[shooter]) {
-      numHits += hits[shooter][shot][player].filter(el => el === ship).length
-    }
-  }
-  return numHits;
+  let newShots = shots;
+  newShots[thisTurnNumber][name] = newShotsThisTurn;
+  self.setState(prevState => getNewState(prevState, thisTurnNumber, name, newShotsThisTurn, coord, "add"));
 }

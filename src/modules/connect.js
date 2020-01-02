@@ -46,10 +46,14 @@ const getBoardInfo = (size, style, owner, ships, shots) => {
   }
 
   if (shots) {
-    for (let turn in shots) {
-      for (let shot in shots[turn]) {
-        const coord = shots[turn][shot];
-        if (coord.length > 1) boardInfo.data[coord[0]][coord[1]].shot = turn;
+    for (let turnNumber in shots) {
+      for (let player in shots[turnNumber]) {
+        if (player !== owner) {
+          for (let shot in shots[turnNumber][player]) {
+            const coord = shots[turnNumber][player][shot];
+            if (coord.length > 1) boardInfo.data[coord[0]][coord[1]].shot = turnNumber;
+          }
+        }
       }
     }
   }
@@ -59,12 +63,12 @@ const getBoardInfo = (size, style, owner, ships, shots) => {
 
 const getShotsOnThisPlayer = (player, shots) => {
   let newShots = [];
-  for (let turn in shots) {
-    newShots[turn] = [];
-    for (let name in shots[turn]) {
-      if (!player === name) {
-        for (let shot in shots[turn][name]) {
-          newShots[turn].push(shot);
+  for (let turnNumber in shots) {
+    newShots[turnNumber] = [];
+    for (let name in shots[turnNumber]) {
+      if (player !== name) {
+        for (let shot in shots[turnNumber][name]) {
+          newShots[turnNumber].push(shot);
         }
       }
     }
@@ -177,8 +181,6 @@ const connect = (db, gameId, name, info, self, dbData) => {
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', snapshot => {
     self.setState(getLocalState(snapshot.val(), name));
-    self.forceUpdate();
-
   });
 };
 
@@ -218,8 +220,15 @@ export default function joinGame(
       playerInfo = {
         connected: true,
         thisPlayerTurn: false,
-        shipsCommitted: false,
+        shipsAreCommitted: false,
         lost: false,
+        hitsOnThisPlayer: {
+          a: [false],
+          b: [false],
+          c: [false],
+          s: [false],
+          d: [false],
+        },
       };
     };
 

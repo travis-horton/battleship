@@ -1,12 +1,16 @@
 import React, { Component } from "react";
 
-const getClassNames = (col, row, shot, color, headerCellLabel, style) => {
+const getClassNames = (col, row, shot, potentialShots, color, headerCellLabel, style) => {
   const classNames = ["cell", color];
 
-  if (shot) classNames.push("shot");
+  if (shot !== false) classNames.push("shot");
   if (row === 0) classNames.push("toprow");
   if (col === 0) classNames.push("leftcol");
   if (headerCellLabel) classNames.push("header");
+  for (let shot in potentialShots) {
+    const thisShot = potentialShots[shot]
+    if (thisShot[0] === row && thisShot[1] === col) classNames.push("potentialShot");  
+  }
 
   return classNames.join(" ");
 }
@@ -16,21 +20,25 @@ export default function Cell({
   row,
   col,
   data,
+  potentialShots,
   headerCellLabel,
   handleCellInput,
   handleCellClick,
   handleCellRightClick
 }) {
+  const handleClick = e => {
+    handleCellClick(row, col);
+  };
+
   const handleInput = e => {
     e.preventDefault();
     handleCellInput(row, col, e.target.value.toLowerCase());
-  }
+  };
 
-  const handleClick = (row, col) => handleCellClick(r, c);
   const handleRightClick = (e) => {
     e.preventDefault();
     handleCellRightClick(row, col);
-  }
+  };
 
   if (headerCellLabel || headerCellLabel === 0) {
     return (
@@ -38,38 +46,38 @@ export default function Cell({
     )
   }
 
-  const classNames = getClassNames(col, row, data.shot, data.color, headerCellLabel, style);
+  const classNames = getClassNames(col, row, data.shot, potentialShots, data.color, headerCellLabel, style);
 
-  if (style === "input") {
-    return (
-      <input
-        onChange={ handleInput }
-        className={ classNames }
-        value={ data.ship }
-      />
-    );
+  switch (style) {
+    case "input": {
+      return <input onChange={ handleInput } className={ classNames } value={ data.ship }/>;
+      break;
+    }
 
-  } else if (style === "destination") {
-    let val;
-    if (data.shot) val = data.shot;
-    if (data.ship) val = data.ship;
+    case "destination": {
+      let val;
+      if (data.shot !== false) val = data.shot;
+      if (data.ship) val = data.ship;
 
-    return (
-      <input
-        onChange={ handleInput }
-        className={ classNames }
-        value={ val }
-        onClick={ handleClick }
-        onContextMenu={ handleRightClick }
-      />
-    );
+      return (
+        <span className={ classNames } onClick={ handleClick } onContextMenu={ handleRightClick }>
+          { val } 
+        </span>
+      );
+      break;
+    }
 
-  } else {
-    return (
-      <span className={ classNames } onClick={ handleClick }>
-        { data.ship }
-      </span>
-    );
+    case "shooting": {
+      return <span className={ classNames } onClick={ handleClick }/>;
+      break;
+    }
 
+    default: {
+      return (
+        <span className={ classNames }>
+          { data.ship }
+        </span>
+      );
+    }
   }
-}
+};

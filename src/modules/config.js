@@ -25,7 +25,7 @@ export default function submitConfig(config, db, self) {
       },
 
       gameState: {
-        turn: 0,
+        turnNumber: 0,
         turnOrder: [config.playerName],
 
         // Initialize current user in players.
@@ -33,8 +33,15 @@ export default function submitConfig(config, db, self) {
           [config.playerName]: {
             connected: false,
             thisPlayerTurn: false,
-            shipsCommitted: false,
+            shipsAreCommitted: false,
             lost: false,
+            hitsOnThisPlayer: {
+              a: [false],
+              b: [false],
+              c: [false],
+              s: [false],
+              d: [false],
+            },
           },
         },
       },

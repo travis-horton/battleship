@@ -1,21 +1,39 @@
 import React, {Component} from 'react';
 import Shots from './shots';
+import { shotsThisPlayerGets } from '../modules/shooting.js';
+
+const playersAreReady = (whosTurn) => {
+  if (!whosTurn) return false;
+  return true;
+}
+
+const thisTurnsShotsTaken = (allShots, turnNumber, name) => {
+  if (allShots[turnNumber][name][0] === 0) return 0;
+  return allShots[turnNumber][name].length;
+}
 
 export default function Instructions({
-  allShipsPlaced,
-  shipsCommitted,
-  curPlayers,
+  allShipsArePlaced,
+  shipsAreCommitted,
   name,
+  players,
   maxPlayers,
-  turn,
+  turnNumber,
   whosTurn,
-  shots,
-  hits,
+  allShots,
+  maxShips,
+  hitsOnThisPlayer,
   turnOrder,
   commitShips,
+  commitShots,
 }) {
-  const handleCommitShips = () => commitShips("commit");
-  if (!shipsCommitted) {
+  let curPlayers = [];
+  for (let player in players) {
+    if (players[player].connected) curPlayers.push(player);
+  }
+
+  if (!shipsAreCommitted) {
+    const handleCommitShips = () => commitShips("commitShips");
     return (
       <div className='left_column'>
         <p><b>INSTRUCTIONS</b></p>
@@ -31,35 +49,50 @@ export default function Instructions({
         <p>No ships may share a cell.</p>
         <br/>
         <p>When you've placed all your ships, click here:</p>
-        <button className={ allShipsPlaced ? "" : "not_ready" } onClick={ handleCommitShips }>Commit Ships</button>
+        <button className={ allShipsArePlaced ? "" : "not_ready" } onClick={ handleCommitShips }>Commit Ships</button>
       </div>
     );
-  } else if (whosTurn.length === 0) {
+
+  } else if (!playersAreReady(whosTurn)) {
     return (
-    <div className='left_column'>
-      <p>Welcome <b>{ name }</b>!</p>
-      <p>Players connected: { curPlayers.length }/{ maxPlayers }.</p>
-      <p>Players: { curPlayers.join(', ') }</p>
-      <p>Waiting on other players to connect and commit their ships.</p>
-    </div>
-    )
+      <div className='left_column'>
+        <p>Welcome <b>{ name }</b>!</p>
+        <p>Players connected: { curPlayers.length }/{ maxPlayers }. ({ curPlayers.join(', ') })</p>
+        <p>Waiting on other players to connect and commit their ships.</p>
+      </div>
+    );
+
   }
+
+  const handleCommitShots = () => {
+    if (name !== whosTurn) {
+      alert("It's not your turn!");
+      return;
+    }
+
+    commitShots("commitShots");
+  }
+
+  const maxShots = shotsThisPlayerGets(hitsOnThisPlayer, maxShips);
+  const shotsTaken = thisTurnsShotsTaken(allShots, turnNumber, name);
+  let buttonClass;
+  if (name !== whosTurn || shotsTaken !== maxShots) buttonClass = "not_ready";
 
   return (
     <div className='left_column'>
       <p>Welcome <b>{ name }</b>!</p>
-      <p>Players connected: { curPlayers.length }/{ maxPlayers }.</p>
-      <p>Players: { curPlayers.join(', ') }</p>
-      <p>Turn number: { turn + 1 }</p>
+      <p>Players connected: { curPlayers.length }/{ maxPlayers }. ({ curPlayers.join(', ') })</p>
+      <p>Turn number: { turnNumber + 1 }</p>
       <p>It is { whosTurn }'s turn.</p>
-    </div>
-  );
-}
-/*
+      <p>Shots taken: { shotsTaken }/{ maxShots } shots total</p>
+      <button className={ buttonClass } onClick={ handleCommitShots }>Fire ze missiles!</button>
       <Shots
-        shots={ shots }
-        hits={ hits }
-        players={ [...curPlayers, thisPlayer] }
+        shots={ allShots }
+        players={ players }
         turnOrder={ turnOrder }
       />
-      */
+    </div>
+  );
+
+}
+
