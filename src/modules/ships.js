@@ -33,7 +33,7 @@ const getOrientation = (shipOne, shipTwo) => {
   if (shipOne[0] - shipTwo[0] === -(shipOne[1] - shipTwo[1])) return "fd";
 }
 
-export default function isValidShipPlacement(r, c, thisShip, data, config) {
+export const isValidShipPlacement = (r, c, thisShip, data, config) => {
   if (!isShip(thisShip)) {
     alert("Must be a ship letter (a, b, c, d, or s).");
     return;
@@ -65,14 +65,41 @@ export default function isValidShipPlacement(r, c, thisShip, data, config) {
   return (isAdjacent([r, c], shipsOfThisType) && isInLine([r, c], shipsOfThisType))
 }
 
-export const allShipsArePlaced = (ships) => {
-  for (let e in ships) {
-    if (!(ships[e].locs.length === ships[e].max)) {
-      return false;
+export const getShipsLocs = (data) => {
+  const shipsLocs = { a: [], b: [], c: [], s: [], d: [], };
+  const size = data.length;
+
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      if (data[i][j].ship) shipsLocs[data[i][j].ship].push([i, j]);
     }
+  }
+  return shipsLocs;
+}
+
+export const allShipsArePlaced = (shipsPlaced, maxShips) => {
+  for (let ship in shipsPlaced) {
+    if (maxShips[ship] !== shipsPlaced[ship].length) return false;
   }
   return true;
 }
+
+export const removeAllOfThisShipFromData = (ship, newData) => {
+  const length = newData.length;
+  for (let i = 0; i < length; i++) {
+    for (let j = 0; j < length; j++) {
+      if (newData[i][j].ship === ship) newData[i][j].ship = "";
+    }
+  }
+  return newData;
+}
+
+export const allThisPlayersShipsArePlaced = (ships, maxShips) => {
+  for (let ship in ships) {
+    if (ships[ship].length < maxShips[ship]) return false;
+  }
+  return true;
+};
 
 export const allPlayersShipsPlaced = (players, maxPlayers) => {
   let numPlayers = Object.keys(players).length;
@@ -83,31 +110,4 @@ export const allPlayersShipsPlaced = (players, maxPlayers) => {
     }
   }
   return true;
-}
-
-export const randomizeTurnOrder = (players) => {
-  const playerArray = [];
-  for (let player in players) {
-    playerArray.push(player);
-  }
-  return shuffle(playerArray);
-}
-
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-}
+};

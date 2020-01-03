@@ -7,11 +7,6 @@ const playersAreReady = (whosTurn) => {
   return true;
 }
 
-const thisTurnsShotsTaken = (allShots, turnNumber, name) => {
-  if (allShots[turnNumber][name][0] === 0) return 0;
-  return allShots[turnNumber][name].length;
-}
-
 export default function Instructions({
   allShipsArePlaced,
   shipsAreCommitted,
@@ -21,6 +16,7 @@ export default function Instructions({
   turnNumber,
   whosTurn,
   allShots,
+  potentialShots,
   maxShips,
   hitsOnThisPlayer,
   turnOrder,
@@ -74,17 +70,16 @@ export default function Instructions({
   }
 
   const maxShots = shotsThisPlayerGets(hitsOnThisPlayer, maxShips);
-  const shotsTaken = thisTurnsShotsTaken(allShots, turnNumber, name);
   let buttonClass;
-  if (name !== whosTurn || shotsTaken !== maxShots) buttonClass = "not_ready";
+  if (name !== whosTurn || potentialShots.length !== maxShots) buttonClass = "not_ready";
 
   return (
     <div className='left_column'>
       <p>Welcome <b>{ name }</b>!</p>
       <p>Players connected: { curPlayers.length }/{ maxPlayers }. ({ curPlayers.join(', ') })</p>
       <p>Turn number: { turnNumber + 1 }</p>
-      <p>It is { whosTurn }'s turn.</p>
-      <p>Shots taken: { shotsTaken }/{ maxShots } shots total</p>
+      <p>It is { whosTurn === name ? 'your' : `${ whosTurn }'s`} turn.</p>
+      <p>Shots taken: { potentialShots.length }/{ maxShots } shots total</p>
       <button className={ buttonClass } onClick={ handleCommitShots }>Fire ze missiles!</button>
       <Shots
         shots={ allShots }

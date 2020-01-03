@@ -13,8 +13,8 @@ const isSameShot = (coord, prevShot) => {
   return false;
 }
 
-const getNewState = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRemove = "remove") => {
-  oldState.localInfo.shots[turn][name] = newShotsThisTurn;
+const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRemove = "remove") => {
+  oldState.localInfo.potentialShots = newShotsThisTurn;
   for (let board in oldState.localInfo.boardInfo) {
     const thisBoard = oldState.localInfo.boardInfo[board];
     if (thisBoard.config.style !== "ships") {
@@ -24,18 +24,17 @@ const getNewState = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRem
   return oldState;
 }
 
-export const shoot = (coord, state, self) => {
+export const generateNewStateWithShot = (coord, state, self) => {
   const { localInfo, config, gameState } = state;
   const { name, shots, status, boardInfo, ships } = localInfo;
   const thisTurnNumber = gameState.turnNumber;
   const hits = gameState.players[name].hitsOnThisPlayer;
-  let newShotsThisTurn = localInfo.shots[thisTurnNumber][name];
+  let newShotsThisTurn = localInfo.potentialShots;
 
   for (let shot in newShotsThisTurn) {
     if (isSameShot(coord, newShotsThisTurn[shot])) {
       newShotsThisTurn.splice(shot, 1);
-      self.setState(prevState => getNewState(prevState, thisTurnNumber, name, newShotsThisTurn, coord));
-      return;
+      return newStateWithShot(state, thisTurnNumber, name, newShotsThisTurn, coord);
     }
   }
 
@@ -60,7 +59,54 @@ export const shoot = (coord, state, self) => {
     newShotsThisTurn.push(coord);
   }
 
-  let newShots = shots;
-  newShots[thisTurnNumber][name] = newShotsThisTurn;
-  self.setState(prevState => getNewState(prevState, thisTurnNumber, name, newShotsThisTurn, coord, "add"));
+  return newStateWithShot(state, thisTurnNumber, name, newShotsThisTurn, coord, "add");
 }
+
+export const getNewGameStateAfterShooting = (state, name, hits) => {
+  const newGameState = { ...state };
+  const { turnOrder } = newGameState;
+  let curPlayerIndex = turnOrder.indexOf(name);
+  let nextPlayer;
+
+  if (curPlayerIndex + 1 === turnOrder.length) {
+    nextPlayer = turnOrder[0];
+    newGameState.turnNumber++;
+  } else {
+    nextPlayer = turnOrder[curPlayerIndex + 1];
+  }
+
+  for (let player in newGameState.players) {
+    newGameState.players[player].hitsOnThisPlayer = hits[player];
+  }
+
+  newGameState.players[name].thisPlayerTurn = false;
+  newGameState.players[nextPlayer].thisPlayerTurn = true;
+
+  return newGameState;
+}
+
+export const getHits = (shots, ships, hits, shooter, turn) => {
+  for (const player in ships) {
+    if (player === shooter) continue;
+    for (const ship in ships[player]) {
+      for (const shipLoc in ships[player][ship]) {
+        for (const shot in shots) {
+          const thisShot = shots[shot];
+          const thisShip = ships[player][ship][shipLoc];
+          if (thisShot[0] === thisShip[0] && thisShot[1] === thisShip[1]) {
+            if (hits[player][ship][0] === false) {
+              hits[player][ship][0] = { turn, shooter }
+            } else {
+              hits[player][ship].push({
+                turn, shooter,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return hits;
+}
+

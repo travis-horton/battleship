@@ -5,8 +5,14 @@ import submitConfig from './modules/config.js';
 import joinGame from './modules/connect.js';
 import Instructions from './components/instructions';
 import Board from './components/board.js';
-import { shotsThisPlayerGets, shoot } from './modules/shooting.js';
-import { allPlayersShipsPlaced } from './modules/ships.js'
+import { shotsThisPlayerGets, generateNewStateWithShot, getNewGameStateAfterShooting, getHits } from './modules/shooting.js';
+import { 
+  allThisPlayersShipsArePlaced,
+  allPlayersShipsPlaced, 
+  isValidShipPlacement, 
+  removeAllOfThisShipFromData, 
+  getShipsLocs 
+} from './modules/ships.js'
 
 let database = firebase.database();
 
@@ -106,12 +112,38 @@ class App extends Component {
 
   ships(id, data) {
     const { config, localInfo, gameState } = this.state;
-    const allShipsArePlaced = (ships) => {
-      for (let ship in ships) {
-        if (ships[ship].length < this.state.config.maxShips[ship]) return false;
+    
+    if (id === 'placeShip') {
+      // you get r, c, ship, owner
+      const { r, c, ship, owner } = data;
+      const boards = this.state.localInfo.boardInfo;
+      let thisBoard = boards.filter(board => board.config.owner === owner)[0];
+      const thisBoardIndex = boards.indexOf(thisBoard);
+      let newData = thisBoard.data;
+
+      if (!isValidShipPlacement(r, c, ship, newData, thisBoard.config)) {
+        return;
       }
-      return true;
-    };
+
+      if (ship === "") {
+        newData = removeAllOfThisShipFromData(newData[r][c].ship, newData);
+      } else {
+        newData[r][c].ship = ship;
+      }
+
+      thisBoard.data = newData;
+      let newBoardInfo = boards;
+      newBoardInfo[thisBoardIndex] = thisBoard;
+
+      this.setState({ ...this.state, localInfo: { ...this.state.localInfo, boardInfo: newBoardInfo }});
+      let shipsLocs = getShipsLocs(newData);
+
+      if (
+        allThisPlayersShipsArePlaced(shipsLocs, config.maxShips)
+      ) {
+        this.ships('allShipsArePlaced', shipsLocs);
+      }
+    }
 
     if (id === 'allShipsArePlaced') {
       const { name, status, boardInfo } = localInfo
@@ -119,8 +151,8 @@ class App extends Component {
     }
 
     if (id === 'commitShips') {
-      const ships = this.state.localInfo.ships;
-      if (!ships || !allShipsArePlaced(ships)) {
+      const ships = localInfo.ships;
+      if (!ships || !allThisPlayersShipsArePlaced(ships, config.maxShips)) {
         alert("You have more ships to place!");
         return;
       }
@@ -135,14 +167,31 @@ class App extends Component {
   shootingFunctions(id, data) {
     switch (id) {
       case "shoot": {
-        shoot(data, this.state, this);
+        this.setState(generateNewStateWithShot(data, this.state, this));
         break;
       }
 
       case "commitShots": {
         if (!confirm("Are you happy with your shots?")) return;
-        const { config, localInfo } = this.state;
-        database.ref(`${ config.gameId }/shots/`).set(localInfo.shots);
+        const { config, localInfo, gameState } = this.state;
+
+        database.ref(config.gameId).once('value', (snapshot) => {
+          const oldHits = {};
+          for (let player in gameState.players) {
+            oldHits[player] = gameState.players[player].hitsOnThisPlayer;
+          }
+
+          const newHits = getHits(
+            localInfo.potentialShots, 
+            snapshot.val().ships,
+            oldHits,
+            localInfo.name,
+            gameState.turnNumber
+          );
+
+          database.ref(`${ config.gameId }/shots/${ gameState.turnNumber }/${ localInfo.name }`).set(localInfo.potentialShots);
+          database.ref(`${ config.gameId }/gameState/`).set(getNewGameStateAfterShooting(gameState, localInfo.name, newHits));
+        });
       }
     }
   }
@@ -179,6 +228,7 @@ class App extends Component {
               turnNumber={ gameState.turnNumber }
               whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn=== true)[0] }
               allShots={ localInfo.shots }
+              potentialShots={ localInfo.potentialShots }
               hitsOnThisPlayer={ gameState.hitsOnThisPlayer }
               shipMaxes={ config.maxShips }
               turnOrder={ gameState.turnOrder }
@@ -207,7 +257,7 @@ class App extends Component {
                     config={ board.config }
                     data={ board.data }
                     potentialShots={ this.state.localInfo.potentialShots }
-                    allShipsArePlaced={ this.ships }
+                    shipFunctions={ this.ships }
                     shootingFunctions={ this.shootingFunctions }
                   />
                 )

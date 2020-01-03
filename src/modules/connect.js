@@ -111,21 +111,23 @@ const getBoards = (dbData, name) => {
   return boardInfo;
 };
 
-const getLocalInfo = (ships, shots, name) => {
+const getLocalInfo = (ships, shots, potentialShots, name) => {
+  if (!potentialShots) potentialShots = [];
   return {
     name,
     ships,
     shots,
+    potentialShots,
     status: 'gameOn',
   };
 };
 
-const getLocalState = (dbData, name) => {
+const getLocalState = (dbData, potentialShots, name) => {
   return {
     config: dbData.config,
     gameState: dbData.gameState,
     localInfo: {
-      ...getLocalInfo(dbData.ships[name], dbData.shots, name),
+      ...getLocalInfo(dbData.ships[name], dbData.shots, potentialShots, name),
       boardInfo: getBoards(dbData, name),
     },
   };
@@ -180,7 +182,7 @@ const connect = (db, gameId, name, info, self, dbData) => {
 
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', snapshot => {
-    self.setState(getLocalState(snapshot.val(), name));
+    self.setState(getLocalState(snapshot.val(), self.state.localInfo.potentialShots, name));
   });
 };
 

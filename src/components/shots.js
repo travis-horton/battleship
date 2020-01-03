@@ -17,6 +17,7 @@ const turnNumber = (turn, shotsByTurn) => {
 
 export default function Shots ({ shots, players, turnOrder }) {
   const playersArray = Object.keys(players);
+  console.log(players);
   return (
     <div>
       { shots.map((turn, i) => 
@@ -41,13 +42,13 @@ export default function Shots ({ shots, players, turnOrder }) {
                 <td>{ player }:</td>
                 <td>{ getPlayersShotsString(turn[player])}</td>
                 { playersArray.map(hitPlayer => {
-                  let thisHits;
+                  let thisHits = [];
                   for (let ship in players[hitPlayer].hitsOnThisPlayer) {
                     players[hitPlayer].hitsOnThisPlayer[ship].map(hit => {
-                      if (hit === turnNumber) thisHits += `, ${ ship }`;
+                      if (hit.turn === turnNumber && hit.shooter === player) thisHits.push(ship);
                     });
                   };
-                  return <td key={ hitPlayer }>{ thisHits }</td>
+                  return <td key={ hitPlayer }>{ thisHits.join(', ') }</td>
                 })}
               </tr>
             )
