@@ -52,7 +52,7 @@ export default function submitConfig(config, db, self) {
 
     // Set db state.
     db.ref(config.gameId).set(fBState)
-      .then(joinGame(db, self, config.gameId, config.playerName));
+      .then(joinGame(db, self, self.handleNewState, config.gameId, config.playerName));
   });
 };
 

@@ -15,10 +15,12 @@ const isSameShot = (coord, prevShot) => {
 
 const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRemove = "remove") => {
   oldState.localInfo.potentialShots = newShotsThisTurn;
+  let turnToAdd = turn;
+  if (oldState.localInfo.shots[turn] && oldState.localInfo.shots[turn][name][0]) turnToAdd++;
   for (let board in oldState.localInfo.boardInfo) {
     const thisBoard = oldState.localInfo.boardInfo[board];
     if (thisBoard.config.style !== "ships") {
-      thisBoard.data[shotCoord[0]][shotCoord[1]].shot = addOrRemove === "add" ? turn : false;
+      thisBoard.data[shotCoord[0]][shotCoord[1]].shot = addOrRemove === "add" ? turnToAdd : false;
     }
   }
   return oldState;
@@ -71,6 +73,7 @@ export const getNewGameStateAfterShooting = (state, name, hits) => {
   if (curPlayerIndex + 1 === turnOrder.length) {
     nextPlayer = turnOrder[0];
     newGameState.turnNumber++;
+
   } else {
     nextPlayer = turnOrder[curPlayerIndex + 1];
   }

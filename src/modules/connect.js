@@ -154,7 +154,7 @@ function shuffle(array) {
 
 // connects player to gameId in db
 // tells db to update client on changes to db
-const connect = (db, gameId, name, info, self, dbData) => {
+const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
   info.connected = true;
   db.ref(`${ gameId }/gameState/players/${ name }`).set(info);
   db.ref(`${ gameId }/gameState/players/${ name }/connected`).onDisconnect().set(false);
@@ -182,13 +182,14 @@ const connect = (db, gameId, name, info, self, dbData) => {
 
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', snapshot => {
-    self.setState(getLocalState(snapshot.val(), self.state.localInfo.potentialShots, name));
+    handleNewState(getLocalState(snapshot.val(), self.state.localInfo.potentialShots, name));
   });
 };
 
 export default function joinGame(
   db,
   self,
+  handleNewState,
   gameId = prompt('Enter game id: '),
   name,
 ) {
@@ -234,7 +235,7 @@ export default function joinGame(
       };
     };
 
-    connect(db, gameId, name, playerInfo, self, snapshot.val());
+    connect(db, gameId, name, playerInfo, self, snapshot.val(), handleNewState);
 
     if (allPlayersShipsPlaced(gameState.players, numPlayers) && gameState.turnOrder === 0) {
       const turnOrder = randomizeTurnOrder(players);

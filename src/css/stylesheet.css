@@ -106,3 +106,7 @@
 .green {
   background-color: green !important;
 }
+
+td {
+  border: 1pt solid grey;
+}

@@ -82,9 +82,14 @@ class App extends Component {
       },
     };
 
+    this.handleNewState = this.handleNewState.bind(this);
     this.configure = this.configure.bind(this);
     this.ships = this.ships.bind(this);
     this.shootingFunctions = this.shootingFunctions.bind(this);
+  }
+
+  handleNewState(newState) {
+    this.setState(newState);
   }
 
   configure(e, config) {
@@ -103,7 +108,7 @@ class App extends Component {
       }
 
       case 'join_game': {
-        joinGame(database, this);
+        joinGame(database, this, this.handleNewState);
         break;
       }
         
@@ -188,6 +193,8 @@ class App extends Component {
             localInfo.name,
             gameState.turnNumber
           );
+
+          this.setState({ ...this.state, localInfo: { ...this.localInfo, potentialShots: [] } });
 
           database.ref(`${ config.gameId }/shots/${ gameState.turnNumber }/${ localInfo.name }`).set(localInfo.potentialShots);
           database.ref(`${ config.gameId }/gameState/`).set(getNewGameStateAfterShooting(gameState, localInfo.name, newHits));
