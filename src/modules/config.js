@@ -27,6 +27,7 @@ export default function submitConfig(config, db, self) {
       gameState: {
         turnNumber: 0,
         turnOrder: [config.playerName],
+        shots: [{ [config.playerName]: false }],
 
         // Initialize current user in players.
         players: {
@@ -47,7 +48,6 @@ export default function submitConfig(config, db, self) {
       },
 
       ships: { [config.playerName]: false },
-      shots: [{ [config.playerName]: false }],
     };
 
     // Set db state.

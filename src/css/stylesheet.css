@@ -70,12 +70,12 @@
     border-left: 1px solid grey;
 }
 
-.potentialshot {
-    background-color: orange !important;
-}
-
 .shot {
   background-color: red !important;
+}
+
+.potentialShot {
+    background-color: orange !important;
 }
 
 .not_ready {

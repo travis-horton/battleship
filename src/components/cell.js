@@ -1,17 +1,20 @@
 import React, { Component } from "react";
 
-const getClassNames = (col, row, shot, potentialShots, color, headerCellLabel, style) => {
+const isPotentialShot = (r, c, potentialShots) => {
+  for (let shot in potentialShots) {
+    const thisShot = potentialShots[shot]
+    if (thisShot[0] === r && thisShot[1] === c) return true;
+  }
+}
+
+const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, style) => {
   const classNames = ["cell", color];
 
   if (shot !== false) classNames.push("shot");
   if (row === 0) classNames.push("toprow");
   if (col === 0) classNames.push("leftcol");
   if (headerCellLabel) classNames.push("header");
-  for (let shot in potentialShots) {
-    const thisShot = potentialShots[shot]
-    if (thisShot[0] === row && thisShot[1] === col) classNames.push("potentialShot");  
-  }
-
+  if (isPotentialShot(row, col, potentialShots)) classNames.push("potentialShot");
   return classNames.join(" ");
 }
 
@@ -20,6 +23,7 @@ export default function Cell({
   row,
   col,
   data,
+  turn,
   potentialShots,
   headerCellLabel,
   handleCellInput,
@@ -46,7 +50,7 @@ export default function Cell({
     )
   }
 
-  const classNames = getClassNames(col, row, data.shot, potentialShots, data.color, headerCellLabel, style);
+  const classNames = getClassNames(row, col, data.shot, potentialShots, data.color, headerCellLabel, style);
 
   switch (style) {
     case "input": {
@@ -56,7 +60,8 @@ export default function Cell({
 
     case "destination": {
       let val;
-      if (data.shot !== false) val = data.shot;
+      if (isPotentialShot(row, col, potentialShots)) val = turn;
+      if (data.shot !== false) val = Number(data.shot) + 1;
       if (data.ship) val = data.ship;
 
       return (
@@ -73,9 +78,10 @@ export default function Cell({
     }
 
     default: {
+      let val = data.shot ? Number(data.shot) + 1 : data.ship;
       return (
         <span className={ classNames }>
-          { data.ship }
+          { val }
         </span>
       );
     }

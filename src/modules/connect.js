@@ -1,6 +1,6 @@
 import { randomizeTurnOrder } from './ships.js';
 import { allPlayersShipsPlaced } from './ships.js';
-import { getHits } from './shooting.js';
+import { shotsThisPlayerGets, getHits } from './shooting.js';
 import Board from '../components/board.js';
 
 // returns a user-chosen name that is under 20 alphanumeric characters
@@ -76,13 +76,12 @@ const getShotsOnThisPlayer = (player, shots) => {
   return shots;
 }
 
-const getBoards = (dbData, name) => {
-  const ships = dbData.ships[name];
-  const shots = dbData.shots;
+const getBoards = (ships, dbData, name) => {
+  const shots = dbData.gameState.shots;
   const size = dbData.config.boardSize;
   const players = dbData.gameState.players;
 
-  if (!ships) {
+  if (!dbData.ships[name]) {
     return [getBoardInfo(size, 'input', name, ships, false)];
   }
 
@@ -111,24 +110,33 @@ const getBoards = (dbData, name) => {
   return boardInfo;
 };
 
-const getLocalInfo = (ships, shots, potentialShots, name) => {
+const getLocalInfo = (ships, potentialShots, name) => {
   if (!potentialShots) potentialShots = [];
   return {
     name,
     ships,
-    shots,
     potentialShots,
     status: 'gameOn',
   };
 };
 
-const getLocalState = (dbData, potentialShots, name) => {
+const getLocalState = (dbData, localInfo, name) => {
+  let ships;
+  if (localInfo.ships.a && localInfo.ships.a.length > 0) {
+    ships = localInfo.ships
+  } else {
+    ships = dbData.ships[name];
+  }
+
+  const potentialShots = localInfo.potentialShots ? localInfo.potentialShots : [];
+  const boards = getBoards(ships, dbData, name);
+
   return {
     config: dbData.config,
     gameState: dbData.gameState,
     localInfo: {
-      ...getLocalInfo(dbData.ships[name], dbData.shots, potentialShots, name),
-      boardInfo: getBoards(dbData, name),
+      ...getLocalInfo(ships, potentialShots, name, dbData.ships[name]),
+      boardInfo: boards,
     },
   };
 };
@@ -163,8 +171,8 @@ const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
     db.ref(`${ gameId }/ships/${ name }`).set(false);
   }
 
-  if (!dbData.shots[0][name]) {
-    db.ref(`${ gameId }/shots/0/${ name }`).set([0]);
+  if (!dbData.gameState.shots[0][name]) {
+    db.ref(`${ gameId }/gameState/shots/0/${ name }`).set([0]);
   }
 
   const players = [name];
@@ -182,7 +190,29 @@ const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
 
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', snapshot => {
-    handleNewState(getLocalState(snapshot.val(), self.state.localInfo.potentialShots, name));
+    const shotsLeft = shotsThisPlayerGets(
+      snapshot.val().gameState.players[name].hitsOnThisPlayer, 
+      self.state.config.maxShips
+    );
+
+    let playersLeft = 0;
+    for (let player in snapshot.val().gameState.players) {
+      if (player === name) continue;
+      let shotsLeft = shotsThisPlayerGets(
+        snapshot.val().gameState.players[player].hitsOnThisPlayer,
+        self.state.config.maxShips
+      );
+      if (shotsLeft > 0) playersLeft++;
+    }
+
+    if (shotsLeft === 0) {
+      alert("You lost!");
+      self.setState({ ...self.state, localInfo: { ...self.state.localInfo, status: "gameEnd" } });
+    } else if (playersLeft === 0) {
+      alert('You won!!');
+    } else {
+      self.setState(getLocalState(snapshot.val(), self.state.localInfo, name));
+    }
   });
 };
 

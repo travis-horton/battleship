@@ -24,6 +24,7 @@ export default function Row({
   row,
   style,
   data,
+  turn,
   potentialShots,
   length,
   handleRowInput,
@@ -51,6 +52,7 @@ export default function Row({
               row={ row }
               col={ i }
               data={ col }
+              turn={ turn }
               potentialShots={ potentialShots }
               handleCellInput={ handleCellInput }
               handleCellClick={ handleCellClick }

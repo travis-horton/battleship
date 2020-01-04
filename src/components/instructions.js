@@ -17,7 +17,7 @@ export default function Instructions({
   whosTurn,
   allShots,
   potentialShots,
-  maxShips,
+  shipMaxes,
   hitsOnThisPlayer,
   turnOrder,
   commitShips,
@@ -69,7 +69,7 @@ export default function Instructions({
     commitShots("commitShots");
   }
 
-  const maxShots = shotsThisPlayerGets(hitsOnThisPlayer, maxShips);
+  const maxShots = shotsThisPlayerGets(hitsOnThisPlayer, shipMaxes);
   let buttonClass;
   if (name !== whosTurn || potentialShots.length !== maxShots) buttonClass = "not_ready";
 

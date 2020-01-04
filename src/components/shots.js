@@ -17,7 +17,6 @@ const turnNumber = (turn, shotsByTurn) => {
 
 export default function Shots ({ shots, players, turnOrder }) {
   const playersArray = Object.keys(players);
-  console.log(players);
   return (
     <div>
       { shots.map((turn, i) => 

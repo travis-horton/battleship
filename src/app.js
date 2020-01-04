@@ -57,13 +57,13 @@ class App extends Component {
           s: [],
           d: [],
         },
-        shots: [],
         potentialShots: [],
       },
 
       gameState: {  // turnNumber, turnOrder, players
         turnNumber: 0,
         turnOrder: [0],
+        shots: [],
         players: {  // for each player: connected, thisPlayerTurn, shipsAreCommitted, lost, hitsOnThisPlayer
           '': {
             connected: true,
@@ -191,13 +191,17 @@ class App extends Component {
             snapshot.val().ships,
             oldHits,
             localInfo.name,
-            gameState.turnNumber
+            gameState.turnNumber,
+            config.maxShips
           );
 
-          this.setState({ ...this.state, localInfo: { ...this.localInfo, potentialShots: [] } });
-
-          database.ref(`${ config.gameId }/shots/${ gameState.turnNumber }/${ localInfo.name }`).set(localInfo.potentialShots);
-          database.ref(`${ config.gameId }/gameState/`).set(getNewGameStateAfterShooting(gameState, localInfo.name, newHits));
+          this.setState({ ...this.state, localInfo: { 
+            ...this.state.localInfo, 
+            potentialShots: [],
+          } }, () => {
+            database.ref(`${ config.gameId }/gameState/`).set(getNewGameStateAfterShooting(gameState, localInfo.potentialShots, localInfo.name, newHits));
+          });
+          
         });
       }
     }
@@ -224,6 +228,13 @@ class App extends Component {
 
       case 'gameOn': {
         const boards = localInfo.boardInfo;
+        const turnNumber = gameState.turnNumber;
+        const nextShotTurn = (
+          (gameState.shots[turnNumber] && gameState.shots[turnNumber][localInfo.name][0]) ? 
+          gameState.turnNumber + 2:
+          gameState.turnNumber + 1
+        );
+
         return (
           <div className='flex_box'>
             <Instructions 
@@ -234,9 +245,9 @@ class App extends Component {
               maxPlayers={ config.maxPlayers }
               turnNumber={ gameState.turnNumber }
               whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn=== true)[0] }
-              allShots={ localInfo.shots }
+              allShots={ gameState.shots }
               potentialShots={ localInfo.potentialShots }
-              hitsOnThisPlayer={ gameState.hitsOnThisPlayer }
+              hitsOnThisPlayer={ gameState.players[localInfo.name].hitsOnThisPlayer }
               shipMaxes={ config.maxShips }
               turnOrder={ gameState.turnOrder }
               commitShips={ this.ships }
@@ -249,6 +260,7 @@ class App extends Component {
                     key={ board.config.owner }
                     config={ board.config }
                     data={ board.data }
+                    turn={ nextShotTurn }
                     potentialShots={ this.state.localInfo.potentialShots }
                     allShipsArePlaced={ this.ships }
                     shootingFunctions={ this.shootingFunctions }
@@ -274,7 +286,11 @@ class App extends Component {
         );
       }
 
+      case 'gameEnd': {
+        return (<p>You lost.</p>);
+      }
     }
+
   }
 }
 

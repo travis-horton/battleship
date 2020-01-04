@@ -54,6 +54,7 @@ export default class Board extends Component {
                 row={ i }
                 style={ config.style }
                 data={ row }
+                turn={ this.props.turn }
                 potentialShots={ this.props.potentialShots }
                 length={ config.size }
                 handleRowInput={ this.handleRowInput }
