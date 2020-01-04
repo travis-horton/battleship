@@ -205,10 +205,12 @@ const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
       if (shotsLeft > 0) playersLeft++;
     }
 
+    const playerArray = Object.keys(players);
+
     if (shotsLeft === 0) {
       alert("You lost!");
       self.setState({ ...self.state, localInfo: { ...self.state.localInfo, status: "gameEnd" } });
-    } else if (playersLeft === 0) {
+    } else if (playersLeft === 0 && playerArray > 1) {
       alert('You won!!');
     } else {
       self.setState(getLocalState(snapshot.val(), self.state.localInfo, name));
