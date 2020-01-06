@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import Shots from './shots';
 import { shotsThisPlayerGets } from '../modules/shooting.js';
+import { allPlayersShipsPlaced } from '../modules/ships.js';
 
 const playersAreReady = (whosTurn) => {
   if (!whosTurn) return false;
@@ -49,7 +50,7 @@ export default function Instructions({
       </div>
     );
 
-  } else if (!playersAreReady(whosTurn)) {
+  } else if (!allPlayersShipsPlaced(players, maxPlayers)) {
     return (
       <div className='left_column'>
         <p>Welcome <b>{ name }</b>!</p>
