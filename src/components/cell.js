@@ -1,71 +1,89 @@
 import React, { Component } from "react";
-import { whatShipIsHere } from "../modules/ships.js";
-import { isShotAt } from "../modules/shooting.js";
 
-const getClassNames = (col, row, shots, potentialShots, headerCellLabel) => {
-  const classNames = ["cell"];
-
-  if (potentialShots && isShotAt(col, row, potentialShots)) {
-    classNames.push("potentialshot");
+const isPotentialShot = (r, c, potentialShots) => {
+  for (let shot in potentialShots) {
+    const thisShot = potentialShots[shot]
+    if (thisShot[0] === r && thisShot[1] === c) return true;
   }
+}
 
-  if (shots && isShotAt(col, row, shots)) {
-    classNames.push("shot");
-  }
+const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, style) => {
+  const classNames = ["cell", color];
 
-  if (row === 1) {
-    classNames.push("toprow");
-  }
-
-  if (col === "A") {
-    classNames.push("leftcol");
-  }
-
-  if (headerCellLabel) {
-    classNames.push("header");
-  }
-
+  if (shot !== false) classNames.push("shot");
+  if (row === 0) classNames.push("toprow");
+  if (col === 0) classNames.push("leftcol");
+  if (headerCellLabel) classNames.push("header");
+  if (isPotentialShot(row, col, potentialShots)) classNames.push("potentialShot");
   return classNames.join(" ");
 }
 
-export const Cell = ({
-  boardStyle,
+export default function Cell({
+  style,
   row,
   col,
-  ships,
-  shots,
+  data,
+  turn,
   potentialShots,
   headerCellLabel,
-  inputShip,
-  potentialShot
-}) => {
-  const classNames = getClassNames(col, row, shots, potentialShots, headerCellLabel);
-  const shipType = whatShipIsHere(col, row, ships);
+  handleCellInput,
+  handleCellClick,
+  handleCellRightClick
+}) {
+  const handleClick = e => {
+    handleCellClick(row, col);
+  };
+
   const handleInput = e => {
     e.preventDefault();
-    inputShip(col, row, e.target.value.toLowerCase());
-  }
+    handleCellInput(row, col, e.target.value.toLowerCase());
+  };
 
-  if (headerCellLabel) {
-    return (
-      <span className={classNames}>{headerCellLabel}</span>
-    )
+  const handleRightClick = (e) => {
+    e.preventDefault();
+    handleCellRightClick(row, col);
+  };
 
-  } else if (boardStyle === "input") {
+  if (headerCellLabel || headerCellLabel === 0) {
     return (
-      <input
-        onChange={handleInput}
-        className={classNames}
-        value={shipType}
-      />
-    )
-
-  } else {
-    const handleClick = () => potentialShot(col, row);
-    return (
-      <span className={classNames} onClick={handleClick}>
-        {shipType}
-      </span>
+      <span className={ "cell header" }>{ headerCellLabel }</span>
     )
   }
-}
+
+  const classNames = getClassNames(row, col, data.shot, potentialShots, data.color, headerCellLabel, style);
+
+  switch (style) {
+    case "input": {
+      return <input onChange={ handleInput } className={ classNames } value={ data.ship }/>;
+      break;
+    }
+
+    case "destination": {
+      let val;
+      if (isPotentialShot(row, col, potentialShots)) val = turn;
+      if (data.shot !== false) val = Number(data.shot) + 1;
+      if (data.ship) val = data.ship;
+
+      return (
+        <span className={ classNames } onClick={ handleClick } onContextMenu={ handleRightClick }>
+          { val } 
+        </span>
+      );
+      break;
+    }
+
+    case "shooting": {
+      return <span className={ classNames } onClick={ handleClick }/>;
+      break;
+    }
+
+    default: {
+      let val = data.shot ? Number(data.shot) + 1 : data.ship;
+      return (
+        <span className={ classNames }>
+          { val }
+        </span>
+      );
+    }
+  }
+};

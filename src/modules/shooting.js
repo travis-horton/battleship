@@ -1,89 +1,134 @@
 import { allPlayersShipsPlaced, whatShipIsHere } from "./ships.js";
 
-export const isShotAt = (c, r, shots) => {
-  for (let i = 0; i < shots.length; i++) {
-    if (shots[i][0] === c && shots[i][1] === r) {
-      return true;
-    }
+export const shotsThisPlayerGets = (hitsOnThisPlayer, maxShips) => {
+  let shots = 6;
+  for (let ship in hitsOnThisPlayer) {
+    if (hitsOnThisPlayer[ship].length === maxShips[ship]) shots = ship === "b" ? shots - 2 : shots - 1;
   }
+  return shots;
+}
+
+const isSameShot = (coord, prevShot) => {
+  if (coord[0] === prevShot[0] && coord[1] === prevShot[1]) return true;
   return false;
 }
 
-export const numberOfShotsYouGet = (ships, hits, thisPlayer) => {
-  let shots = 6;
-  for (let ship in ships) {
-    if (ships[ship].max === hitsOnThisShip(hits, ship, thisPlayer)) {
-      if (ship === "b") {
-        shots -= 2;
-      } else {
-        shots --;
+const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRemove = "remove") => {
+  oldState.localInfo.potentialShots = newShotsThisTurn;
+  let turnToAdd = turn;
+  if (oldState.gameState.shots[turn] && oldState.gameState.shots[turn][name][0]) turnToAdd++;
+  for (let board in oldState.localInfo.boardInfo) {
+    const thisBoard = oldState.localInfo.boardInfo[board];
+    if (thisBoard.config.style !== "ships") {
+      thisBoard.data[shotCoord[0]][shotCoord[1]].shot = addOrRemove === "add" ? turnToAdd : false;
+    }
+  }
+  return oldState;
+}
+
+export const generateNewStateWithShot = (coord, state, self) => {
+  const { localInfo, config, gameState } = state;
+  const { name, status, boardInfo, ships } = localInfo;
+  const { shots } = gameState;
+  const thisTurnNumber = gameState.turnNumber;
+  const hits = gameState.players[name].hitsOnThisPlayer;
+  let newShotsThisTurn = localInfo.potentialShots;
+
+  for (let turnNumber in shots) {
+    for (let shot in shots[turnNumber][name]) {
+      const thisShot = shots[turnNumber][name][shot]
+      if (isSameShot(coord, thisShot)) {
+        alert("You've already shot there!");
+        return;
       }
     }
   }
-  return shots;
-}
 
-const indexOfShot = (c, r, shots) => {
-  for (let shot in shots)
-    if (shots[shot][0] === c && shots[shot][1] === r) {
-      return shot;
+  for (let shot in newShotsThisTurn) {
+    if (isSameShot(coord, newShotsThisTurn[shot])) {
+      newShotsThisTurn.splice(shot, 1);
+      return newStateWithShot(state, thisTurnNumber, name, newShotsThisTurn, coord);
     }
-  return -1;
-}
+  }
 
-export const generateNewShots = (c, r, shots, numShots) => {
-  if (isShotAt(c, r, shots)) {
-    shots.splice(indexOfShot(c, r, shots), 1);
+  if (newShotsThisTurn.length >= shotsThisPlayerGets(hits, config.maxShips)) {
+    alert("You don't get any more shots!");
+    return;
+  }
 
-  } else if (shots.length === 0) {
-    shots = [[c, r]]
-
-  } else if (shots.length >= numShots) {
-    alert(`You only get ${numShots} shots.`);
-
+  if (newShotsThisTurn[0] === 0) {
+    newShotsThisTurn[0] = coord;
   } else {
-    shots.push([c, r]);
+    newShotsThisTurn.push(coord);
   }
 
-  return shots;
+  return newStateWithShot(state, thisTurnNumber, name, newShotsThisTurn, coord, "add");
 }
 
-export const getAllShotsByTurn = (shots) => {
-  const shotsByTurn = [];
-  for (let player in shots) {
-    for (let turn in shots[player]) {
-      if (!shotsByTurn[turn]) shotsByTurn[turn] = {};
-      shotsByTurn[turn][player] = shots[player][turn];
+export const getNewGameStateAfterShooting = (gameState, shotsToAdd, name, hits) => {
+  const newGameState = { ...gameState };
+  newGameState.shots[gameState.turnNumber][name] = shotsToAdd;
+
+  const { turnOrder, turnNumber } = newGameState;
+  let curPlayerIndex = turnOrder.indexOf(name);
+  let nextPlayer;
+
+  if (curPlayerIndex + 1 === turnOrder.length) {
+    nextPlayer = turnOrder[0];
+    newGameState.turnNumber++;
+  } else {
+    nextPlayer = turnOrder[curPlayerIndex + 1];
+  }
+
+  if (!newGameState.shots[turnNumber + 1]) {
+    newGameState.shots[turnNumber + 1] = {};
+  }
+  for (let player in newGameState.players) {
+    newGameState.players[player].hitsOnThisPlayer = hits[player];
+    if (!newGameState.shots[turnNumber + 1][player]) {
+      newGameState.shots[turnNumber + 1][player] = [0];
     }
   }
-  return shotsByTurn;
+
+  newGameState.players[name].thisPlayerTurn = false;
+  newGameState.players[nextPlayer].thisPlayerTurn = true;
+
+  return newGameState;
 }
 
-export const getHits = (shots, ships, shooter) => {
-  let hits = {};
-  for (let player in ships) {
-    if (player !== shooter) {
-      hits[player] = [];
-      for (let shot in shots) {
-        hits[player].push(whatShipIsHere(shots[shot][0], shots[shot][1], ships[player]) || null);
+export const getHits = (shots, ships, hits, shooter, turn, maxShips) => {
+  let humanShipNames = {
+    a: "aircraft carrier",
+    b: "battleship",
+    c: "cruiser",
+    d: "destroyer",
+    s: "submarine",
+  }
+
+  for (const player in ships) {
+    if (player === shooter) continue;
+    for (const ship in ships[player]) {
+      for (const shipLoc in ships[player][ship]) {
+        for (const shot in shots) {
+          const thisShot = shots[shot];
+          const thisShip = ships[player][ship][shipLoc];
+          if (thisShot[0] === thisShip[0] && thisShot[1] === thisShip[1]) {
+            if (hits[player][ship][0] === false) {
+              hits[player][ship][0] = { turn, shooter }
+            } else {
+              hits[player][ship].push({
+                turn, shooter,
+              });
+              if (hits[player][ship].length === maxShips[ship]) {
+                alert(`You sunk ${ player }'s ${ humanShipNames[ship] }!!`);
+              }
+            }
+          }
+        }
       }
-      hits[player] = hits[player].filter( el => (el != null));
-      if (hits[player].length === 0) {
-        hits[player].push("NONE");
-      }
-    } else {
-      hits[player] = ["n/a"];
     }
   }
-  return hits
+
+  return hits;
 }
 
-const hitsOnThisShip = (hits, ship, player) => {
-  let numHits = 0;
-  for (let shooter in hits) {
-    for (let shot in hits[shooter]) {
-      numHits += hits[shooter][shot][player].filter(el => el === ship).length
-    }
-  }
-  return numHits;
-}

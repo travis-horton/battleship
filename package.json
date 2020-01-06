@@ -6,8 +6,8 @@
   "license": "ISC",
   "description": "my battleship game",
   "scripts": {
-    "serve": "./node_modules/.bin/parcel ./src/index.html",
-    "build": "./node_modules/.bin/parcel build ./src/index.html"
+    "serve": "rm -r dist; ./node_modules/.bin/parcel ./src/index.html",
+    "build": "rm -r dist; ./node_modules/.bin/parcel build ./src/index.html"
   },
   "repository": {
     "type": "git",
@@ -20,11 +20,9 @@
     "react-dom": "^16.8.6"
   },
   "devDependencies": {
-    "@babel/plugin-transform-destructuring": "^7.7.4",
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1"
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-transform-runtime": "^7.7.6",
+    "@babel/preset-env": "^7.7.7",
+    "@babel/preset-react": "^7.7.4"
   }
 }

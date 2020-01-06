@@ -70,10 +70,43 @@
     border-left: 1px solid grey;
 }
 
-.potentialshot {
+.shot {
+  background-color: red !important;
+}
+
+.potentialShot {
     background-color: orange !important;
 }
 
-.shot {
+.not_ready {
+  background-color: grey;
+}
+
+.dropdown {
+  position: fixed;
+  background-color: white;
+}
+
+.blue {
+  background-color: blue !important;
+}
+
+.red {
   background-color: red !important;
+}
+
+.black {
+  background-color: black !important;
+}
+
+.grey {
+  background-color: grey !important;
+}
+
+.green {
+  background-color: green !important;
+}
+
+td {
+  border: 1pt solid grey;
 }
