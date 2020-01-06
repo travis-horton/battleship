@@ -1,81 +1,87 @@
 * {
-    box-sizing: border-box;
-    font-size: small;
-    font-family: georgia;
-    text-align: center;
+  box-sizing: border-box;
+  font-size: small;
+  font-family: georgia;
+  text-align: center;
 }
 
 .flex_box {
-    display: flex;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.intro {
+  max-width: 500px;
 }
 
 .left_column {
-    width: 30%;
+  min-width: 450px;
+  flex-basis: 1;
 }
 
 .right_column {
-    display: inline;
-    width: 70%;
-    justify-content: center;
+  display: inline;
+  width: 70%;
+  justify-content: center;
 }
 
 .board_area {
-    display: flex;
+  display: flex;
 }
 
 .board {
-    padding: 2px;
-    border: 1px dashed grey;
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: center;
-    justify-content: center;
-    margin: 4px;
+  padding: 2px;
+  border: 1px dashed grey;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
 }
 
 .row {
-    border: none;
-    flex: 0 0 18px;
-    display: flex;
+  border: none;
+  flex: 0 0 18px;
+  display: flex;
 }
 
 .row:nth-child(3n) {
-    background-color: rgb(245, 245, 255);
+  background-color: rgb(245, 245, 255);
 }
 
 .cell {
-    margin: 0;
-    padding: 0;
-    width: 18px;
-    min-height: 18px;
-    background-color: inherit;
-    border: inherit;
-    border-right: 1px solid grey;
-    border-bottom: 1px solid grey;
+  margin: 0;
+  padding: 0;
+  width: 18px;
+  min-height: 18px;
+  background-color: inherit;
+  border: inherit;
+  border-right: 1px solid grey;
+  border-bottom: 1px solid grey;
 }
 
 .cell:nth-child(3n) {
-    background-color: rgb(245, 245, 255);
+  background-color: rgb(245, 245, 255);
 }
 
 .header {
-    border: none;
+  border: none;
 }
 
 .toprow {
-    border-top: 1px solid grey;
+  border-top: 1px solid grey;
 }
 
 .leftcol {
-    border-left: 1px solid grey;
+  border-left: 1px solid grey;
 }
 
 .shot {
-  background-color: red !important;
+  background-color: grey !important;
 }
 
 .potentialShot {
-    background-color: orange !important;
+  background-color: orange !important;
 }
 
 .not_ready {
@@ -91,6 +97,10 @@
   background-color: blue !important;
 }
 
+.snow {
+  background-color: snow !important;
+}
+
 .red {
   background-color: red !important;
 }
@@ -104,7 +114,19 @@
 }
 
 .green {
-  background-color: green !important;
+  background-color: palegreen;
+}
+
+.purple {
+  background-color: violet;
+}
+
+.brown {
+  background-color: burlywood;
+}
+
+.yellow {
+  background-color: lightyellow;
 }
 
 td {

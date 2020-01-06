@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 const getPlayersShotsString = (shots) => {
-  if (!shots) return '';
+  if (shots[0] === 0) return 'Not shot yet';
   let turnString = '';
   for (let shot = 0; shot < shots.length; shot++) {
     if (shots[shot] === 0) continue;
@@ -17,9 +17,13 @@ const turnNumber = (turn, shotsByTurn) => {
 
 export default function Shots ({ shots, players, turnOrder }) {
   const playersArray = Object.keys(players);
+  const reversedShots = [];
+  for (let i = 0; i < shots.length; i++) {
+    reversedShots.push(shots[shots.length - (1 + i)]);
+  }
   return (
     <div>
-      { shots.map((turn, i) => 
+      { reversedShots.map((turn, i) => 
       <table key={ i }>
         <thead>
         <tr>
@@ -27,7 +31,7 @@ export default function Shots ({ shots, players, turnOrder }) {
           <th>Player</th>
           <th>Shots</th>
           { playersArray.map(player => 
-          <th key={ player }>Hits on { player }</th>
+          <th key={ player }>Hit { player }</th>
           )}
         </tr>
         </thead>
@@ -42,11 +46,24 @@ export default function Shots ({ shots, players, turnOrder }) {
                 <td>{ getPlayersShotsString(turn[player])}</td>
                 { playersArray.map(hitPlayer => {
                   let thisHits = [];
-                  for (let ship in players[hitPlayer].hitsOnThisPlayer) {
-                    players[hitPlayer].hitsOnThisPlayer[ship].map(hit => {
-                      if (hit.turn === turnNumber && hit.shooter === player) thisHits.push(ship);
-                    });
-                  };
+
+                  if (turn[player][0] === 0) {
+                    thisHits = ['-'];
+                  } else {
+                    for (let ship in players[hitPlayer].hitsOnThisPlayer) {
+                      if (hitPlayer === player) {
+                        thisHits = ['n/a']
+                      } else {
+                        players[hitPlayer].hitsOnThisPlayer[ship].map(hit => {
+                          if (hit.turn === turnNumber && hit.shooter === player) thisHits.push(ship);
+                        });
+                      }
+                    };
+                    if (thisHits.length === 0) {
+                      thisHits.push('No hits');
+                    }
+                  }
+
                   return <td key={ hitPlayer }>{ thisHits.join(', ') }</td>
                 })}
               </tr>

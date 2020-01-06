@@ -27,6 +27,7 @@ export default function Row({
   turn,
   potentialShots,
   length,
+  playerColors,
   handleRowInput,
   handleRowClick,
   handleRowRightClick
@@ -53,6 +54,7 @@ export default function Row({
               col={ i }
               data={ col }
               turn={ turn }
+              playerColors={ playerColors }
               potentialShots={ potentialShots }
               handleCellInput={ handleCellInput }
               handleCellClick={ handleCellClick }

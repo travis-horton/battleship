@@ -1,7 +1,22 @@
 import { randomizeTurnOrder } from './ships.js';
 import { allPlayersShipsPlaced } from './ships.js';
-import { shotsThisPlayerGets, getHits } from './shooting.js';
+import { shotsThisPlayerGets } from './shooting.js';
 import Board from '../components/board.js';
+
+const getPlayerColor = (players) => {
+  const availableColors = ['green', 'purple', 'yellow', 'brown'];
+  for (let player in players) {
+    availableColors.splice(availableColors.indexOf(players[player].playerColor), 1);
+  }
+
+  if (availableColors.length === 1) return availableColors[0];
+
+  let playerColor;
+  while (!playerColor || availableColors.indexOf(playerColor) === -1) {
+    playerColor = prompt(`Choose a color from: ${ availableColors.join(', ') }`);
+  }
+  return playerColor;
+}
 
 // returns a user-chosen name that is under 20 alphanumeric characters
 const choosePlayerName = (extraPrompt = '') => {
@@ -33,7 +48,7 @@ const getBoardInfo = (size, style, owner, ships, shots, oldBoard) => {
         },
       },
     // fill sets all elements to the same reference, so needed a special map thingy here...
-    data: (new Array(size).fill(null).map(() => new Array(size).fill(null).map(() => ({ ship: "", shot: false, color: "" })))),
+    data: (new Array(size).fill(null).map(() => new Array(size).fill(null).map(() => ({ ship: '', shot: false, color: '' })))),
     };
 
   if (ships) {
@@ -51,7 +66,7 @@ const getBoardInfo = (size, style, owner, ships, shots, oldBoard) => {
         if (player !== owner) {
           for (let shot in shots[turnNumber][player]) {
             const coord = shots[turnNumber][player][shot];
-            if (coord.length > 1) boardInfo.data[coord[0]][coord[1]].shot = turnNumber;
+            if (coord.length > 1) boardInfo.data[coord[0]][coord[1]].shot = { turn: turnNumber, shooter: player };
           }
         }
       }
@@ -109,7 +124,6 @@ const getBoards = (ships, dbData, name, boards) => {
     }
   }
 
-  boardInfo.push(getBoardInfo(size, 'shooting', name, false, false));
   boardInfo.push(getBoardInfo(
     size,
     'ships',
@@ -171,8 +185,6 @@ function shuffle(array) {
   return array;
 }
 
-// connects player to gameId in db
-// tells db to update client on changes to db
 const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
   info.connected = true;
   db.ref(`${ gameId }/gameState/players/${ name }`).set(info);
@@ -219,8 +231,8 @@ const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
     const playerArray = Object.keys(players);
 
     if (shotsLeft === 0) {
-      alert("You lost!");
-      self.setState({ ...self.state, localInfo: { ...self.state.localInfo, status: "gameEnd" } });
+      alert('You lost!');
+      self.setState({ ...self.state, localInfo: { ...self.state.localInfo, status: 'gameEnd' } });
     } else if (playersLeft === 0 && playerArray > 1) {
       alert('You won!!');
     } else {
@@ -237,7 +249,6 @@ export default function joinGame(
   name,
 ) {
   if (gameId === null || gameId.length === 0) return;
-  if (!name) name = choosePlayerName();
 
   db.ref(gameId).once('value', (snapshot) => {
     if (!snapshot.exists()) {
@@ -245,6 +256,7 @@ export default function joinGame(
       return;
     }
 
+    if (!name) name = choosePlayerName();
     const { config, gameState } = snapshot.val();
     let numPlayers = Object.keys(gameState.players).length;
     let playerInfo;
@@ -267,6 +279,7 @@ export default function joinGame(
         connected: true,
         thisPlayerTurn: false,
         shipsAreCommitted: false,
+        playerColor: getPlayerColor(snapshot.val().gameState.players),
         lost: false,
         hitsOnThisPlayer: {
           a: [false],

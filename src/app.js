@@ -37,7 +37,7 @@ class App extends Component {
         name: '',
         status: 'initial',  // one of: [initial, setup, gameOn, gameEnd]
         boardInfo: [
-          // one for shooting, one for this players ships, one each for every other player
+          // one each for every other player, one for this players ships,
           // Example:
           //{
           //  data: 2d array of boardSize, each element { ship: str, shot: int, color: str },
@@ -69,6 +69,7 @@ class App extends Component {
             connected: true,
             thisPlayerTurn: false,
             shipsAreCommitted: false,
+            playerColor: '',
             lost: false,
             hitsOnThisPlayer: {
               a: [false],
@@ -130,7 +131,7 @@ class App extends Component {
         return;
       }
 
-      if (ship === "") {
+      if (ship === '') {
         newData = removeAllOfThisShipFromData(newData[r][c].ship, newData);
       } else {
         newData[r][c].ship = ship;
@@ -158,11 +159,11 @@ class App extends Component {
     if (id === 'commitShips') {
       const ships = localInfo.ships;
       if (!ships || !allThisPlayersShipsArePlaced(ships, config.maxShips)) {
-        alert("You have more ships to place!");
+        alert('You have more ships to place!');
         return;
       }
 
-      if (!confirm("Are you happy with your ship placement?")) return;
+      if (!confirm('Are you happy with your ship placement?')) return;
 
       database.ref(`${ config.gameId }/gameState/players/${ localInfo.name }/shipsAreCommitted`).set(true);
       database.ref(`${ config.gameId }/ships/${ localInfo.name }`).set(localInfo.ships);
@@ -171,14 +172,23 @@ class App extends Component {
 
   shootingFunctions(id, data) {
     switch (id) {
-      case "shoot": {
+      case 'shoot': {
         this.setState(generateNewStateWithShot(data, this.state, this));
         break;
       }
 
-      case "commitShots": {
-        if (!confirm("Are you happy with your shots?")) return;
+      case 'commitShots': {
         const { config, localInfo, gameState } = this.state;
+        const curShotsThisPlayerGets = shotsThisPlayerGets(
+          gameState.players[localInfo.name].hitsOnThisPlayer, config.maxShips
+        );
+        const numShotsTaken = localInfo.potentialShots.length;
+
+        if (numShotsTaken < curShotsThisPlayerGets) {
+          alert(`You get ${ curShotsThisPlayerGets } shot${ curShotsThisPlayerGets > 1 ? 's' : '' } and you've only shot ${ numShotsTaken } time${ numShotsTaken > 1 ? 's' : '' }!`);
+          return;
+        }
+        if (!confirm('Are you happy with your shots?')) return;
 
         database.ref(config.gameId).once('value', (snapshot) => {
           const oldHits = {};
@@ -188,6 +198,7 @@ class App extends Component {
 
           const newHits = getHits(
             localInfo.potentialShots, 
+            snapshot.val().gameState.shots,
             snapshot.val().ships,
             oldHits,
             localInfo.name,
@@ -213,12 +224,14 @@ class App extends Component {
     switch (localInfo.status) {
       case 'initial': {
         return (
-          <div>
-            <p>Traditional battleship is a game played by two players, each having two 10x10 boards. Before the game starts, they each place ships on their boards, then they take turns shooting at the other players ships. After each round of shooting, the opponent announces if a ship was hit and what ship it was. If all the sections of a ship are hit, that ship is sunk. When all the ships of a player are sunk, that player looses.</p>
+          <div className='flex_box'>
+            <div className='intro'>
+            <p>Traditional battleship is a game played by two players, each having two 10x10 boards. Before the game starts, they each place ships on their boards, then they take turns shooting at the other players' ships. After each round of shooting, the opponent announces if a ship was hit and which ship it was. If all the sections of a ship are hit, that ship is sunk. When all the ships of a player are sunk, that player loses.</p>
             <p>This version of battleship is slightly more advanced. First of all, the board size is left up to the player. For 2 player games, much more than 13 will take a long time. Also, you can play with up to 4 players -- boards between 16 and 20 work well for this number of players. In this version, each shot hits every board but the shooter's.</p>
             <p>If you are joining a game, you will prompted to enter the game ID, so make sure to get that from the player who created the game!</p>
             <button id='make_new_game' onClick={ this.configure }>New game</button>
             <button id='join_game' onClick={ this.configure }>Join game</button>
+            </div>
           </div>
         );
       }
@@ -237,6 +250,11 @@ class App extends Component {
           gameState.turnNumber + 2:
           gameState.turnNumber + 1
         );
+        const whosTurn = Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn === true)[0]; 
+        const playerColors = {};
+        for (let player in gameState.players) {
+          playerColors[player] = gameState.players[player].playerColor;
+        }
 
         return (
           <div className='flex_box'>
@@ -247,10 +265,11 @@ class App extends Component {
               name={ localInfo.name }
               maxPlayers={ config.maxPlayers }
               turnNumber={ gameState.turnNumber }
-              whosTurn={ Object.keys(gameState.players).filter(player => gameState.players[player].thisPlayerTurn=== true)[0] }
+              whosTurn={ whosTurn }
               allShots={ gameState.shots }
               potentialShots={ localInfo.potentialShots }
               hitsOnThisPlayer={ gameState.players[localInfo.name].hitsOnThisPlayer }
+              playerColors={ playerColors }
               shipMaxes={ config.maxShips }
               turnOrder={ gameState.turnOrder }
               commitShips={ this.ships }
@@ -258,27 +277,28 @@ class App extends Component {
             />
             <span>
               {
-                boards.filter(board => board.config.style === "destination").map(board =>
+                boards.filter(board => board.config.style === 'destination').map(board =>
                   <Board
                     key={ board.config.owner }
                     config={ board.config }
                     data={ board.data }
                     turn={ nextShotTurn }
                     potentialShots={ this.state.localInfo.potentialShots }
+                    playerColors={ playerColors }
                     allShipsArePlaced={ this.ships }
                     shootingFunctions={ this.shootingFunctions }
+                    classNames={ whosTurn === localInfo.name ? 'snow' : '' }
                   />
                 )
               }
-            </span>
-            <span>
               {
-                boards.filter(board => board.config.style !== "destination").map(board =>
+                boards.filter(board => board.config.style !== 'destination').map(board =>
                   <Board
                     key={ board.config.style }
                     config={ board.config }
                     data={ board.data }
-                    potentialShots={ this.state.localInfo.potentialShots }
+                    potentialShots={ localInfo.potentialShots }
+                    playerColors={ playerColors }
                     shipFunctions={ this.ships }
                     shootingFunctions={ this.shootingFunctions }
                   />

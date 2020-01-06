@@ -18,11 +18,11 @@ export default class Board extends Component {
 
   handleRowInput(r, c, ship) {
     let owner = this.props.config.owner;
-    this.props.shipFunctions("placeShip", { r, c, ship, owner });
+    this.props.shipFunctions('placeShip', { r, c, ship, owner });
   }
 
   handleRowClick(r, c) {
-    this.props.shootingFunctions("shoot", [r, c]);
+    this.props.shootingFunctions('shoot', [r, c]);
   }
 
   handleRowRightClick(r, c) {
@@ -39,8 +39,10 @@ export default class Board extends Component {
   render(i) {
     const config = this.props.config;
     const data = this.props.data;
+    let classNames = this.props.classNames;
+    classNames += ' board';
     return (
-      <span className='board'>
+      <span className={ classNames }>
         <span>{ getLabel(config.owner, config.style) }</span>
         <Row
           row='header'
@@ -57,6 +59,7 @@ export default class Board extends Component {
                 turn={ this.props.turn }
                 potentialShots={ this.props.potentialShots }
                 length={ config.size }
+                playerColors={ this.props.playerColors }
                 handleRowInput={ this.handleRowInput }
                 handleRowClick={ this.handleRowClick }
                 handleRowRightClick={ this.handleRowRightClick }

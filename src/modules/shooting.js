@@ -3,7 +3,8 @@ import { allPlayersShipsPlaced, whatShipIsHere } from "./ships.js";
 export const shotsThisPlayerGets = (hitsOnThisPlayer, maxShips) => {
   let shots = 6;
   for (let ship in hitsOnThisPlayer) {
-    if (hitsOnThisPlayer[ship].length === maxShips[ship]) shots = ship === "b" ? shots - 2 : shots - 1;
+    let uniqueHitsOnThisShip = hitsOnThisPlayer[ship].filter(hit => !hit.duplicateHit);
+    if (uniqueHitsOnThisShip.length === maxShips[ship]) shots = ship === "b" ? shots - 2 : shots - 1;
   }
   return shots;
 }
@@ -20,7 +21,7 @@ const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, add
   for (let board in oldState.localInfo.boardInfo) {
     const thisBoard = oldState.localInfo.boardInfo[board];
     if (thisBoard.config.style !== "ships") {
-      thisBoard.data[shotCoord[0]][shotCoord[1]].shot = addOrRemove === "add" ? turnToAdd : false;
+      thisBoard.data[shotCoord[0]][shotCoord[1]].potentialShot = addOrRemove === "add" ? turnToAdd : false;
     }
   }
   return oldState;
@@ -67,6 +68,7 @@ export const generateNewStateWithShot = (coord, state, self) => {
 
 export const getNewGameStateAfterShooting = (gameState, shotsToAdd, name, hits) => {
   const newGameState = { ...gameState };
+
   newGameState.shots[gameState.turnNumber][name] = shotsToAdd;
 
   const { turnOrder, turnNumber } = newGameState;
@@ -96,35 +98,89 @@ export const getNewGameStateAfterShooting = (gameState, shotsToAdd, name, hits) 
   return newGameState;
 }
 
-export const getHits = (shots, ships, hits, shooter, turn, maxShips) => {
-  let humanShipNames = {
-    a: "aircraft carrier",
-    b: "battleship",
-    c: "cruiser",
-    d: "destroyer",
-    s: "submarine",
+const didHitThisShip = (shot, ship) => {
+  if (shot[0] === ship[0] && shot[1] === ship[1]) return true;
+  return false;
+}
+
+const alreadyHitThisShip = (shipLoc, prevShots, shooter) => {
+  for (let turn in prevShots) {
+    for (let player in prevShots[turn]) {
+      if (player === shooter) continue;
+      for (let shot in prevShots[turn][player]) {
+        if (didHitThisShip(prevShots[turn][player][shot], shipLoc)) {
+          return true;
+        }
+      }
+    }
   }
 
+  return false;
+}
+
+const noHitsOnThisShip = (hitsOnThisShip) => {
+  if (hitsOnThisShip[0] === false) return true;
+  return false;
+}
+
+const addHit = (hitsOnThisShip, hitInfo) => {
+  if (noHitsOnThisShip(hitsOnThisShip)) {
+    hitsOnThisShip[0] = hitInfo;
+  } else { 
+    hitsOnThisShip.push(hitInfo);
+  }
+}
+
+const addNewShotsThatHitThisShipLocToHits = (
+  thisTurnShots,
+  allPrevShots,
+  shipLoc,
+  hits,
+  newHitInfo, 
+  maxOfThisShip,
+  shooter,
+  player,
+  ship,
+) => {
+  for (const shot in thisTurnShots) {
+    const thisShot = thisTurnShots[shot];
+    if (didHitThisShip(thisShot, shipLoc)) {
+      if (alreadyHitThisShip(shipLoc, allPrevShots, shooter)) {
+        newHitInfo.duplicateHit = true;
+      }
+      addHit(hits, newHitInfo);
+      console.log(hits.filter(hit => !hit.duplicateHit));
+      if (hits.filter(hit => !hit.duplicateHit).length === maxOfThisShip) {
+        let humanShipNames = {
+          a: "aircraft carrier",
+          b: "battleship",
+          c: "cruiser",
+          d: "destroyer",
+          s: "submarine",
+        }
+
+        alert(`You sunk ${ player }'s ${ humanShipNames[ship] }!!`);
+      }
+    }
+  }
+}
+
+export const getHits = (shots, prevShots, ships, hits, shooter, turn, maxShips) => {
   for (const player in ships) {
     if (player === shooter) continue;
     for (const ship in ships[player]) {
       for (const shipLoc in ships[player][ship]) {
-        for (const shot in shots) {
-          const thisShot = shots[shot];
-          const thisShip = ships[player][ship][shipLoc];
-          if (thisShot[0] === thisShip[0] && thisShot[1] === thisShip[1]) {
-            if (hits[player][ship][0] === false) {
-              hits[player][ship][0] = { turn, shooter }
-            } else {
-              hits[player][ship].push({
-                turn, shooter,
-              });
-              if (hits[player][ship].length === maxShips[ship]) {
-                alert(`You sunk ${ player }'s ${ humanShipNames[ship] }!!`);
-              }
-            }
-          }
-        }
+        addNewShotsThatHitThisShipLocToHits(
+          shots, 
+          prevShots,
+          ships[player][ship][shipLoc], 
+          hits[player][ship],
+          { turn, shooter },
+          maxShips[ship],
+          shooter,
+          player,
+          ship,
+        );
       }
     }
   }

@@ -1,11 +1,11 @@
-import joinGame from "./connect.js";
+import joinGame from './connect.js';
 
 export default function submitConfig(config, db, self) {
   if (errorsInConfigInput(config)) return;
 
-  db.ref("/").once("value").then((snapshot) => {
+  db.ref('/').once('value').then((snapshot) => {
     if (snapshot.hasChild(config.gameId)) {
-      alert("Game ID already taken, choose a new game ID.");
+      alert('Game ID already taken, choose a new game ID.');
       return;
     }
 
@@ -36,6 +36,7 @@ export default function submitConfig(config, db, self) {
             thisPlayerTurn: false,
             shipsAreCommitted: false,
             lost: false,
+            playerColor: config.playerColor,
             hitsOnThisPlayer: {
               a: [false],
               b: [false],
@@ -62,13 +63,14 @@ export default function submitConfig(config, db, self) {
 const errorsInConfigInput = (config) => {
   config.playerName = config.playerName.trim();
   config.gameId = config.gameId.trim();
-  let errorMsg = "";
+  let errorMsg = '';
   let regx = /[^a-zA-Z0-9 ]/;
   let computerToHuman = {
-    playerName: "player name",
-    gameId: "game id",
-    boardSize: "board size",
-    maxPlayers: "number of players"
+    playerName: 'player name',
+    gameId: 'game id',
+    boardSize: 'board size',
+    maxPlayers: 'number of players',
+    playerColor: 'player color',
   };
 
 
@@ -99,7 +101,7 @@ const errorsInConfigInput = (config) => {
   }
 
   if (errorMsg.length > 0) {
-    errorMsg += "Try again.";
+    errorMsg += 'Try again.';
     alert(errorMsg);
     return true;
   } else {

@@ -21,6 +21,7 @@ export default function Instructions({
   shipMaxes,
   hitsOnThisPlayer,
   turnOrder,
+  playerColors,
   commitShips,
   commitShots,
 }) {
@@ -30,7 +31,7 @@ export default function Instructions({
   }
 
   if (!shipsAreCommitted) {
-    const handleCommitShips = () => commitShips("commitShips");
+    const handleCommitShips = () => commitShips('commitShips');
     return (
       <div className='left_column'>
         <p><b>INSTRUCTIONS</b></p>
@@ -46,7 +47,7 @@ export default function Instructions({
         <p>No ships may share a cell.</p>
         <br/>
         <p>When you've placed all your ships, click here:</p>
-        <button className={ allShipsArePlaced ? "" : "not_ready" } onClick={ handleCommitShips }>Commit Ships</button>
+        <button className={ allShipsArePlaced ? '' : 'not_ready' } onClick={ handleCommitShips }>Commit Ships</button>
       </div>
     );
 
@@ -63,25 +64,34 @@ export default function Instructions({
 
   const handleCommitShots = () => {
     if (name !== whosTurn) {
-      alert("It's not your turn!");
+      alert('It\'s not your turn!');
       return;
     }
 
-    commitShots("commitShots");
+    commitShots('commitShots');
   }
 
   const maxShots = shotsThisPlayerGets(hitsOnThisPlayer, shipMaxes);
   let buttonClass;
-  if (name !== whosTurn || potentialShots.length !== maxShots) buttonClass = "not_ready";
+  if (name !== whosTurn || potentialShots.length !== maxShots) buttonClass = 'not_ready';
+  const classNames = whosTurn === name ? 'snow' : '';
 
   return (
     <div className='left_column'>
       <p>Welcome <b>{ name }</b>!</p>
-      <p>You can input your shots on any other player's board or your shooting board.</p>
+      <p>You can input your shots on by clicking on any other player's board.</p>
       <p>You can also right click any other player's board's cells to cycle through some colors to keep track of your thoughts.</p>
-      <p>Players connected: { curPlayers.length }/{ maxPlayers }. ({ curPlayers.join(', ') })</p>
+      <p>Players connected: { curPlayers.length }/{ maxPlayers }.</p>
+      <div>
+        <p>Player colors: </p>
+        { curPlayers.map(player => {
+          return (
+            <p className={ playerColors[player] } key={ player }>{ player }</p>
+          );
+        }) }
+      </div>
       <p>Turn number: { turnNumber + 1 }</p>
-      <p>It is { whosTurn === name ? 'your' : `${ whosTurn }'s`} turn.</p>
+      <p className={ classNames }>It is { whosTurn === name ? 'your' : `${ whosTurn }'s`} turn.</p>
       <p>Shots taken: { potentialShots.length }/{ maxShots } shots total</p>
       <button className={ buttonClass } onClick={ handleCommitShots }>Fire ze missiles!</button>
       <Shots

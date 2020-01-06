@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
 const isPotentialShot = (r, c, potentialShots) => {
   for (let shot in potentialShots) {
@@ -7,15 +7,15 @@ const isPotentialShot = (r, c, potentialShots) => {
   }
 }
 
-const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, style) => {
-  const classNames = ["cell", color];
+const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, style, playerColors) => {
+  const classNames = ['cell', color];
 
-  if (shot !== false) classNames.push("shot");
-  if (row === 0) classNames.push("toprow");
-  if (col === 0) classNames.push("leftcol");
-  if (headerCellLabel) classNames.push("header");
-  if (isPotentialShot(row, col, potentialShots)) classNames.push("potentialShot");
-  return classNames.join(" ");
+  if (shot !== false) classNames.push(playerColors[shot.shooter]);
+  if (row === 0) classNames.push('toprow');
+  if (col === 0) classNames.push('leftcol');
+  if (headerCellLabel) classNames.push('header');
+  if (isPotentialShot(row, col, potentialShots)) classNames.push('potentialShot');
+  return classNames.join(' ');
 }
 
 export default function Cell({
@@ -25,6 +25,7 @@ export default function Cell({
   data,
   turn,
   potentialShots,
+  playerColors,
   headerCellLabel,
   handleCellInput,
   handleCellClick,
@@ -46,22 +47,22 @@ export default function Cell({
 
   if (headerCellLabel || headerCellLabel === 0) {
     return (
-      <span className={ "cell header" }>{ headerCellLabel }</span>
+      <span className={ 'cell header' }>{ headerCellLabel }</span>
     )
   }
 
-  const classNames = getClassNames(row, col, data.shot, potentialShots, data.color, headerCellLabel, style);
+  const classNames = getClassNames(row, col, data.shot, potentialShots, data.color, headerCellLabel, style, playerColors);
 
   switch (style) {
-    case "input": {
+    case 'input': {
       return <input onChange={ handleInput } className={ classNames } value={ data.ship }/>;
       break;
     }
 
-    case "destination": {
+    case 'destination': {
       let val;
       if (isPotentialShot(row, col, potentialShots)) val = turn;
-      if (data.shot !== false) val = Number(data.shot) + 1;
+      if (data.shot !== false) val = Number(data.shot.turn) + 1;
       if (data.ship) val = data.ship;
 
       return (
@@ -72,13 +73,8 @@ export default function Cell({
       break;
     }
 
-    case "shooting": {
-      return <span className={ classNames } onClick={ handleClick }/>;
-      break;
-    }
-
     default: {
-      let val = data.shot ? Number(data.shot) + 1 : data.ship;
+      let val = data.shot ? Number(data.shot.turn) + 1 : data.ship;
       return (
         <span className={ classNames }>
           { val }
