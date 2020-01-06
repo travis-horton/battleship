@@ -18,7 +18,7 @@ const choosePlayerName = (extraPrompt = '') => {
   return name;
 };
 
-const getBoardInfo = (size, style, owner, ships, shots) => {
+const getBoardInfo = (size, style, owner, ships, shots, oldBoard) => {
   const boardInfo = {
       config: {
         size,
@@ -58,6 +58,16 @@ const getBoardInfo = (size, style, owner, ships, shots) => {
     }
   }
 
+  if (oldBoard) {
+    for (let row in oldBoard.data) {
+      for (let col in oldBoard.data) {
+        if (oldBoard.data) {
+          boardInfo.data[row][col].color = oldBoard.data[row][col].color;
+        }
+      }
+    }
+  }
+
   return boardInfo;
 };
 
@@ -76,7 +86,7 @@ const getShotsOnThisPlayer = (player, shots) => {
   return shots;
 }
 
-const getBoards = (ships, dbData, name) => {
+const getBoards = (ships, dbData, name, boards) => {
   const shots = dbData.gameState.shots;
   const size = dbData.config.boardSize;
   const players = dbData.gameState.players;
@@ -93,7 +103,8 @@ const getBoards = (ships, dbData, name) => {
         'destination',
         player,
         [],
-        getShotsOnThisPlayer(player, shots)
+        getShotsOnThisPlayer(player, shots),
+        boards.filter(board => board.config.owner === player)[0]
       ))
     }
   }
@@ -129,7 +140,7 @@ const getLocalState = (dbData, localInfo, name) => {
   }
 
   const potentialShots = localInfo.potentialShots ? localInfo.potentialShots : [];
-  const boards = getBoards(ships, dbData, name);
+  const boards = getBoards(ships, dbData, name, localInfo.boardInfo);
 
   return {
     config: dbData.config,
