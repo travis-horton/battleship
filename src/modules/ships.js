@@ -102,10 +102,11 @@ export const allThisPlayersShipsArePlaced = (ships, maxShips) => {
 };
 
 export const allPlayersShipsPlaced = (players, maxPlayers) => {
+  console.log(players, maxPlayers);
   let numPlayers = Object.keys(players).length;
   if (numPlayers < maxPlayers) return false;
   for (let p in players) {
-    if (!players[p].shipsCommitted) {
+    if (!players[p].shipsAreCommitted) {
       return false;
     }
   }

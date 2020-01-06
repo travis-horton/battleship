@@ -34,7 +34,7 @@ export default class Setup extends Component {
   render() {
     return (
       <div>
-        <p>Limit length to 20 characters, which must be letters or numbers!</p>
+        <p>Limit player name and game ID length to 20 characters, which must be letters or numbers!</p>
         <form id="config_submit" onSubmit={ this.props.submitConfig }>
           <ConfigSelector
             id="playerName"

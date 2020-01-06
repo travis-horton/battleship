@@ -214,6 +214,9 @@ class App extends Component {
       case 'initial': {
         return (
           <div>
+            <p>Traditional battleship is a game played by two players, each having two 10x10 boards. Before the game starts, they each place ships on their boards, then they take turns shooting at the other players ships. After each round of shooting, the opponent announces if a ship was hit and what ship it was. If all the sections of a ship are hit, that ship is sunk. When all the ships of a player are sunk, that player looses.</p>
+            <p>This version of battleship is slightly more advanced. First of all, the board size is left up to the player. For 2 player games, much more than 13 will take a long time. Also, you can play with up to 4 players -- boards between 16 and 20 work well for this number of players. In this version, each shot hits every board but the shooter's.</p>
+            <p>If you are joining a game, you will prompted to enter the game ID, so make sure to get that from the player who created the game!</p>
             <button id='make_new_game' onClick={ this.configure }>New game</button>
             <button id='join_game' onClick={ this.configure }>Join game</button>
           </div>

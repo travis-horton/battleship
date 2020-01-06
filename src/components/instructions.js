@@ -77,6 +77,8 @@ export default function Instructions({
   return (
     <div className='left_column'>
       <p>Welcome <b>{ name }</b>!</p>
+      <p>You can input your shots on any other player's board or your shooting board.</p>
+      <p>You can also right click any other player's board's cells to cycle through some colors to keep track of your thoughts.</p>
       <p>Players connected: { curPlayers.length }/{ maxPlayers }. ({ curPlayers.join(', ') })</p>
       <p>Turn number: { turnNumber + 1 }</p>
       <p>It is { whosTurn === name ? 'your' : `${ whosTurn }'s`} turn.</p>
