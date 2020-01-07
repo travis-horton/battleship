@@ -226,9 +226,12 @@ class App extends Component {
         return (
           <div className='flex_box'>
             <div className='intro'>
-            <p>Traditional battleship is a game played by two players, each having two 10x10 boards. Before the game starts, they each place ships on their boards, then they take turns shooting at the other players' ships. After each round of shooting, the opponent announces if a ship was hit and which ship it was. If all the sections of a ship are hit, that ship is sunk. When all the ships of a player are sunk, that player loses.</p>
-            <p>This version of battleship is slightly more advanced. First of all, the board size is left up to the player. For 2 player games, much more than 13 will take a long time. Also, you can play with up to 4 players -- boards between 16 and 20 work well for this number of players. In this version, each shot hits every board but the shooter's.</p>
-            <p>If you are joining a game, you will prompted to enter the game ID, so make sure to get that from the player who created the game!</p>
+              <p>Traditional Battleship is a game played by two players, each with two 10x10 boards. Before the game starts, each player places several different ships on their respecitve boards. Then, each person takes turns shooting at the other player’s ships. The goal is to hit and “sink” the other player’s ships.</p>
+              <p>After each round of shooting, the opponent announces if a ship was hit and if so, which ship it was. If all the sections of a ship are hit, that ship is sunk.</p>
+              <p>When all the ships of a player are sunk, that player loses.</p>
+              <p>This version of Battleship is slightly more advanced. The board size is left up to the player; the range is as small as 10x10 or as big as 20x20. Take note: For 2 player games, we recommend a 12x12  board or smaller. Any bigger than 13x13 will increase play time signficantly.</p>
+              <p>Additionally, you can play with up to 4 players, for which we recommend boards between 16 and 20. In this version, each shot hits every board but the shooter's.</p>
+              <p>If you’re joining a game, you will prompted to enter a case-sensitive game ID, so you will need to get that from the player who created the game.</p>
             <button id='make_new_game' onClick={ this.configure }>New game</button>
             <button id='join_game' onClick={ this.configure }>Join game</button>
             </div>
