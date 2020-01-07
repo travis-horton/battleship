@@ -101,32 +101,32 @@
   background-color: snow !important;
 }
 
+.grey {
+  background-color: grey !important;
+}
+
+.green {
+  background-color: palegreen !important;;
+}
+
+.purple {
+  background-color: violet !important;;
+}
+
+.brown {
+  background-color: burlywood !important;;
+}
+
+.yellow {
+  background-color: lightyellow !important;;
+}
+
 .red {
   background-color: red !important;
 }
 
 .black {
   background-color: black !important;
-}
-
-.grey {
-  background-color: grey !important;
-}
-
-.green {
-  background-color: palegreen;
-}
-
-.purple {
-  background-color: violet;
-}
-
-.brown {
-  background-color: burlywood;
-}
-
-.yellow {
-  background-color: lightyellow;
 }
 
 td {

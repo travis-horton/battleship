@@ -149,7 +149,6 @@ const addNewShotsThatHitThisShipLocToHits = (
         newHitInfo.duplicateHit = true;
       }
       addHit(hits, newHitInfo);
-      console.log(hits.filter(hit => !hit.duplicateHit));
       if (hits.filter(hit => !hit.duplicateHit).length === maxOfThisShip) {
         let humanShipNames = {
           a: "aircraft carrier",
@@ -185,6 +184,7 @@ export const getHits = (shots, prevShots, ships, hits, shooter, turn, maxShips) 
     }
   }
 
+  console.log(hits);
   return hits;
 }
 
