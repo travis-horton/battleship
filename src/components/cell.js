@@ -74,7 +74,6 @@ export default function Cell({
     }
 
     default: {
-      let val = ;
       return (
         <span className={ classNames }>
           { data.ship }
