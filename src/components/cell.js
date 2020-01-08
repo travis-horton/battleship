@@ -74,10 +74,10 @@ export default function Cell({
     }
 
     default: {
-      let val = data.shot ? Number(data.shot.turn) + 1 : data.ship;
+      let val = ;
       return (
         <span className={ classNames }>
-          { val }
+          { data.ship }
         </span>
       );
     }

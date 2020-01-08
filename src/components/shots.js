@@ -17,13 +17,9 @@ const turnNumber = (turn, shotsByTurn) => {
 
 export default function Shots ({ shots, players, turnOrder }) {
   const playersArray = Object.keys(players);
-  const reversedShots = [];
-  for (let i = 0; i < shots.length; i++) {
-    reversedShots.push(shots[shots.length - (1 + i)]);
-  }
   return (
     <div>
-      { reversedShots.map((turn, i) => 
+      { shots.map((turn, i) => 
       <table key={ i }>
         <thead>
         <tr>
