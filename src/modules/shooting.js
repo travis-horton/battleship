@@ -103,10 +103,10 @@ const didHitThisShip = (shot, ship) => {
   return false;
 }
 
-const alreadyHitThisShip = (shipLoc, prevShots, thisPlayer) => {
+const alreadyHitThisShip = (shipLoc, prevShots, thisPlayer, thisShooter) => {
   for (let turn in prevShots) {
     for (let player in prevShots[turn]) {
-      if (player === thisPhooter) continue;
+      if (player === thisShooter) continue;
       for (let shot in prevShots[turn][player]) {
         if (didHitThisShip(prevShots[turn][player][shot], shipLoc)) {
           return true;
@@ -145,7 +145,7 @@ const addNewShotsThatHitThisShipLocToHits = (
   for (const shot in thisTurnShots) {
     const thisShot = thisTurnShots[shot];
     if (didHitThisShip(thisShot, shipLoc)) {
-      if (alreadyHitThisShip(shipLoc, allPrevShots, player)) {
+      if (alreadyHitThisShip(shipLoc, allPrevShots, player, shooter)) {
         newHitInfo.duplicateHit = true;
       }
       addHit(hits, newHitInfo);
