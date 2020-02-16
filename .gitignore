@@ -16,8 +16,7 @@ lerna-debug.log*
 .npm
 
 # dotenv environment variables file
-.env
-.env.test
+.env*
 
 dist
 .cache

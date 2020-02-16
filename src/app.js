@@ -14,7 +14,11 @@ import {
   removeAllOfThisShipFromData,
   getShipsLocs,
 } from './modules/ships';
+import { firebaseConfig } from './.env.js';
+console.log(firebaseConfig);
 
+firebase.initializeApp(firebaseConfig);
+firebase.analytics();
 const database = firebase.database();
 
 class App extends Component {
