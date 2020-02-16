@@ -27,7 +27,7 @@ const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, add
   return oldState;
 };
 
-export const generateNewStateWithShot = (coord, state, self) => {
+export const generateNewStateWithShot = (coord, state) => {
   const { localInfo, config, gameState } = state;
   const {
     name, status, boardInfo, ships,

@@ -14,8 +14,7 @@ import {
   removeAllOfThisShipFromData,
   getShipsLocs,
 } from './modules/ships';
-import { firebaseConfig } from './.env.js';
-console.log(firebaseConfig);
+import { firebaseConfig } from './.env';
 
 firebase.initializeApp(firebaseConfig);
 firebase.analytics();
@@ -129,11 +128,10 @@ class App extends Component {
     const { config, localInfo, gameState } = this.state;
 
     if (id === 'placeShip') {
-      // you get r, c, ship, owner
       const {
         r, c, ship, owner,
       } = data;
-      const { boardInfo } = this.state.localInfo;
+      const { boardInfo } = localInfo;
       const thisBoard = boardInfo.filter((board) => board.config.owner === owner)[0];
       const thisBoardIndex = boardInfo.indexOf(thisBoard);
       let newData = thisBoard.data;
@@ -152,13 +150,13 @@ class App extends Component {
       const newBoardInfo = boardInfo;
       newBoardInfo[thisBoardIndex] = thisBoard;
 
-      this.setState({
-        ...this.state,
+      this.setState((prevState) => ({
+        ...prevState,
         localInfo: {
-          ...this.state.localInfo,
+          ...prevState.localInfo,
           boardInfo: newBoardInfo,
         },
-      });
+      }));
 
       const shipsLocs = getShipsLocs(newData);
 
@@ -197,7 +195,7 @@ class App extends Component {
   shootingFunctions(id, data) {
     switch (id) {
       case 'shoot': {
-        this.setState(generateNewStateWithShot(data, this.state, this));
+        this.setState((prevState) => (generateNewStateWithShot(data, prevState)));
         break;
       }
 
@@ -240,6 +238,10 @@ class App extends Component {
             database.ref(`${config.gameId}/gameState/`).set(getNewGameStateAfterShooting(gameState, localInfo.potentialShots, localInfo.name, newHits));
           });
         });
+      }
+
+      default: {
+        break;
       }
     }
   }
