@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 
 const isPotentialShot = (r, c, potentialShots) => {
-  for (let shot in potentialShots) {
-    const thisShot = potentialShots[shot]
+  for (const shot in potentialShots) {
+    const thisShot = potentialShots[shot];
     if (thisShot[0] === r && thisShot[1] === c) return true;
   }
-}
+};
 
 const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, style, playerColors) => {
   const classNames = ['cell', color];
@@ -16,7 +16,7 @@ const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, s
   if (headerCellLabel) classNames.push('header');
   if (isPotentialShot(row, col, potentialShots)) classNames.push('potentialShot');
   return classNames.join(' ');
-}
+};
 
 export default function Cell({
   style,
@@ -29,13 +29,13 @@ export default function Cell({
   headerCellLabel,
   handleCellInput,
   handleCellClick,
-  handleCellRightClick
+  handleCellRightClick,
 }) {
-  const handleClick = e => {
+  const handleClick = (e) => {
     handleCellClick(row, col);
   };
 
-  const handleInput = e => {
+  const handleInput = (e) => {
     e.preventDefault();
     handleCellInput(row, col, e.target.value.toLowerCase());
   };
@@ -47,15 +47,15 @@ export default function Cell({
 
   if (headerCellLabel || headerCellLabel === 0) {
     return (
-      <span className={ 'cell header' }>{ headerCellLabel }</span>
-    )
+      <span className="cell header">{ headerCellLabel }</span>
+    );
   }
 
   const classNames = getClassNames(row, col, data.shot, potentialShots, data.color, headerCellLabel, style, playerColors);
 
   switch (style) {
     case 'input': {
-      return <input onChange={ handleInput } className={ classNames } value={ data.ship }/>;
+      return <input onChange={handleInput} className={classNames} value={data.ship} />;
       break;
     }
 
@@ -66,8 +66,8 @@ export default function Cell({
       if (data.ship) val = data.ship;
 
       return (
-        <span className={ classNames } onClick={ handleClick } onContextMenu={ handleRightClick }>
-          { val } 
+        <span className={classNames} onClick={handleClick} onContextMenu={handleRightClick}>
+          { val }
         </span>
       );
       break;
@@ -75,10 +75,10 @@ export default function Cell({
 
     default: {
       return (
-        <span className={ classNames }>
+        <span className={classNames}>
           { data.ship }
         </span>
       );
     }
   }
-};
+}

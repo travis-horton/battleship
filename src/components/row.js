@@ -6,19 +6,19 @@ const headerRow = (className, length) => {
   for (let i = 0; i < length; i++) {
     headers.push(
       <Cell
-        headerCellLabel={ String.fromCharCode(i + 65) }
-        key={ i }
-      />
+        headerCellLabel={String.fromCharCode(i + 65)}
+        key={i}
+      />,
     );
   }
   return (
-    <div className={ className }>
-      <Cell headerCellLabel=' '/>
+    <div className={className}>
+      <Cell headerCellLabel=" " />
       { headers }
-      <Cell headerCellLabel=' '/>
+      <Cell headerCellLabel=" " />
     </div>
   );
-}
+};
 
 export default function Row({
   row,
@@ -30,40 +30,39 @@ export default function Row({
   playerColors,
   handleRowInput,
   handleRowClick,
-  handleRowRightClick
+  handleRowRightClick,
 }) {
-  const handleCellInput = (r, c, val) => handleRowInput(r, c,  val);
+  const handleCellInput = (r, c, val) => handleRowInput(r, c, val);
   const handleCellClick = (r, c) => {
     handleRowClick(r, c);
-  }
+  };
   const handleCellRightClick = (r, c) => handleRowRightClick(r, c);
   const className = 'row';
 
   if (row === 'header') {
     return headerRow(className, length);
-  } else {
-    return (
-      <div className={ className }>
-        <Cell headerCellLabel={ row + 1 } key={ -1 }/>
-        {
-          data.map((col, i) =>
-            <Cell
-              key={ i }
-              style={ style }
-              row={ row }
-              col={ i }
-              data={ col }
-              turn={ turn }
-              playerColors={ playerColors }
-              potentialShots={ potentialShots }
-              handleCellInput={ handleCellInput }
-              handleCellClick={ handleCellClick }
-              handleCellRightClick={ handleCellRightClick }
-            />
-          )
-        }
-        <Cell headerCellLabel={ row + 1 } key={ data.length }/>
-      </div>
-    );
   }
+  return (
+    <div className={className}>
+      <Cell headerCellLabel={row + 1} key={-1} />
+      {
+          data.map((col, i) => (
+            <Cell
+              key={i}
+              style={style}
+              row={row}
+              col={i}
+              data={col}
+              turn={turn}
+              playerColors={playerColors}
+              potentialShots={potentialShots}
+              handleCellInput={handleCellInput}
+              handleCellClick={handleCellClick}
+              handleCellRightClick={handleCellRightClick}
+            />
+          ))
+        }
+      <Cell headerCellLabel={row + 1} key={data.length} />
+    </div>
+  );
 }

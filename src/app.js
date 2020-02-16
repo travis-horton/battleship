@@ -151,7 +151,7 @@ class App extends Component {
       this.setState({
         ...this.state,
         localInfo: {
-          ...this.state.localInfo, 
+          ...this.state.localInfo,
           boardInfo: newBoardInfo,
         },
       });

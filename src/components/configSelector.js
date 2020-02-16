@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 
 export default function ConfigSelector({
   id,
@@ -19,16 +19,15 @@ export default function ConfigSelector({
     min,
     max,
     name: id,
-    autoComplete: "off"
+    autoComplete: 'off',
   };
 
   return (
     <div>
-      <label htmlFor={ id }>
+      <label htmlFor={id}>
         { labelText }
       </label>
-      <input onChange={ handleInput } { ...options }/>
+      <input onChange={handleInput} {...options} />
     </div>
   );
 }
-
