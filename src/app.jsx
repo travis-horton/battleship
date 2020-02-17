@@ -214,9 +214,10 @@ class App extends Component {
 
         database.ref(config.gameId).once('value', (snapshot) => {
           const oldHits = {};
-          for (const player in gameState.players) {
-            oldHits[player] = gameState.players[player].hitsOnThisPlayer;
-          }
+          const players = gameState.players.keys();
+          players.forEach((player) => {
+            oldHits[player] = gameState.players[player].hitOnThisPlayer;
+          });
 
           const newHits = getHits(
             localInfo.potentialShots,
@@ -228,16 +229,17 @@ class App extends Component {
             config.maxShips,
           );
 
-          this.setState({
-            ...this.state,
+          this.setState((prevState) => ({
+            ...prevState,
             localInfo: {
-              ...this.state.localInfo,
+              ...prevState.localInfo,
               potentialShots: [],
             },
-          }, () => {
+          }), () => {
             database.ref(`${config.gameId}/gameState/`).set(getNewGameStateAfterShooting(gameState, localInfo.potentialShots, localInfo.name, newHits));
           });
         });
+        break;
       }
 
       default: {
@@ -254,14 +256,40 @@ class App extends Component {
         return (
           <div className="flex_box">
             <div className="intro">
-              <p>Traditional Battleship is a game played by two players, each with two 10x10 boards. Before the game starts, each player places several different ships on their respecitve boards. Then, each person takes turns shooting at the other player’s ships. The goal is to hit and “sink” the other player’s ships.</p>
-              <p>After each round of shooting, the opponent announces if a ship was hit and if so, which ship it was. If all the sections of a ship are hit, that ship is sunk.</p>
-              <p>When all the ships of a player are sunk, that player loses.</p>
-              <p>This version of Battleship is slightly more advanced. The board size is left up to the player; the range is as small as 10x10 or as big as 20x20. Take note: For 2 player games, we recommend a 12x12  board or smaller. Any bigger than 13x13 will increase play time signficantly.</p>
-              <p>Additionally, you can play with up to 4 players, for which we recommend boards between 16 and 20. In this version, each shot hits every board but the shooter's.</p>
-              <p>If you’re joining a game, you will prompted to enter a case-sensitive game ID, so you will need to get that from the player who created the game.</p>
-              <button id="make_new_game" onClick={this.configure}>New game</button>
-              <button id="join_game" onClick={this.configure}>Join game</button>
+              <p>
+                Traditional Battleship is a game played by two players, each with two 10x10 boards.
+                Before the game starts, each player places several different ships on their
+                respecitve boards.
+                Then, each person takes turns shooting at the other player’s ships.
+                The goal is to hit and “sink” the other player’s ships.
+              </p>
+              <p>
+                After each round of shooting, the opponent announces if a ship was hit and if so,
+                which ship it was. If all the sections of a ship are hit, that ship is sunk.
+              </p>
+              <p>
+                When all the ships of a player are sunk, that player loses.
+              </p>
+              <p>
+                This version of Battleship is slightly more advanced.
+                The board size is left up to the player;
+                the range is as small as 10x10 or as big as 20x20.
+                Take note:
+                For 2 player games, we recommend a 12x12 board or smaller.
+                Any bigger than 13x13 will increase play time signficantly.
+              </p>
+              <p>
+                Additionally, you can play with up to 4 players,
+                for which we recommend boards between 16 and 20.
+                In this version, each shot hits every board but the shooter’s.
+              </p>
+              <p>
+                If you’re joining a game, you will prompted to enter a
+                case-sensitive game ID, so you will need to get that from
+                the player who created the game.
+              </p>
+              <button id="make_new_game" type="button" onClick={this.configure}>New game</button>
+              <button id="join_game" type="button" onClick={this.configure}>Join game</button>
             </div>
           </div>
         );
@@ -276,16 +304,20 @@ class App extends Component {
       case 'gameOn': {
         const boards = localInfo.boardInfo;
         const { turnNumber } = gameState;
+        const { potentialShots } = localInfo;
         const nextShotTurn = (
           (gameState.shots[turnNumber] && gameState.shots[turnNumber][localInfo.name][0])
             ? gameState.turnNumber + 2
             : gameState.turnNumber + 1
         );
-        const whosTurn = Object.keys(gameState.players).filter((player) => gameState.players[player].thisPlayerTurn === true)[0];
+        const whosTurn = Object.keys(gameState.players).filter(
+          (player) => gameState.players[player].thisPlayerTurn === true,
+        )[0];
         const playerColors = {};
-        for (const player in gameState.players) {
+        const players = gameState.players.keys();
+        players.forEach((player) => {
           playerColors[player] = gameState.players[player].playerColor;
-        }
+        });
 
         return (
           <div className="flex_box">
@@ -314,7 +346,7 @@ class App extends Component {
                     config={board.config}
                     data={board.data}
                     turn={nextShotTurn}
-                    potentialShots={this.state.localInfo.potentialShots}
+                    potentialShots={potentialShots}
                     playerColors={playerColors}
                     allShipsArePlaced={this.ships}
                     shootingFunctions={this.shootingFunctions}
@@ -342,6 +374,10 @@ class App extends Component {
 
       case 'gameEnd': {
         return (<p>You lost.</p>);
+      }
+
+      default: {
+        return (<p>Oops. Something went wrong.</p>);
       }
     }
   }
