@@ -1,13 +1,23 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 const isPotentialShot = (r, c, potentialShots) => {
   for (const shot in potentialShots) {
     const thisShot = potentialShots[shot];
     if (thisShot[0] === r && thisShot[1] === c) return true;
   }
+  return false;
 };
 
-const getClassNames = (row, col, shot, potentialShots, color, headerCellLabel, style, playerColors) => {
+const getClassNames = (
+  row,
+  col,
+  shot,
+  potentialShots,
+  color,
+  headerCellLabel,
+  style,
+  playerColors,
+) => {
   const classNames = ['cell', color];
 
   if (shot !== false) classNames.push(playerColors[shot.shooter]);
@@ -31,7 +41,7 @@ export default function Cell({
   handleCellClick,
   handleCellRightClick,
 }) {
-  const handleClick = (e) => {
+  const handleClick = () => {
     handleCellClick(row, col);
   };
 
@@ -51,12 +61,20 @@ export default function Cell({
     );
   }
 
-  const classNames = getClassNames(row, col, data.shot, potentialShots, data.color, headerCellLabel, style, playerColors);
+  const classNames = getClassNames(
+    row,
+    col,
+    data.shot,
+    potentialShots,
+    data.color,
+    headerCellLabel,
+    style,
+    playerColors,
+  );
 
   switch (style) {
     case 'input': {
       return <input onChange={handleInput} className={classNames} value={data.ship} />;
-      break;
     }
 
     case 'destination': {
@@ -70,7 +88,6 @@ export default function Cell({
           { val }
         </span>
       );
-      break;
     }
 
     default: {

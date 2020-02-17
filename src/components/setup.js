@@ -25,9 +25,9 @@ export default class Setup extends Component {
     this.props.submitConfig(
       e,
       {
-        playerName: this.state.playerName,
+        playerName: this.state.playerName.trim(),
         playerColor: this.state.playerColor,
-        gameId: this.state.gameId,
+        gameId: this.state.gameId.trim(),
         boardSize: Number(this.state.boardSize),
         maxPlayers: Number(this.state.maxPlayers),
       },

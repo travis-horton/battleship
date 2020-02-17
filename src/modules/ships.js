@@ -5,7 +5,7 @@ const isShip = (value) => {
 };
 
 const isAdjacent = (thisShipLoc, shipsOfThisType) => {
-  for (let i = 0; i < shipsOfThisType.length; i++) {
+  for (let i = 0; i < shipsOfThisType.length; i += 1) {
     if (
       Math.abs(thisShipLoc[0] - shipsOfThisType[i][0]) < 2
       && Math.abs(thisShipLoc[1] - shipsOfThisType[i][1]) < 2
@@ -18,6 +18,14 @@ const isAdjacent = (thisShipLoc, shipsOfThisType) => {
   return false;
 };
 
+const getOrientation = (shipOne, shipTwo) => {
+  if (shipOne[0] === shipTwo[0]) return 'h';
+  if (shipOne[1] === shipTwo[1]) return 'v';
+  if (shipOne[0] - shipTwo[0] === shipOne[1] - shipTwo[1]) return 'bd';
+  if (shipOne[0] - shipTwo[0] === -(shipOne[1] - shipTwo[1])) return 'fd';
+  return 'something went wrong';
+};
+
 const isInLine = (thisShipsLoc, otherShips) => {
   const thisShipsOrientation = getOrientation(thisShipsLoc, otherShips[0]);
   const otherShipsOrientation = getOrientation(otherShips[0], otherShips[1]);
@@ -26,25 +34,18 @@ const isInLine = (thisShipsLoc, otherShips) => {
   return false;
 };
 
-const getOrientation = (shipOne, shipTwo) => {
-  if (shipOne[0] === shipTwo[0]) return 'h';
-  if (shipOne[1] === shipTwo[1]) return 'v';
-  if (shipOne[0] - shipTwo[0] === shipOne[1] - shipTwo[1]) return 'bd';
-  if (shipOne[0] - shipTwo[0] === -(shipOne[1] - shipTwo[1])) return 'fd';
-};
-
 export const isValidShipPlacement = (r, c, thisShip, data, config) => {
   if (!isShip(thisShip)) {
     alert('Must be a ship letter (a, b, c, d, or s).');
-    return;
+    return false;
   }
 
   if (thisShip === '') return true;
 
   // get total of this ship on board
   const shipsOfThisType = [];
-  for (let i = 0; i < config.size; i++) {
-    for (let j = 0; j < config.size; j++) {
+  for (let i = 0; i < config.size; i += 1) {
+    for (let j = 0; j < config.size; j += 1) {
       if (data[i][j].ship === thisShip) shipsOfThisType.push([i, j]);
     }
   }
@@ -71,8 +72,8 @@ export const getShipsLocs = (data) => {
   };
   const size = data.length;
 
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
+  for (let i = 0; i < size; i += 1) {
+    for (let j = 0; j < size; j += 1) {
       if (data[i][j].ship) shipsLocs[data[i][j].ship].push([i, j]);
     }
   }
@@ -80,16 +81,18 @@ export const getShipsLocs = (data) => {
 };
 
 export const allShipsArePlaced = (shipsPlaced, maxShips) => {
-  for (const ship in shipsPlaced) {
-    if (maxShips[ship] !== shipsPlaced[ship].length) return false;
-  }
-  return true;
+  let value = true;
+  const ships = shipsPlaced.keys();
+  ships.forEach((ship) => {
+    if (maxShips[ship] !== shipsPlaced[ship].length) value = false;
+  });
+  return value;
 };
 
 export const removeAllOfThisShipFromData = (ship, newData) => {
   const { length } = newData;
-  for (let i = 0; i < length; i++) {
-    for (let j = 0; j < length; j++) {
+  for (let i = 0; i < length; i += 1) {
+    for (let j = 0; j < length; j += 1) {
       if (newData[i][j].ship === ship) newData[i][j].ship = '';
     }
   }
@@ -97,19 +100,21 @@ export const removeAllOfThisShipFromData = (ship, newData) => {
 };
 
 export const allThisPlayersShipsArePlaced = (ships, maxShips) => {
-  for (const ship in ships) {
-    if (ships[ship].length < maxShips[ship]) return false;
-  }
-  return true;
+  let value = true;
+  const shipType = ships.keys();
+  shipType.forEach((ship) => {
+    if (ships[ship].length < maxShips[ship]) value = false;
+  });
+  return value;
 };
 
 export const allPlayersShipsPlaced = (players, maxPlayers) => {
+  let value = true;
   const numPlayers = Object.keys(players).length;
   if (numPlayers < maxPlayers) return false;
-  for (const p in players) {
-    if (!players[p].shipsAreCommitted) {
-      return false;
-    }
-  }
-  return true;
+  const playerNames = players.keys();
+  playerNames.forEach((p) => {
+    if (!players[p].shipsAreCommitted) value = false;
+  });
+  return value;
 };

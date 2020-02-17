@@ -114,7 +114,7 @@ class App extends Component {
       }
 
       case 'join_game': {
-        joinGame(database, this, this.handleNewState);
+        joinGame(database, this);
         break;
       }
 

@@ -6,6 +6,7 @@ const getLabel = (owner, style) => {
   if (style === 'shooting') return 'This is your shooting board:';
   if (style === 'ships') return 'These are your ships:';
   if (style === 'destination') return `This is ${owner}'s board:`;
+  return 'something went wrong';
 };
 
 export default class Board extends Component {
@@ -38,7 +39,7 @@ export default class Board extends Component {
   }
 
 
-  render(i) {
+  render() {
     const { config } = this.props;
     const { data } = this.props;
     let { classNames } = this.props;

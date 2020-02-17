@@ -1,13 +1,12 @@
-import { randomizeTurnOrder, allPlayersShipsPlaced } from './ships.js';
-
-import { shotsThisPlayerGets } from './shooting.js';
-import Board from '../components/board.js';
+import { allPlayersShipsPlaced } from './ships';
+import { shotsThisPlayerGets } from './shooting';
 
 const getPlayerColor = (players) => {
   const availableColors = ['green', 'purple', 'yellow', 'brown'];
-  for (const player in players) {
+  const playerNames = players.keys();
+  playerNames.forEach((player) => {
     availableColors.splice(availableColors.indexOf(players[player].playerColor), 1);
-  }
+  });
 
   if (availableColors.length === 1) return availableColors[0];
 
@@ -52,12 +51,13 @@ const getBoardInfo = (size, style, owner, ships, shots, oldBoard) => {
   };
 
   if (ships) {
-    for (const ship in ships) {
-      for (let i = 0; i < ships[ship].length; i++) {
+    const shipTypes = ships.keys();
+    shipTypes.forEach((ship) => {
+      for (let i = 0; i < ships[ship].length; i += 1) {
         const coord = ships[ship][i];
         boardInfo.data[coord[0]][coord[1]].ship = ship;
       }
-    }
+    });
   }
 
   if (shots) {
@@ -66,7 +66,9 @@ const getBoardInfo = (size, style, owner, ships, shots, oldBoard) => {
         if (player !== owner) {
           for (const shot in shots[turnNumber][player]) {
             const coord = shots[turnNumber][player][shot];
-            if (coord.length > 1) boardInfo.data[coord[0]][coord[1]].shot = { turn: turnNumber, shooter: player };
+            if (coord.length > 1) {
+              boardInfo.data[coord[0]][coord[1]].shot = { turn: turnNumber, shooter: player };
+            }
           }
         }
       }
@@ -135,15 +137,16 @@ const getBoards = (ships, dbData, name, boards) => {
   return boardInfo;
 };
 
-const getLocalInfo = (ships, potentialShots, name) => {
-  if (!potentialShots) potentialShots = [];
-  return {
-    name,
-    ships,
-    potentialShots,
-    status: 'gameOn',
-  };
-};
+const getLocalInfo = (
+  ships,
+  potentialShots = [],
+  name,
+) => ({
+  name,
+  ships,
+  potentialShots,
+  status: 'gameOn',
+});
 
 const getLocalState = (dbData, localInfo, name) => {
   let ships;
@@ -167,8 +170,10 @@ const getLocalState = (dbData, localInfo, name) => {
 };
 
 function shuffle(array) {
-  let currentIndex = array.length; let temporaryValue; let
-    randomIndex;
+  const newArray = [...array];
+  let currentIndex = newArray.length;
+  let temporaryValue;
+  let randomIndex;
 
   // While there remain elements to shuffle...
   while (currentIndex !== 0) {
@@ -177,15 +182,15 @@ function shuffle(array) {
     currentIndex -= 1;
 
     // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
+    temporaryValue = newArray[currentIndex];
+    newArray[currentIndex] = newArray[randomIndex];
+    newArray[randomIndex] = temporaryValue;
   }
 
-  return array;
+  return newArray;
 }
 
-const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
+const connect = (db, gameId, name, info, self, dbData) => {
   info.connected = true;
   db.ref(`${gameId}/gameState/players/${name}`).set(info);
   db.ref(`${gameId}/gameState/players/${name}/connected`).onDisconnect().set(false);
@@ -213,27 +218,25 @@ const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
 
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', (snapshot) => {
-    const shotsLeft = shotsThisPlayerGets(
-      snapshot.val().gameState.players[name].hitsOnThisPlayer,
-      self.state.config.maxShips,
-    );
+    let shotsLeft;
 
     let playersLeft = 0;
     for (const player in snapshot.val().gameState.players) {
-      if (player === name) continue;
-      const shotsLeft = shotsThisPlayerGets(
-        snapshot.val().gameState.players[player].hitsOnThisPlayer,
-        self.state.config.maxShips,
-      );
-      if (shotsLeft > 0) playersLeft++;
+      if (player !== name) {
+        shotsLeft = shotsThisPlayerGets(
+          snapshot.val().gameState.players[player].hitsOnThisPlayer,
+          self.state.config.maxShips,
+        );
+        if (shotsLeft > 0) playersLeft += 1;
+      }
     }
 
-    const playerArray = Object.keys(players);
+    const playerArray = players.keys();
 
     if (shotsLeft === 0) {
       alert('You lost!');
       self.setState({ ...self.state, localInfo: { ...self.state.localInfo, status: 'gameEnd' } });
-    } else if (playersLeft === 0 && playerArray > 1) {
+    } else if (playersLeft === 0 && playerArray.length > 1) {
       alert('You won!!');
     } else {
       self.setState(getLocalState(snapshot.val(), self.state.localInfo, name));
@@ -244,9 +247,11 @@ const connect = (db, gameId, name, info, self, dbData, handleNewState) => {
 export default function joinGame(
   db,
   self,
-  handleNewState,
   gameId = prompt('Enter game id: '),
-  name,
+  name = gameId
+    ? choosePlayerName()
+    : null
+  ,
 ) {
   if (gameId === null || gameId.length === 0) return;
 
@@ -256,7 +261,6 @@ export default function joinGame(
       return;
     }
 
-    if (!name) name = choosePlayerName();
     const { config, gameState } = snapshot.val();
     const numPlayers = Object.keys(gameState.players).length;
     let playerInfo;
@@ -290,10 +294,10 @@ export default function joinGame(
       };
     }
 
-    connect(db, gameId, name, playerInfo, self, snapshot.val(), handleNewState);
+    connect(db, gameId, name, playerInfo, self, snapshot.val());
 
     if (allPlayersShipsPlaced(gameState.players, numPlayers) && gameState.turnOrder === 0) {
-      const turnOrder = randomizeTurnOrder(players);
+      const turnOrder = shuffle(gameState.players.keys());
       db.ref(`${gameId}/gameState/turnOrder`).set(turnOrder);
       db.ref(`${gameId}/gameState/players/${turnOrder[0]}/thisPlayerTurn`).set(true);
     }

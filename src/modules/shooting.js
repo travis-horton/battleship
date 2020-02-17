@@ -1,5 +1,3 @@
-import { allPlayersShipsPlaced, whatShipIsHere } from './ships.js';
-
 export const shotsThisPlayerGets = (hitsOnThisPlayer, maxShips) => {
   let shots = 6;
   for (const ship in hitsOnThisPlayer) {
@@ -17,7 +15,7 @@ const isSameShot = (coord, prevShot) => {
 const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, addOrRemove = 'remove') => {
   oldState.localInfo.potentialShots = newShotsThisTurn;
   let turnToAdd = turn;
-  if (oldState.gameState.shots[turn] && oldState.gameState.shots[turn][name][0]) turnToAdd++;
+  if (oldState.gameState.shots[turn] && oldState.gameState.shots[turn][name][0]) turnToAdd += 1;
   for (const board in oldState.localInfo.boardInfo) {
     const thisBoard = oldState.localInfo.boardInfo[board];
     if (thisBoard.config.style !== 'ships') {
@@ -29,9 +27,7 @@ const newStateWithShot = (oldState, turn, name, newShotsThisTurn, shotCoord, add
 
 export const generateNewStateWithShot = (coord, state) => {
   const { localInfo, config, gameState } = state;
-  const {
-    name, status, boardInfo, ships,
-  } = localInfo;
+  const { name } = localInfo;
   const { shots } = gameState;
   const thisTurnNumber = gameState.turnNumber;
   const hits = gameState.players[name].hitsOnThisPlayer;
@@ -42,7 +38,7 @@ export const generateNewStateWithShot = (coord, state) => {
       const thisShot = shots[turnNumber][name][shot];
       if (isSameShot(coord, thisShot)) {
         alert("You've already shot there!");
-        return;
+        return false;
       }
     }
   }
@@ -56,7 +52,7 @@ export const generateNewStateWithShot = (coord, state) => {
 
   if (newShotsThisTurn.length >= shotsThisPlayerGets(hits, config.maxShips)) {
     alert("You don't get any more shots!");
-    return;
+    return false;
   }
 
   if (newShotsThisTurn[0] === 0) {
@@ -78,8 +74,8 @@ export const getNewGameStateAfterShooting = (gameState, shotsToAdd, name, hits) 
   let nextPlayer;
 
   if (curPlayerIndex + 1 === turnOrder.length) {
-    nextPlayer = turnOrder[0];
-    newGameState.turnNumber++;
+    [nextPlayer] = turnOrder;
+    newGameState.turnNumber += 1;
   } else {
     nextPlayer = turnOrder[curPlayerIndex + 1];
   }
@@ -108,10 +104,11 @@ const didHitThisShip = (shot, ship) => {
 const alreadyHitThisShip = (shipLoc, prevShots, thisPlayer, thisShooter) => {
   for (const turn in prevShots) {
     for (const player in prevShots[turn]) {
-      if (player === thisShooter) continue;
-      for (const shot in prevShots[turn][player]) {
-        if (didHitThisShip(prevShots[turn][player][shot], shipLoc)) {
-          return true;
+      if (player !== thisShooter) {
+        for (const shot in prevShots[turn][player]) {
+          if (didHitThisShip(prevShots[turn][player][shot], shipLoc)) {
+            return true;
+          }
         }
       }
     }
@@ -168,20 +165,21 @@ const addNewShotsThatHitThisShipLocToHits = (
 
 export const getHits = (shots, prevShots, ships, hits, shooter, turn, maxShips) => {
   for (const player in ships) {
-    if (player === shooter) continue;
-    for (const ship in ships[player]) {
-      for (const shipLoc in ships[player][ship]) {
-        addNewShotsThatHitThisShipLocToHits(
-          shots,
-          prevShots,
-          ships[player][ship][shipLoc],
-          hits[player][ship],
-          { turn, shooter },
-          maxShips[ship],
-          shooter,
-          player,
-          ship,
-        );
+    if (player !== shooter) {
+      for (const ship in ships[player]) {
+        for (const shipLoc in ships[player][ship]) {
+          addNewShotsThatHitThisShipLocToHits(
+            shots,
+            prevShots,
+            ships[player][ship][shipLoc],
+            hits[player][ship],
+            { turn, shooter },
+            maxShips[ship],
+            shooter,
+            player,
+            ship,
+          );
+        }
       }
     }
   }
