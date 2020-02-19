@@ -1,9 +1,11 @@
 import React from 'react';
 
 const isPotentialShot = (r, c, potentialShots) => {
-  for (const shot in potentialShots) {
-    const thisShot = potentialShots[shot];
-    if (thisShot[0] === r && thisShot[1] === c) return true;
+  const shots = potentialShots.keys();
+  const shotsLength = shots.length();
+  for (let i = 0; i < shotsLength; i += 1) {
+    const thisShow = potentialShots[shots[i]];
+    if (thisShow[0] === r && thisShow[1] === c) return true;
   }
   return false;
 };

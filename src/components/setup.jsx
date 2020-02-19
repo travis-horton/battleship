@@ -16,34 +16,45 @@ export default class Setup extends Component {
   }
 
   handleChange(e, id) {
-    if (!id) this.setState({ playerColor: e.target.value }); // configSelector doesn't have a select option, so I just added a select
+    if (!id) {
+      this.setState({ playerColor: e.target.value });
+    }
     this.setState({ [id]: e.target.value });
   }
 
   handleSubmit(e) {
     e.preventDefault();
-    this.props.submitConfig(
+    const { submitConfig } = this.props;
+    const {
+      playerName, playerColor, gameId, boardSize, maxPlayers,
+    } = this.state;
+    submitConfig(
       e,
       {
-        playerName: this.state.playerName.trim(),
-        playerColor: this.state.playerColor,
-        gameId: this.state.gameId.trim(),
-        boardSize: Number(this.state.boardSize),
-        maxPlayers: Number(this.state.maxPlayers),
+        playerColor,
+        playerName: playerName.trim(),
+        gameId: gameId.trim(),
+        boardSize: Number(boardSize),
+        maxPlayers: Number(maxPlayers),
       },
     );
   }
 
   render() {
+    const { submitConfig } = this.props;
+    const {
+      playerName, gameId, boardSize, maxPlayers,
+    } = this.state;
     return (
       <div>
-        <p>Limit player name and game ID length to 20 characters, which must be letters or numbers!</p>
-        <form id="config_submit" onSubmit={this.props.submitConfig}>
+        <p>
+          Limit player name and game ID length to 20 characters, which must be letters or numbers!
+        </p>
+        <form id="config_submit" onSubmit={submitConfig}>
           <ConfigSelector
             id="playerName"
             type="text"
             labelText="Choose a player name: "
-            value={this.state.playerName}
             onChange={this.handleChange}
           />
           <label htmlFor="playerColor">
@@ -60,7 +71,7 @@ export default class Setup extends Component {
             id="gameId"
             type="text"
             labelText="Choose a game id: "
-            value={this.state.gameId}
+            value={gameId}
             onChange={this.handleChange}
           />
           <ConfigSelector
@@ -69,7 +80,7 @@ export default class Setup extends Component {
             labelText="Choose your board size (10-20): "
             min={10}
             max={20}
-            value={this.state.boardSize}
+            value={boardSize}
             onChange={this.handleChange}
           />
           <ConfigSelector
@@ -78,7 +89,7 @@ export default class Setup extends Component {
             labelText="Choose the number of players (2-4): "
             min={2}
             max={4}
-            value={this.state.maxPlayers}
+            value={maxPlayers}
             onChange={this.handleChange}
           />
           <button id="config_submit" type="submit" onClick={this.handleSubmit}>

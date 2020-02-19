@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
+import React from 'react';
 import Cell from './cell';
 
 const headerRow = (className, length) => {
   const headers = [];
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < length; i += 1) {
     headers.push(
       <Cell
         headerCellLabel={String.fromCharCode(i + 65)}

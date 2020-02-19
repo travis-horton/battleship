@@ -18,19 +18,23 @@ export default class Board extends Component {
   }
 
   handleRowInput(r, c, ship) {
-    const { owner } = this.props.config;
-    this.props.shipFunctions('placeShip', {
+    const { config } = this.props;
+    const { owner } = config;
+    const { shipFunctions } = this.props;
+    shipFunctions('placeShip', {
       r, c, ship, owner,
     });
   }
 
   handleRowClick(r, c) {
-    this.props.shootingFunctions('shoot', [r, c]);
+    const { shootingFunctions } = this.props;
+    shootingFunctions('shoot', [r, c]);
   }
 
   handleRowRightClick(r, c) {
     const colors = ['', 'blue', 'red', 'grey', 'black', 'green'];
-    const newData = [...this.props.data];
+    const { data } = this.props;
+    const newData = [...data];
     let nextColor = colors.indexOf(newData[r][c].color) + 1;
     if (colors.indexOf(newData[r][c].color) === colors.length - 1) nextColor = 0;
     newData[r][c].color = colors[nextColor];
@@ -40,8 +44,9 @@ export default class Board extends Component {
 
 
   render() {
-    const { config } = this.props;
-    const { data } = this.props;
+    const {
+      config, data, turn, potentialShots, playerColors,
+    } = this.props;
     let { classNames } = this.props;
     classNames += ' board';
     return (
@@ -58,10 +63,10 @@ export default class Board extends Component {
               row={i}
               style={config.style}
               data={row}
-              turn={this.props.turn}
-              potentialShots={this.props.potentialShots}
+              turn={turn}
+              potentialShots={potentialShots}
               length={config.size}
-              playerColors={this.props.playerColors}
+              playerColors={playerColors}
               handleRowInput={this.handleRowInput}
               handleRowClick={this.handleRowClick}
               handleRowRightClick={this.handleRowRightClick}

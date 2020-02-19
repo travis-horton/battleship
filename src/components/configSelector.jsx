@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 export default function ConfigSelector({
   id,
@@ -6,7 +6,6 @@ export default function ConfigSelector({
   labelText,
   min,
   max,
-  value,
   onChange,
 }) {
   const handleInput = (e) => {

@@ -1,18 +1,17 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 const getPlayersShotsString = (shots) => {
   if (shots[0] === 0) return 'Not shot yet';
   let turnString = '';
-  for (let shot = 0; shot < shots.length; shot++) {
-    if (shots[shot] === 0) continue;
-    turnString += String.fromCharCode(shots[shot][1] + 65);
-    turnString += shots[shot][0] + 1;
-    turnString += (shot < shots.length - 1) ? ', ' : '';
+  const shotsLength = shots.length;
+  for (let shot = 0; shot < shotsLength; shot += 1) {
+    if (shots[shot] !== 0) {
+      turnString += String.fromCharCode(shots[shot][1] + 65);
+      turnString += shots[shot][0] + 1;
+      turnString += (shot < shots.length - 1) ? ', ' : '';
+    }
   }
   return turnString;
-};
-
-const turnNumber = (turn, shotsByTurn) => {
 };
 
 export default function Shots({ shots, players, turnOrder }) {
@@ -57,7 +56,9 @@ export default function Shots({ shots, players, turnOrder }) {
                           thisHits = ['n/a'];
                         } else {
                           players[hitPlayer].hitsOnThisPlayer[ship].map((hit) => {
-                            if (hit.turn === turnNumber && hit.shooter === player) thisHits.push(ship);
+                            if (hit.turn === turnNumber && hit.shooter === player) {
+                              thisHits.push(ship);
+                            }
                           });
                         }
                       }
