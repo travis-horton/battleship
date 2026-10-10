@@ -1,6 +1,6 @@
 {
   "name": "battleship",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "server.js",
   "author": "kiddspazz (https://www.travish.com)",
   "license": "ISC",
