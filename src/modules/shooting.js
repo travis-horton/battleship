@@ -101,10 +101,12 @@ const didHitThisShip = (shot, ship) => {
   return false;
 };
 
-const alreadyHitThisShip = (shipLoc, prevShots, thisPlayer, thisShooter) => {
+// True if an earlier shot already hit this square of thisPlayer's board. A player's own
+// shots never land on their own board, so only the other players' shots are counted.
+const alreadyHitThisShip = (shipLoc, prevShots, thisPlayer) => {
   for (const turn in prevShots) {
     for (const player in prevShots[turn]) {
-      if (player !== thisShooter) {
+      if (player !== thisPlayer) {
         for (const shot in prevShots[turn][player]) {
           if (didHitThisShip(prevShots[turn][player][shot], shipLoc)) {
             return true;
@@ -144,7 +146,7 @@ const addNewShotsThatHitThisShipLocToHits = (
   for (const shot in thisTurnShots) {
     const thisShot = thisTurnShots[shot];
     if (didHitThisShip(thisShot, shipLoc)) {
-      if (alreadyHitThisShip(shipLoc, allPrevShots, player, shooter)) {
+      if (alreadyHitThisShip(shipLoc, allPrevShots, player)) {
         newHitInfo.duplicateHit = true;
       }
       addHit(hits, newHitInfo);
