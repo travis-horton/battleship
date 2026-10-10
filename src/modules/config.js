@@ -15,8 +15,7 @@ const errorsInConfigInput = (config) => {
   };
 
 
-  const entries = config.keys();
-  entries.forEach((entry) => {
+  Object.keys(config).forEach((entry) => {
     if (config[entry].length === 0) {
       errorMsg += `You didn't choose a ${computerToHuman[entry]}.\n`;
     }

@@ -1,14 +1,8 @@
 import React from 'react';
 
-const isPotentialShot = (r, c, potentialShots) => {
-  const shots = potentialShots.keys();
-  const shotsLength = shots.length();
-  for (let i = 0; i < shotsLength; i += 1) {
-    const thisShow = potentialShots[shots[i]];
-    if (thisShow[0] === r && thisShow[1] === c) return true;
-  }
-  return false;
-};
+const isPotentialShot = (r, c, potentialShots = []) => (
+  potentialShots.some((shot) => shot[0] === r && shot[1] === c)
+);
 
 const getClassNames = (
   row,
