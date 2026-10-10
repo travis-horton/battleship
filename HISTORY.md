@@ -4,6 +4,9 @@ Newest first, back to the project's first day.
 
 ## October 2026
 
+**battleship #30: five more security updates for the borrowed building blocks, in one go** · [PR #30](https://github.com/travis-horton/battleship/pull/30) · merged 26.1010.1329 · v1.0.3
+- Behind the scenes: brought five borrowed building blocks up to their makers' patched versions — two parts of the tool that translates the game's code for browsers, a password-hashing library, a pattern-matching library and a library for live connections — replacing five separate automatic update requests. Known security warnings go from 109 to 104; the game builds and all 14 automatic checks pass as before.
+
 **battleship #29: the game can be played again** · [PR #29](https://github.com/travis-horton/battleship/pull/29) · merged 26.1010.1230 · v1.0.2
 - **[Getting past setup](https://github.com/travis-horton/battleship/commit/b724662)** · merged 26.1010.1230
   Fixed: since 20.0217, submitting the setup form stopped with an error, so no game could be started or joined, and drawing a board and showing the game screen failed the same way. All three work again, and the waiting screen lists the connected players by name.
