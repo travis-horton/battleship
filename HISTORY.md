@@ -33,16 +33,16 @@ Newest first, back to the project's first day.
 
 **Code tidy-up finishes** · [commit](https://github.com/travis-horton/battleship/commit/a8ce23b) · merged 20.0218.2210 · v0.1.49
 - Behind the scenes: the last code-style pass, over the board, row, setup, instructions and shots-list pieces. Apostrophes and quotation marks in the instructions are now written in a form the checker accepts; they look the same on screen.
-  Behind the scenes: by mistake, it also rewrote the "is this square one of your planned shots?" check and the list of connected players in a way that cannot work, so drawing a board stops with an error. Together with the slips of 20.0216 and 20.0217 this leaves the game unable to get past setup; none of the three has been fixed since.
+  Behind the scenes: by mistake, it also rewrote the "is this square one of your planned shots?" check and the list of connected players in a way that cannot work, so drawing a board stops with an error. Together with the slips of 20.0216 and 20.0217 this leaves the game unable to get past setup; none of the three has been fixed since. (Later fixed on 26.1010, in battleship #29: setup, drawing a board and the game screen all work again.)
 
 **Code tidy-up continues** · [commit](https://github.com/travis-horton/battleship/commit/61fdb99) · merged 20.0217.0109 · v0.1.48
 - Behind the scenes: more code-style fixes across the setup check, joining, ships and shooting code, and the board square was rewritten in the newer, simpler style the rest of the screens already used.
-  Behind the scenes: by mistake, it also rewrote three checks in a way that cannot work: the check of your player name, game ID, board size and number of players when you submit the setup form, and the two "are all the ships placed?" checks. Submitting the setup form now stops with an error instead of starting or joining a game; this has not been fixed since.
+  Behind the scenes: by mistake, it also rewrote three checks in a way that cannot work: the check of your player name, game ID, board size and number of players when you submit the setup form, and the two "are all the ships placed?" checks. Submitting the setup form now stops with an error instead of starting or joining a game; this has not been fixed since. (Later fixed on 26.1010, in battleship #29: the setup form works again.)
 
 **Code tidy-up begins, and the database settings move out of the page** · [commits](https://github.com/travis-horton/battleship/commits/master?since=2020-02-16&until=2020-02-16) · merged 20.0216.2350 · v0.1.47
 - **[Tidy-up, part 4](https://github.com/travis-horton/battleship/commit/e7111d4)** · merged 20.0216.2350
   Behind the scenes: rewrapped the welcome page's long paragraphs, and every screen got a fallback message ("Oops. Something went wrong.") for an unexpected state.
-  Behind the scenes: by mistake, it also rewrote two spots, the list of each player's color on the game screen and the tally of earlier hits after a round of shooting, in a way that cannot work, so the game screen fails to appear once play begins. This has not been fixed since.
+  Behind the scenes: by mistake, it also rewrote two spots, the list of each player's color on the game screen and the tally of earlier hits after a round of shooting, in a way that cannot work, so the game screen fails to appear once play begins. This has not been fixed since. (Later fixed on 26.1010, in battleship #29: the game screen appears again.)
 - **[Tidy-up, part 3](https://github.com/travis-horton/battleship/commit/d8f5cb3)** · merged 20.0216.1141
   Behind the scenes: small code-style fixes in how the screen updates when you place a ship or take a shot. It also stopped printing the database's connection settings to the browser's developer console, which the change at 11:13 had started doing.
 - **[Database settings out of the page](https://github.com/travis-horton/battleship/commit/f5d4071)** · merged 20.0216.1113
@@ -57,14 +57,14 @@ Newest first, back to the project's first day.
 
 **Hits that land on a ship work again** · [commit](https://github.com/travis-horton/battleship/commit/6e5603c) · merged 20.0127.1029 · v0.1.46
 - Fixed: since the 20.0107 repeat-hit fix, any volley that landed on a ship stalled the game: the shots weren't saved and the turn never passed to the next player. Now it works again.
-  Behind the scenes: the repair went back to the 20.0106 way of spotting repeat hits, so the problem the 20.0107 fix was aimed at came back: a square the board's own owner fired at earlier still counts as "already hit", and a ship can fail to sink.
+  Behind the scenes: the repair went back to the 20.0106 way of spotting repeat hits, so the problem the 20.0107 fix was aimed at came back: a square the board's own owner fired at earlier still counts as "already hit", and a ship can fail to sink. (Later fixed on 26.1010, in battleship #29: an opponent's hit on a square you fired at yourself now counts, and the ship sinks.)
 
 **Intro rewrite, repeat-hit fix, record table order** · [commits](https://github.com/travis-horton/battleship/commits/master?since=2020-01-07&until=2020-01-07) · merged 20.0107.1755 · v0.1.45
 - **[Player colours show on every shot](https://github.com/travis-horton/battleship/commit/b9ba99d)** · merged 20.0107.0630
   Fixed: a square that was shot at now always shows the colour of the player who fired, instead of being covered by other colouring. Red and black, two of the right-click note colours, still show on top.
 - **[Intro rewrite and repeat-hit fix](https://github.com/travis-horton/battleship/commit/49756b5)** · merged 20.0107.1233
   New: the opening page is rewritten and broken into short paragraphs. It now recommends a 12x12 board or smaller for two players and 16 to 20 for four, and it warns that game IDs are case-sensitive.
-  Fixed: the repeat-hit check from the day before also counted squares that the board's own owner had fired at (a shot hits every board except the shooter's), so a ship could fail to sink. A typo in the fix meant that from now on, any volley that landed on a ship stalled the game. (Later corrected on 20.0127: volleys work again, but the original repeat-hit problem came back.)
+  Fixed: the repeat-hit check from the day before also counted squares that the board's own owner had fired at (a shot hits every board except the shooter's), so a ship could fail to sink. A typo in the fix meant that from now on, any volley that landed on a ship stalled the game. (Later corrected on 20.0127: volleys work again, but the original repeat-hit problem came back.) (Later fixed on 26.1010, in battleship #29: the repeat-hit problem is gone.)
 - **[Record table back in turn order; your own board shows just your ships](https://github.com/travis-horton/battleship/commit/c67644e)** · merged 20.0107.1752
   New: the turn-by-turn record lists turns oldest first again. Your own ships board no longer prints turn numbers on squares that were shot; it shows only your ship letters, with each shot square coloured by the player who fired. This version had a typo that stopped the game from starting at all.
 - **[Game starts again](https://github.com/travis-horton/battleship/commit/7e56f3f)** · merged 20.0107.1755
@@ -92,7 +92,7 @@ Newest first, back to the project's first day.
 - **[Shooting](https://github.com/travis-horton/battleship/commit/a3e94ea)** · merged 20.0105.2115
   New: you aim by clicking squares right on the other players' boards. Each aimed square shows the turn it will count for, a "Shots taken" counter tracks how many you've aimed, and you can't aim at a square you've already fired at. The Fire button stays grey until it's your turn and all your shots are aimed.
 - **[Sinking ships and losing](https://github.com/travis-horton/battleship/commit/492c462)** · merged 20.0105.2115
-  New: a message pops up when your volley sinks someone's ship. When you run out of shots, you get a "You lost!" message and the game ends for you. A "You won!!" message was started too, but as written it never appears ([commit](https://github.com/travis-horton/battleship/commit/3ac70de)).
+  New: a message pops up when your volley sinks someone's ship. When you run out of shots, you get a "You lost!" message and the game ends for you. A "You won!!" message was started too, but as written it never appears ([commit](https://github.com/travis-horton/battleship/commit/3ac70de)). (Later fixed on 26.1010, in battleship #29: "You won!!" now appears.)
 - **[Record table](https://github.com/travis-horton/battleship/commit/a3e94ea)** · merged 20.0105.2115
   New: the turn-by-turn record shows each shot as a column letter and row number (like "C5"), and lists which ship letters each player hit.
 - **[Note colours](https://github.com/travis-horton/battleship/commit/7ef38e0)** · merged 20.0105.2115

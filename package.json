@@ -7,7 +7,8 @@
   "description": "my battleship game",
   "scripts": {
     "serve": "rm -r dist; ./node_modules/.bin/parcel ./src/index.html",
-    "build": "rm -r dist; ./node_modules/.bin/parcel build ./src/index.html"
+    "build": "rm -r dist; ./node_modules/.bin/parcel build ./src/index.html",
+    "test": "node --import ./test/register.mjs --test \"test/*.test.mjs\""
   },
   "repository": {
     "type": "git",

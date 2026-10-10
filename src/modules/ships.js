@@ -82,8 +82,7 @@ export const getShipsLocs = (data) => {
 
 export const allShipsArePlaced = (shipsPlaced, maxShips) => {
   let value = true;
-  const ships = shipsPlaced.keys();
-  ships.forEach((ship) => {
+  Object.keys(shipsPlaced).forEach((ship) => {
     if (maxShips[ship] !== shipsPlaced[ship].length) value = false;
   });
   return value;
@@ -101,8 +100,7 @@ export const removeAllOfThisShipFromData = (ship, newData) => {
 
 export const allThisPlayersShipsArePlaced = (ships, maxShips) => {
   let value = true;
-  const shipType = ships.keys();
-  shipType.forEach((ship) => {
+  Object.keys(ships).forEach((ship) => {
     if (ships[ship].length < maxShips[ship]) value = false;
   });
   return value;
@@ -112,8 +110,7 @@ export const allPlayersShipsPlaced = (players, maxPlayers) => {
   let value = true;
   const numPlayers = Object.keys(players).length;
   if (numPlayers < maxPlayers) return false;
-  const playerNames = players.keys();
-  playerNames.forEach((p) => {
+  Object.keys(players).forEach((p) => {
     if (!players[p].shipsAreCommitted) value = false;
   });
   return value;

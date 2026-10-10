@@ -20,13 +20,7 @@ export default function Instructions({
   commitShips,
   commitShots,
 }) {
-  const curPlayers = [];
-  const playerKeys = players.keys();
-  const playersLength = playerKeys.length();
-  for (let i = 0; i < playersLength; i += 1) {
-    const player = players[playerKeys[i]];
-    if (player.connected) curPlayers.push(player);
-  }
+  const curPlayers = Object.keys(players).filter((player) => players[player].connected);
 
   if (!shipsAreCommitted) {
     const handleCommitShips = () => commitShips('commitShips');

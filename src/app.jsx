@@ -214,9 +214,8 @@ class App extends Component {
 
         database.ref(config.gameId).once('value', (snapshot) => {
           const oldHits = {};
-          const players = gameState.players.keys();
-          players.forEach((player) => {
-            oldHits[player] = gameState.players[player].hitOnThisPlayer;
+          Object.keys(gameState.players).forEach((player) => {
+            oldHits[player] = gameState.players[player].hitsOnThisPlayer;
           });
 
           const newHits = getHits(
@@ -314,8 +313,7 @@ class App extends Component {
           (player) => gameState.players[player].thisPlayerTurn === true,
         )[0];
         const playerColors = {};
-        const players = gameState.players.keys();
-        players.forEach((player) => {
+        Object.keys(gameState.players).forEach((player) => {
           playerColors[player] = gameState.players[player].playerColor;
         });
 

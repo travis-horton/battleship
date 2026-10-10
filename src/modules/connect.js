@@ -3,8 +3,7 @@ import { shotsThisPlayerGets } from './shooting';
 
 const getPlayerColor = (players) => {
   const availableColors = ['green', 'purple', 'yellow', 'brown'];
-  const playerNames = players.keys();
-  playerNames.forEach((player) => {
+  Object.keys(players).forEach((player) => {
     availableColors.splice(availableColors.indexOf(players[player].playerColor), 1);
   });
 
@@ -51,8 +50,7 @@ const getBoardInfo = (size, style, owner, ships, shots, oldBoard) => {
   };
 
   if (ships) {
-    const shipTypes = ships.keys();
-    shipTypes.forEach((ship) => {
+    Object.keys(ships).forEach((ship) => {
       for (let i = 0; i < ships[ship].length; i += 1) {
         const coord = ships[ship][i];
         boardInfo.data[coord[0]][coord[1]].ship = ship;
@@ -218,25 +216,23 @@ const connect = (db, gameId, name, info, self, dbData) => {
 
   // Tells db to update client on changes to db
   db.ref(gameId).on('value', (snapshot) => {
-    let shotsLeft;
+    const dbPlayers = snapshot.val().gameState.players;
+    // This player's own shots left: at zero, every one of their ships is sunk.
+    const shotsLeft = shotsThisPlayerGets(
+      dbPlayers[name].hitsOnThisPlayer,
+      self.state.config.maxShips,
+    );
 
-    let playersLeft = 0;
-    for (const player in snapshot.val().gameState.players) {
-      if (player !== name) {
-        shotsLeft = shotsThisPlayerGets(
-          snapshot.val().gameState.players[player].hitsOnThisPlayer,
-          self.state.config.maxShips,
-        );
-        if (shotsLeft > 0) playersLeft += 1;
-      }
-    }
-
-    const playerArray = players.keys();
+    // How many other players still have at least one ship afloat.
+    const playersLeft = Object.keys(dbPlayers).filter((player) => (
+      player !== name
+      && shotsThisPlayerGets(dbPlayers[player].hitsOnThisPlayer, self.state.config.maxShips) > 0
+    )).length;
 
     if (shotsLeft === 0) {
       alert('You lost!');
       self.setState({ ...self.state, localInfo: { ...self.state.localInfo, status: 'gameEnd' } });
-    } else if (playersLeft === 0 && playerArray.length > 1) {
+    } else if (playersLeft === 0 && Object.keys(dbPlayers).length > 1) {
       alert('You won!!');
     } else {
       self.setState(getLocalState(snapshot.val(), self.state.localInfo, name));
@@ -297,7 +293,7 @@ export default function joinGame(
     connect(db, gameId, name, playerInfo, self, snapshot.val());
 
     if (allPlayersShipsPlaced(gameState.players, numPlayers) && gameState.turnOrder === 0) {
-      const turnOrder = shuffle(gameState.players.keys());
+      const turnOrder = shuffle(Object.keys(gameState.players));
       db.ref(`${gameId}/gameState/turnOrder`).set(turnOrder);
       db.ref(`${gameId}/gameState/players/${turnOrder[0]}/thisPlayerTurn`).set(true);
     }
