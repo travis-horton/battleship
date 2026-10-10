@@ -4,6 +4,9 @@ Newest first, back to the project's first day.
 
 ## October 2026
 
+**battleship #25: Bump brace-expansion from 1.1.11 to 1.1.21** · [PR #25](https://github.com/travis-horton/battleship/pull/25) · merged 26.1010.1335 · v1.0.5
+- Behind the scenes: an automatic dependency update — "Bump brace-expansion from 1.1.11 to 1.1.21".
+
 **battleship #31: Bump semver and core-js-compat** · [PR #31](https://github.com/travis-horton/battleship/pull/31) · merged 26.1010.1334 · v1.0.4
 - Behind the scenes: an automatic dependency update — "Bump semver and core-js-compat".
 
