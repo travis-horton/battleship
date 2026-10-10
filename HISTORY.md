@@ -4,6 +4,18 @@ Newest first, back to the project's first day.
 
 ## October 2026
 
+**battleship #29: the game can be played again** · [PR #29](https://github.com/travis-horton/battleship/pull/29) · merged 26.1010.1230 · v1.0.2
+- **[Getting past setup](https://github.com/travis-horton/battleship/commit/b724662)** · merged 26.1010.1230
+  Fixed: since 20.0217, submitting the setup form stopped with an error, so no game could be started or joined, and drawing a board and showing the game screen failed the same way. All three work again, and the waiting screen lists the connected players by name.
+- **[The right winner and loser](https://github.com/travis-horton/battleship/commit/b724662)** · merged 26.1010.1230
+  Fixed: since 20.0217, the end-of-game check looked at an opponent's fleet instead of your own, so the winner was told "You lost!" and the real loser heard nothing. Now the loser sees "You lost!" and the winner sees "You won!!", a message that had never appeared before.
+- **[Ships sink again](https://github.com/travis-horton/battleship/commit/be402c7)** · merged 26.1010.1230
+  Fixed: since 20.0127, if you had fired at a square yourself, an opponent's later hit on your ship in that same square did not count, so that ship could never sink. Now it counts; a square another player already hit still counts only once.
+- **[Automatic checks](https://github.com/travis-horton/battleship/commit/2499419)** · merged 26.1010.1230
+  Behind the scenes: added 14 automatic checks covering the setup form, counting placed ships, drawing boards, joining a game, hits and sinking, and the end of the game; 13 of them fail on the old code and all pass now.
+  Try it: open Terminal and paste
+      cd ~/code/battleship && npm test
+
 **battleship #23: the project's past, written down** · [PR #23](https://github.com/travis-horton/battleship/pull/23) · merged 26.1010.1210 · v1.0.1
 - Behind the scenes: the history file now covers every change from the game's first day (18.1221), not only those since 26.1010, numbered 0.1.0 through 0.1.52 so today's entry stays 1.0.0.
 
