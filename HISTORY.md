@@ -4,6 +4,9 @@ Newest first, back to the project's first day.
 
 ## October 2026
 
+**battleship #31: Bump semver and core-js-compat** · [PR #31](https://github.com/travis-horton/battleship/pull/31) · merged 26.1010.1334 · v1.0.4
+- Behind the scenes: an automatic dependency update — "Bump semver and core-js-compat".
+
 **battleship #30: five more security updates for the borrowed building blocks, in one go** · [PR #30](https://github.com/travis-horton/battleship/pull/30) · merged 26.1010.1329 · v1.0.3
 - Behind the scenes: brought five borrowed building blocks up to their makers' patched versions — two parts of the tool that translates the game's code for browsers, a password-hashing library, a pattern-matching library and a library for live connections — replacing five separate automatic update requests. Known security warnings go from 109 to 104; the game builds and all 14 automatic checks pass as before.
 
